@@ -1,0 +1,43 @@
+import { Balance } from './Balance';
+import { BetControl } from './BetControl';
+import { SpinButton } from './SpinButton';
+
+export interface HudState {
+  ready: boolean;
+  balance: number;
+  bet: number;
+  spinning: boolean;
+  freeSpinsLeft: number;
+  freeSpinsTotal: number;
+  message: string;
+}
+
+interface Props {
+  state: HudState;
+  onSpin: () => void;
+  onBetChange: (direction: 1 | -1) => void;
+}
+
+/** The whole UI on top of the canvas. */
+export function Hud({ state: s, onSpin, onBetChange }: Props) {
+  const locked = !s.ready || s.spinning || s.freeSpinsLeft > 0;
+
+  return (
+    <>
+      {!s.ready && <div className="loading">Loading…</div>}
+      {s.freeSpinsLeft > 0 && (
+        <div className="banner">FREE SPINS: {s.freeSpinsLeft} left · Total {s.freeSpinsTotal.toFixed(2)}</div>
+      )}
+      <div className="hud">
+        <div className="hud-group">
+          <Balance value={s.balance} />
+          <BetControl bet={s.bet} disabled={locked} onChange={onBetChange} />
+        </div>
+        <SpinButton disabled={locked} spinning={s.spinning} onSpin={onSpin} />
+        <div className="hud-group">
+          <div className="message">{s.message}</div>
+        </div>
+      </div>
+    </>
+  );
+}

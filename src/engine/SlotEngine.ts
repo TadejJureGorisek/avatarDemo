@@ -66,12 +66,25 @@ export class SlotEngine {
   balance: number;
   freeSpinsLeft = 0;
   freeSpinsTotal = 0;
-  private scatter?: SymbolDef;
+  readonly scatter?: SymbolDef;
+  private symbols: Map<string, SymbolDef>;
 
-  constructor(private config: GameConfig, private random = cryptoRandom) {
+  constructor(readonly config: GameConfig, private random = cryptoRandom) {
     this.balance = config.startingBalance;
     this.scatter = config.symbols.find((s) => s.kind === 'scatter');
+    this.symbols = new Map(config.symbols.map((s) => [s.id, s]));
   }
+
+  /** Board size, passed down to the view so nothing there hardcodes 5x3. */
+  get reels() {
+    return this.config.reels;
+  }
+
+  get rows() {
+    return this.config.rows;
+  }
+
+  getSymbol = (id: string) => this.symbols.get(id)!;
 
   canSpin(bet: number) {
     return this.freeSpinsLeft > 0 || this.balance >= bet;

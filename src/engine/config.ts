@@ -7,12 +7,10 @@ export interface SymbolDef {
   weight: number;
   /** Pay multipliers of the bet by match count. Regular symbols pay per way. */
   pays: Record<number, number>;
-  /** Has a `<id>_connect.png` highlight texture. */
-  hasConnect: boolean;
 }
 
 const sym = (id: string, weight: number, p3: number, p4: number, p5: number): SymbolDef => ({
-  id, kind: 'regular', weight, pays: { 3: p3, 4: p4, 5: p5 }, hasConnect: true,
+  id, kind: 'regular', weight, pays: { 3: p3, 4: p4, 5: p5 },
 });
 
 export const config = {
@@ -38,7 +36,7 @@ export const config = {
     sym('10', 14, 1.05, 5.25, 21),
     sym('9', 14, 1.05, 5.25, 21),
     // Scatter: pays anywhere, multiplier of the bet.
-    { id: 'BONUS', kind: 'scatter', weight: 3, pays: { 3: 2, 4: 10, 5: 50 }, hasConnect: false },
+    { id: 'BONUS', kind: 'scatter', weight: 3, pays: { 3: 2, 4: 10, 5: 50 } },
   ] as SymbolDef[],
   maxScattersPerReel: 1,
   freeSpins: { minScatters: 3, awarded: 8 },

@@ -17,9 +17,9 @@ start command is needed.
 ## Features
 
 - 5 reels × 3 rows, **243 ways**, pays left to right from reel 1 (3+ of a kind).
-- Drop-style spin: reels drop out and in one after another, then winning symbols switch to their
-  `_connect` art and pulse while the rest dim.
-- Balance, bet (+/−), last win and a status message in the React HUD. `Space` spins.
+- Drop-style spin: reels drop out and in one after another. Winning symbols pop (scale up and
+  down) until the next spin, with the win amount shown over the symbols.
+- Balance, bet (+/−) and a status message in the React HUD. `Space` spins.
 - **BONUS** scatter pays anywhere (3/4/5) and 3+ award **8 free spins** (auto-played, retriggerable).
 - **Anticipation**: once two BONUS symbols have landed, the remaining reels slow down while the
   character plays `bonus_anticipation`, then `bonus_anticipation_win` / `_lose`.
@@ -30,16 +30,24 @@ start command is needed.
 
 ```
 src/
-  engine/config.ts       board size, symbols, weights, paytable, bets, free spins (data only)
-  engine/SlotEngine.ts   pure logic: RNG, grid generation, ways evaluation, wallet, free spins
-  MainView.ts            PixiJS: Board (drop animation), WinLayer, Spine Character, spin flow
-  Hud.tsx                React HUD: balance, bet, win, spin button
+  engine/
+    config.ts          board size, symbols, weights, paytable, bets, free spins (data only)
+    SlotEngine.ts      pure logic: RNG, grid generation, ways evaluation, wallet, free spins
+  view/
+    MainView.tsx       the whole game: Pixi scene + HUD + spin flow
+    board/Board.ts     symbols area, creates one Reel per reel
+    board/Reel.ts      one column, creates one Cell per row, drop animation
+    board/Cell.ts      one symbol sprite
+    Wins.ts            win pop on winning symbols + win amount over the board
+    Character.ts       Spine character
+    hud/Hud.tsx        the whole UI: Balance, BetControl, SpinButton, messages
 ```
 
-**Extending:** board size is `reels`/`rows` in `config.ts`, and the engine and board both read it.
-Adding a wild is just a symbol with `kind: 'wild'`, since the evaluator already substitutes it.
-New features (bonus game, multipliers, cascades) go in `SlotEngine.spin()` for the maths and
-`MainView.present()` for the presentation. The HUD doesn't need to change.
+Animation uses GSAP. **Extending:** the board size comes from the engine (`engine.reels` ×
+`engine.rows`, set in `config.ts`) and is passed down Board → Reel → Cell, so nothing in the view
+hardcodes 5×3. Adding a wild is just a symbol with `kind: 'wild'`, since the evaluator already
+substitutes it. New features (bonus game, multipliers, cascades) go in `SlotEngine.spin()` for the
+maths and `present()` in `MainView.tsx` for the presentation.
 
 ## Spine character analysis
 

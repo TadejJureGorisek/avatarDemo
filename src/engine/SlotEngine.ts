@@ -68,6 +68,7 @@ export class SlotEngine {
   freeSpinsTotal = 0;
   readonly scatter?: SymbolDef;
   private symbols: Map<string, SymbolDef>;
+  private forcedGrid?: Grid;
 
   constructor(readonly config: GameConfig, private random = cryptoRandom) {
     this.balance = config.startingBalance;
@@ -98,7 +99,8 @@ export class SlotEngine {
       this.freeSpinsTotal = 0;
     }
 
-    const grid = this.generateGrid();
+    const grid = this.forcedGrid ?? this.generateGrid();
+    this.forcedGrid = undefined;
     const wins = evaluate(grid, this.config.symbols, bet);
     const totalWin = round(wins.reduce((sum, w) => sum + w.amount, 0));
     this.balance = round(this.balance + totalWin);
@@ -109,6 +111,23 @@ export class SlotEngine {
     this.freeSpinsLeft += freeSpinsAwarded;
 
     return { grid, wins, totalWin, isFreeSpin, freeSpinsAwarded };
+  }
+
+  /** Demo cheat: the next spin lands the top symbol across the middle row, or enough BONUS for free spins. */
+  forceNext(cheat: 'win' | 'freeSpins') {
+    const grid = this.generateGrid();
+    const middle = Math.floor(this.rows / 2);
+    if (cheat === 'win') {
+      const top = this.config.symbols.find((s) => s.kind === 'regular')!;
+      grid.forEach((column) => (column[middle] = top.id));
+    } else if (this.scatter) {
+      // Spread the scatters out (reels 1, 3, 5 on a 5-reel board) so the anticipation plays.
+      const { minScatters } = this.config.freeSpins;
+      for (let i = 0; i < minScatters; i++) {
+        grid[Math.round((i * (this.reels - 1)) / Math.max(1, minScatters - 1))][middle] = this.scatter.id;
+      }
+    }
+    this.forcedGrid = grid;
   }
 
   generateGrid(): Grid {

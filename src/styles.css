@@ -59,3 +59,10 @@ button:disabled { opacity: 0.4; cursor: default; }
   .message { min-width: 0; font-size: 12px; }
   .spin { width: 80px; height: 80px; margin-top: 0; }
 }
+
+.cheats { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.cheats button {
+  padding: 6px 14px; border-radius: 8px; cursor: pointer; font-weight: 700;
+  border: 2px solid rgb(255 201 74 / 0.5); background: rgb(26 11 61 / 0.9); color: #ffc94a;
+}
+.cheats-menu { display: flex; flex-direction: column; gap: 6px; }

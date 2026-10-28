@@ -24,6 +24,8 @@ start command is needed.
 - **Anticipation**: once two BONUS symbols have landed, the remaining reels slow down while the
   character plays `bonus_anticipation`, then `bonus_anticipation_win` / `_lose`.
 - Character plays `small_win` on any win and loops `idle` otherwise.
+- **CHEATS** menu (top right): *Big win* forces the top symbol across the middle row, *Free spins*
+  forces 3 BONUS. Handled in `BetState` via `SlotEngine.forceNext()`.
 - RNG: `crypto.getRandomValues`. Paytable tuned by simulation to RTP ≈ 96%, hit rate ≈ 13%.
 
 ## Structure
@@ -45,7 +47,7 @@ src/
     board/Cell.ts      one symbol sprite
     Wins.ts            win pop on winning symbols + win amount over the board
     Character.ts       Spine character
-    hud/Hud.tsx        the whole UI: Balance, BetControl, SpinButton, messages
+    hud/Hud.tsx        the whole UI: Balance, BetControl, SpinButton, CheatMenu, messages
 ```
 
 Animation uses GSAP. All game flow lives in the states; the HUD only sends a spin request and

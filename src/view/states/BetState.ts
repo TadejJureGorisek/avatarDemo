@@ -14,8 +14,11 @@ export const BetState: GameState = {
     }
 
     for (;;) {
-      await waitForSpin();
-      if (engine.canSpin(bet())) return 'spin';
+      const cheat = await waitForSpin();
+      if (engine.canSpin(bet())) {
+        if (cheat) engine.forceNext(cheat);
+        return 'spin';
+      }
       updateHud({ message: 'Not enough balance, lower your bet' });
     }
   },

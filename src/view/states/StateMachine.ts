@@ -1,6 +1,7 @@
 import type { SlotEngine, SpinResult } from '../../engine/SlotEngine';
 import type { Board } from '../board/Board';
 import type { Character } from '../Character';
+import type { Cheat } from '../hud/CheatMenu';
 import type { HudState } from '../hud/Hud';
 import type { Wins } from '../Wins';
 
@@ -14,8 +15,8 @@ export interface GameContext {
   character: Character;
   bet: () => number;
   updateHud: (patch: Partial<HudState>) => void;
-  /** Resolves when the player presses SPIN. */
-  waitForSpin: () => Promise<void>;
+  /** Resolves when the player presses SPIN, or picks a cheat from the cheat menu. */
+  waitForSpin: () => Promise<Cheat | undefined>;
   /** Result of the last spin, set by SpinState for WinState. */
   result?: SpinResult;
 }

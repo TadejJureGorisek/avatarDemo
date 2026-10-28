@@ -4,6 +4,7 @@ import type { SlotEngine } from '../engine/SlotEngine';
 import { Board } from './board/Board';
 import { symbolUrl } from './board/Cell';
 import { Character, CHARACTER_ASSETS } from './Character';
+import type { Cheat } from './hud/CheatMenu';
 import { Hud, type HudState } from './hud/Hud';
 import { BetState } from './states/BetState';
 import { SpinState } from './states/SpinState';
@@ -20,7 +21,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const { bets, defaultBetIndex } = engine.config;
   const host = useRef<HTMLDivElement>(null);
   const betIndex = useRef(defaultBetIndex);
-  const spinRequest = useRef<() => void>();
+  const spinRequest = useRef<(cheat?: Cheat) => void>();
   const [hud, setHud] = useState<HudState>({
     ready: false, state: 'bet', balance: engine.balance, bet: bets[defaultBetIndex],
     freeSpinsLeft: 0, freeSpinsTotal: 0, message: 'Press SPIN to play',
@@ -52,11 +53,12 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   }, [bets]);
 
   const requestSpin = useCallback(() => spinRequest.current?.(), []);
+  const requestCheat = useCallback((cheat: Cheat) => spinRequest.current?.(cheat), []);
 
   return (
     <div className="game">
       <div className="canvas-host" ref={host} />
-      <Hud state={hud} onSpin={requestSpin} onBetChange={changeBet} />
+      <Hud state={hud} onSpin={requestSpin} onBetChange={changeBet} onCheat={requestCheat} />
     </div>
   );
 }

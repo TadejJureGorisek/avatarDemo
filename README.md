@@ -34,7 +34,12 @@ src/
     config.ts          board size, symbols, weights, paytable, bets, free spins (data only)
     SlotEngine.ts      pure logic: RNG, grid generation, ways evaluation, wallet, free spins
   view/
-    MainView.tsx       the whole game: Pixi scene + HUD + spin flow
+    MainView.tsx       the whole game: builds the Pixi scene + HUD, runs the state machine
+    states/
+      StateMachine.ts  loops Bet → Spin → Win (only on a win) → Bet
+      BetState.ts      waits for SPIN (balance check); auto-continues during free spins
+      SpinState.ts     takes the stake, gets the result, drops reels, bonus anticipation
+      WinState.ts      win pop + amount, pays the win, character reaction
     board/Board.ts     symbols area, creates one Reel per reel
     board/Reel.ts      one column, creates one Cell per row, drop animation
     board/Cell.ts      one symbol sprite
@@ -43,11 +48,14 @@ src/
     hud/Hud.tsx        the whole UI: Balance, BetControl, SpinButton, messages
 ```
 
-Animation uses GSAP. **Extending:** the board size comes from the engine (`engine.reels` ×
-`engine.rows`, set in `config.ts`) and is passed down Board → Reel → Cell, so nothing in the view
-hardcodes 5×3. Adding a wild is just a symbol with `kind: 'wild'`, since the evaluator already
-substitutes it. New features (bonus game, multipliers, cascades) go in `SlotEngine.spin()` for the
-maths and `present()` in `MainView.tsx` for the presentation.
+Animation uses GSAP. All game flow lives in the states; the HUD only sends a spin request and
+is locked outside the bet state.
+
+**Extending:** the board size comes from the engine (`engine.reels` × `engine.rows`, set in
+`config.ts`) and is passed down Board → Reel → Cell, so nothing in the view hardcodes 5×3. Adding
+a wild is just a symbol with `kind: 'wild'`, since the evaluator already substitutes it. A new
+feature is a new state (for example a `BonusState` entered from `WinState`) plus its maths in
+`SlotEngine`.
 
 ## Spine character analysis
 

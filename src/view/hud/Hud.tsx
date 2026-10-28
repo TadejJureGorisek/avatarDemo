@@ -1,12 +1,14 @@
+import type { StateName } from '../states/StateMachine';
 import { Balance } from './Balance';
 import { BetControl } from './BetControl';
 import { SpinButton } from './SpinButton';
 
 export interface HudState {
   ready: boolean;
+  /** Current game state; controls are only live in the bet state. */
+  state: StateName;
   balance: number;
   bet: number;
-  spinning: boolean;
   freeSpinsLeft: number;
   freeSpinsTotal: number;
   message: string;
@@ -20,7 +22,7 @@ interface Props {
 
 /** The whole UI on top of the canvas. */
 export function Hud({ state: s, onSpin, onBetChange }: Props) {
-  const locked = !s.ready || s.spinning || s.freeSpinsLeft > 0;
+  const locked = !s.ready || s.state !== 'bet' || s.freeSpinsLeft > 0;
 
   return (
     <>
@@ -33,7 +35,7 @@ export function Hud({ state: s, onSpin, onBetChange }: Props) {
           <Balance value={s.balance} />
           <BetControl bet={s.bet} disabled={locked} onChange={onBetChange} />
         </div>
-        <SpinButton disabled={locked} spinning={s.spinning} onSpin={onSpin} />
+        <SpinButton disabled={locked} spinning={s.state === 'spin'} onSpin={onSpin} />
         <div className="hud-group">
           <div className="message">{s.message}</div>
         </div>

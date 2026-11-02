@@ -39,8 +39,8 @@ const HUD_GAP = 40;
 const HUD_ROW = 125;
 /** The portrait HUD's height (two rows at the bottom of the screen). */
 const HUD_PORTRAIT = 620;
-/** Of that, the bottom row with SPIN. */
-const PORTRAIT_SPIN_ROW = 340;
+/** How far down the portrait HUD the SPIN button starts (design px). */
+const PORTRAIT_SPIN_TOP = 233;
 /** The HUD is laid out for scene scale 0.8 (a 1280×720 window) and zoomed with the scene from there. */
 const HUD_ZOOM_PER_SCENE = 1.25;
 /** The logo above the character (in game and on the splash), and the gap under it (design px). */
@@ -255,8 +255,8 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
       character.x = left - bounds.x * fit;
       feet = boardY + engine.rows * cell + FRAME_PAD;
       // On the splash only SPIN (CONTINUE) shows, so the splash has everything above the SPIN row.
-      const spinRowTop = D.height - MARGIN - PORTRAIT_SPIN_ROW;
-      splashArea = { top: MARGIN, bottom: spinRowTop - 2 * MESSAGE_GAP, dotsY: spinRowTop - MESSAGE_GAP };
+      const spinTop = hudTop + PORTRAIT_SPIN_TOP;
+      splashArea = { top: MARGIN, bottom: spinTop - 2 * MESSAGE_GAP, dotsY: spinTop - MESSAGE_GAP };
     }
     character.scale.set(fit);
     character.y = feet - (bounds.y + bounds.height) * fit;

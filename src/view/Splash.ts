@@ -13,6 +13,18 @@ const SLIDE_SHIFT = 300;
 const FREE_SPINS_SLIDE = 2;
 /** Room kept for the arrows at either side of the pictures. */
 const SIDE = 150;
+/**
+ * A slide as a block, from its top (design px): the title's centre, the picture's top, and the
+ * description's centre under the picture (two lines). The picture's centre ends up halfway
+ * between the title and the description.
+ */
+const TITLE_ABOVE = 35;
+const PICTURE_TOP = 85;
+const TEXT_BELOW = 50;
+/** The block's height besides the picture. */
+const BLOCK_EXTRA = PICTURE_TOP + TEXT_BELOW + 45;
+/** Between the logo and the slide's title. */
+const LOGO_GAP = 20;
 
 /** Where the splash goes: its width, top and bottom, the dots' y (in line with the message) and the logo's height. */
 export interface SplashLayout {
@@ -64,13 +76,17 @@ export class Splash extends Container {
       killTweens(child);
       child.destroy({ children: true });
     }
-    // The logo stays put while the slides change below it.
+    // The logo, then the slide's title, picture and description close together, all centred as
+    // one group; the picture is as big as fits, and fits between the arrows. The logo stays put
+    // while the slides change below it.
+    const pictureHeight = Math.min(bottom - top - logoHeight - LOGO_GAP - BLOCK_EXTRA, width - 2 * SIDE);
+    const groupTop = top + (bottom - top - (logoHeight + LOGO_GAP + pictureHeight + BLOCK_EXTRA)) / 2;
     const title = logo(logoHeight, width - 2 * SIDE);
-    title.position.set(width / 2, top + logoHeight / 2);
-    const titleY = top + logoHeight + 40;
-    const textY = bottom - 50;
-    // The picture fits between the title and the description, and between the arrows.
-    const box = { y: (titleY + textY) / 2, width: width - 2 * SIDE, height: Math.min(textY - titleY - 140, width - 2 * SIDE) };
+    title.position.set(width / 2, groupTop + logoHeight / 2);
+    const blockTop = groupTop + logoHeight + LOGO_GAP;
+    const titleY = blockTop + TITLE_ABOVE;
+    const textY = blockTop + PICTURE_TOP + pictureHeight + TEXT_BELOW;
+    const box = { y: (titleY + textY) / 2, width: width - 2 * SIDE, height: pictureHeight };
     const { awarded, minScatters } = this.config.freeSpins;
     this.slides = [
       slide(width / 2, titleY, textY, 'MEET THE BOSS', 'Chains, shades and a pocket full of gold.\n243 ways to win on every spin!',

@@ -52,6 +52,13 @@ export class BigWin extends Container {
     });
   }
 
+  /** Stops a count-up that's still running (the splash's showcase rebuilds on rotation). */
+  override destroy(options?: Parameters<Container['destroy']>[0]) {
+    this.tween?.kill();
+    gsap.killTweensOf([this, this.scale, this.title.scale, this.amount.scale]);
+    super.destroy(options);
+  }
+
   /** The highest tier this win reaches, or undefined when it's not a big win. */
   tierFor(win: number, bet: number) {
     return [...this.tiers].reverse().find((t) => win >= t.x * bet);

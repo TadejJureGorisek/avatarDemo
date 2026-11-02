@@ -1,14 +1,13 @@
 import gsap from 'gsap';
 import { Assets, Container, FillGradient, Graphics, Sprite } from 'pixi.js';
 
-/** The art for each part of the game, with where its floor is (of its height). */
+/** The art for each part of the game, with where the character stands on it (of its height). */
 const ART = {
-  base: 'assets/backgrounds/base.webp',
-  freeSpins: 'assets/backgrounds/free-spins.webp',
-  splash: 'assets/backgrounds/splash.webp',
+  base: { url: 'assets/backgrounds/base.webp', floor: 0.69 },
+  freeSpins: { url: 'assets/backgrounds/free-spins.webp', floor: 0.755 },
+  splash: { url: 'assets/backgrounds/splash.webp', floor: 0.755 },
 };
-const ART_FLOOR = 0.755;
-export const BACKGROUND_URLS = Object.values(ART);
+export const BACKGROUND_URLS = Object.values(ART).map((a) => a.url);
 
 /**
  * Full-window background behind the scene. A purple gradient shows while loading; then the art
@@ -32,8 +31,8 @@ export class Background extends Container {
 
   /** Adds the art once it has loaded (`BACKGROUND_URLS`); the splash art shows first. */
   addArt() {
-    const sprite = (url: string) => new Sprite(Assets.get(url));
-    this.art = { base: sprite(ART.base), splash: sprite(ART.splash), freeSpins: sprite(ART.freeSpins) };
+    const sprite = (key: keyof typeof ART) => new Sprite(Assets.get(ART[key].url));
+    this.art = { base: sprite('base'), splash: sprite('splash'), freeSpins: sprite('freeSpins') };
     this.art.freeSpins.alpha = 0;
     this.addChild(this.art.base, this.art.splash, this.art.freeSpins);
     this.resize(...this.last);
@@ -43,13 +42,14 @@ export class Background extends Container {
   resize(width: number, height: number, floorY: number) {
     this.last = [width, height, floorY];
     this.gradient.clear().rect(0, 0, width, height).fill(this.fill);
-    for (const sprite of Object.values(this.art ?? {})) {
+    for (const [key, sprite] of Object.entries(this.art ?? {})) {
       const { width: w, height: h } = sprite.texture;
+      const { floor } = ART[key as keyof typeof ART];
       // As big as it takes to span the width, and to reach both the top (above the floor) and the
       // bottom (below it) of the window.
-      const scale = Math.max(width / w, floorY / (ART_FLOOR * h), (height - floorY) / ((1 - ART_FLOOR) * h));
+      const scale = Math.max(width / w, floorY / (floor * h), (height - floorY) / ((1 - floor) * h));
       sprite.scale.set(scale);
-      sprite.position.set((width - w * scale) / 2, floorY - ART_FLOOR * h * scale);
+      sprite.position.set((width - w * scale) / 2, floorY - floor * h * scale);
     }
   }
 

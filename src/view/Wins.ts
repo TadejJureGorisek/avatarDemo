@@ -20,7 +20,8 @@ export class Wins extends Container {
     this.addChild(this.amount);
   }
 
-  show(wins: Win[], total: number) {
+  /** Pops the winning symbols; the amount shows now, or later via `showAmount` (after a big win count-up). */
+  show(wins: Win[], total: number, withAmount = true) {
     this.clear();
     if (!wins.length) return;
     this.winning = [...new Set(wins.flatMap((w) => w.positions.map((p) => this.board.cell(p.reel, p.row))))];
@@ -28,6 +29,10 @@ export class Wins extends Container {
       gsap.to(cell.scale, { x: cell.scale.x * 1.1, y: cell.scale.y * 1.1, duration: 0.3, ease: 'sine.inOut',
         yoyo: true, repeat: -1 });
     }
+    if (withAmount) this.showAmount(total);
+  }
+
+  showAmount(total: number) {
     this.amount.text = `WIN ${total.toFixed(2)}`;
     gsap.fromTo(this.amount.scale, { x: 0, y: 0 }, { x: 1, y: 1, duration: 0.4, ease: 'back.out(2)' });
   }

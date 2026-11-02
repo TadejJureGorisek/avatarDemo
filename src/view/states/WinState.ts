@@ -7,9 +7,14 @@ import type { GameState } from './StateMachine';
 export const WinState: GameState = {
   async enter({ engine, wins, character, message, popup, bigWin, bet, updateHud, result }) {
     const r = result!;
-    wins.show(r.wins, r.totalWin);
+    // On a big win the "WIN X" text waits until the count-up is done, so it never shows through its panel.
+    const big = bigWin.tierFor(r.totalWin, bet());
+    wins.show(r.wins, r.totalWin, !big);
     if (r.totalWin && !r.freeSpinsAwarded) void character.play('small_win');
-    if (bigWin.tierFor(r.totalWin, bet())) await bigWin.play(r.totalWin, bet());
+    if (big) {
+      await bigWin.play(r.totalWin, bet());
+      wins.showAmount(r.totalWin);
+    }
 
     updateHud({ balance: engine.balance, freeSpinsLeft: engine.freeSpinsLeft, freeSpinsTotal: engine.freeSpinsTotal });
     const ways = r.wins.reduce((n, w) => n + w.ways, 0);

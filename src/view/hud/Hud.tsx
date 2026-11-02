@@ -25,6 +25,8 @@ export interface HudState {
   autoplayLeft: number;
   freeSpinsReady: boolean;
   continueReady: boolean;
+  /** SPIN skips the big win count-up. */
+  bigWinCounting: boolean;
   turbo: boolean;
 }
 
@@ -63,7 +65,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     : inFreeSpins ? [s.freeSpinsLeft, `${s.freeSpinsLeft} free spins left`]
     : autoplay ? [s.autoplayLeft, `Stop autoplay, ${s.autoplayLeft} spins left`]
     : s.state === 'spin' ? [<Icon name="stop" size={30} />, 'Stop'] : [<Icon name="spin" size={44} />, 'Spin'];
-  const spinDisabled = !s.freeSpinsReady && !s.continueReady && (!s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay)
+  const spinDisabled = !s.freeSpinsReady && !s.continueReady && !s.bigWinCounting && (!s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay)
     || (autoOpen && locked) || (stopPressed && !autoplay));
   const pressSpin = () => {
     if (!autoOpen) {

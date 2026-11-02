@@ -12,6 +12,8 @@ const HEIGHT = 420;
 const FRAME = 40;
 export const BIG_WIN_SIZE = { width: WIDTH + 2 * FRAME, height: HEIGHT + 2 * FRAME };
 const HOLD_S = 1.5;
+/** How long the count-up spends on each tier, so every title stays up at least this long. */
+const TIER_S = 2;
 
 export class BigWin extends Container {
   private title = new Text({
@@ -24,7 +26,7 @@ export class BigWin extends Container {
     style: { fontFamily: 'system-ui, sans-serif', fontSize: 110, fontWeight: '900', fill: 0xffffff,
       stroke: { color: 0x3a1500, width: 12 } },
   });
-  private tween?: gsap.core.Tween;
+  private tween?: gsap.core.Timeline;
 
   constructor(private tiers: BigWinTier[]) {
     super();
@@ -43,8 +45,17 @@ export class BigWin extends Container {
     this.hitArea = new Rectangle(-WIDTH / 2, -HEIGHT / 2, WIDTH, HEIGHT);
     this.on('pointertap', (e) => {
       e.stopPropagation();
-      this.tween?.progress(1);
+      this.skip();
     });
+  }
+
+  get counting() {
+    return !!this.tween;
+  }
+
+  /** Jumps the count-up to the final amount; it then holds and hides as usual. */
+  skip() {
+    this.tween?.progress(1);
   }
 
   override destroy(options?: Parameters<Container['destroy']>[0]) {
@@ -76,7 +87,12 @@ export class BigWin extends Container {
     gsap.fromTo(this, { alpha: 0 }, { alpha: 1, duration: 0.25 });
     gsap.fromTo(this.scale, { x: 0.7, y: 0.7 }, { x: 1, y: 1, duration: 0.4, ease: 'back.out(1.7)' });
     update();
-    this.tween = gsap.to(counter, { value: win, duration: 2 + top * 1.2, ease: 'power2.inOut', onUpdate: update });
+    // One stretch per tier: up to the next tier's threshold, and the last one up to the win.
+    this.tween = gsap.timeline({ onUpdate: update });
+    for (let i = 0; i <= top; i++) {
+      const end = i < top ? this.tiers[i + 1].x * bet : win;
+      this.tween.to(counter, { value: end, duration: TIER_S, ease: i < top ? 'none' : 'power2.out' });
+    }
     await this.tween;
     this.tween = undefined;
     counter.value = win;

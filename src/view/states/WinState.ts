@@ -8,7 +8,9 @@ export const WinState: GameState = {
     wins.show(r.wins, r.totalWin, !big);
     if (r.totalWin && !r.freeSpinsAwarded) void character.play('small_win');
     if (big) {
+      updateHud({ bigWinCounting: true });
       await bigWin.play(r.totalWin, bet());
+      updateHud({ bigWinCounting: false });
       wins.showAmount(r.totalWin);
     }
 

@@ -36,7 +36,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const betState = (i: number) => ({ bet: bets[i], atMinBet: i === 0, atMaxBet: i === bets.length - 1 });
   const [hud, setHud] = useState<HudState>({
     ready: false, state: 'splash', balance: engine.balance, ...betState(defaultBetIndex),
-    freeSpinsLeft: 0, freeSpin: false, autoplayLeft: 0, freeSpinsReady: false, continueReady: false, turbo: false,
+    freeSpinsLeft: 0, freeSpin: false, autoplayLeft: 0, freeSpinsReady: false, continueReady: false, bigWinCounting: false, turbo: false,
   });
   const update = (patch: Partial<HudState>) => setHud((s) => ({ ...s, ...patch }));
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -45,6 +45,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const turbo = useRef(false);
   const setAutoplay = (spins: number) => update({ autoplayLeft: (autoplayLeft.current = spins) });
   const symbolInfoRef = useRef<SymbolInfo>();
+  const bigWinRef = useRef<BigWin>();
   const [hudLayout, setHudLayout] = useState<HudLayout>({ top: 0, metersY: 0, left: 0, width: 0, zoom: 1, boardWidth: 0, portrait: false });
 
   useEffect(() => {
@@ -81,6 +82,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
       );
       const { board, symbolInfo } = scene;
       symbolInfoRef.current = symbolInfo;
+      bigWinRef.current = scene.bigWin;
       let shown = '';
       board.onCellTap = (reel, row) => {
         if (machine.current?.current === 'spin') return;
@@ -108,7 +110,8 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   }, [bets]);
 
   const pressSpin = useCallback(() => {
-    if (autoplayLeft.current > 0) setAutoplay(0);
+    if (bigWinRef.current?.counting) bigWinRef.current.skip();
+    else if (autoplayLeft.current > 0) setAutoplay(0);
     else if (machine.current?.current === 'spin') stopRequest.current?.();
     else spinRequest.current?.();
   }, []);

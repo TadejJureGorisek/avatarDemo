@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
+import { colors, disabledLook } from './theme';
 
 export type Cheat = 'win' | 'freeSpins';
 
@@ -15,15 +16,25 @@ export function CheatMenu({ disabled, onCheat }: Props) {
     onCheat(cheat);
   };
 
+  const option = { ...button, ...disabledLook(disabled) };
   return (
-    <div className="cheats">
-      <button className="cheats-toggle" onClick={() => setOpen(!open)}>CHEATS</button>
+    <div style={container}>
+      <button style={button} onClick={() => setOpen(!open)}>CHEATS</button>
       {open && (
-        <div className="cheats-menu">
-          <button onClick={() => pick('win')} disabled={disabled}>Big win</button>
-          <button onClick={() => pick('freeSpins')} disabled={disabled}>Free spins</button>
-        </div>
+        <>
+          <button style={option} onClick={() => pick('win')} disabled={disabled}>Big win</button>
+          <button style={option} onClick={() => pick('freeSpins')} disabled={disabled}>Free spins</button>
+        </>
       )}
     </div>
   );
 }
+
+const container: CSSProperties = {
+  position: 'absolute', top: 12, right: 12, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6,
+};
+
+const button: CSSProperties = {
+  padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 700,
+  border: `2px solid ${colors.border}`, background: colors.panel, color: colors.gold,
+};

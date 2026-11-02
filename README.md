@@ -49,6 +49,7 @@ src/
     Character.ts       Spine character
     Background.ts      full-screen gradient
     hud/Hud.tsx        the whole UI: Balance, BetControl, SpinButton, CheatMenu, messages
+    hud/theme.ts       shared inline styles (no CSS files)
 ```
 
 Animation uses GSAP. All game flow lives in the states; the HUD only sends a spin request and

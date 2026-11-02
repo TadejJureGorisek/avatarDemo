@@ -1,12 +1,12 @@
 import { Application, Assets, Container } from 'pixi.js';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { SlotEngine } from '../engine/SlotEngine';
 import { Background } from './Background';
 import { Board } from './board/Board';
 import { symbolUrl } from './board/Cell';
 import { Character, CHARACTER_ASSETS } from './Character';
 import type { Cheat } from './hud/CheatMenu';
-import { Hud, type HudState } from './hud/Hud';
+import { Hud, HUD_HEIGHT, type HudState } from './hud/Hud';
 import { BetState } from './states/BetState';
 import { SpinState } from './states/SpinState';
 import { StateMachine } from './states/StateMachine';
@@ -15,7 +15,7 @@ import { Wins } from './Wins';
 
 const CELL = 200;
 const DESIGN = { width: 1600, height: 900 };
-const HUD_HEIGHT = 110;
+const fill: CSSProperties = { position: 'absolute', inset: 0 };
 
 export function MainView({ engine }: { engine: SlotEngine }) {
   const host = useRef<HTMLDivElement>(null);
@@ -56,8 +56,8 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const requestCheat = useCallback((cheat: Cheat) => spinRequest.current?.(cheat), []);
 
   return (
-    <div className="game">
-      <div className="canvas-host" ref={host} />
+    <div style={fill}>
+      <div style={fill} ref={host} />
       <Hud state={hud} onSpin={requestSpin} onBetChange={changeBet} onCheat={requestCheat} />
     </div>
   );
@@ -68,6 +68,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
     resizeTo: host, backgroundAlpha: 0, antialias: true, autoDensity: true,
     resolution: Math.min(devicePixelRatio, 2)
   });
+  app.canvas.style.display = 'block'; // inline canvases add a few px of line-box overflow
   host.appendChild(app.canvas);
 
   Assets.add(CHARACTER_ASSETS);

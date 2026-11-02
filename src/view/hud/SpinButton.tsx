@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, type CSSProperties } from 'react';
+import { colors, disabledLook } from './theme';
 
 interface Props {
   disabled: boolean;
@@ -19,8 +20,16 @@ export function SpinButton({ disabled, spinning, onSpin }: Props) {
   }, [disabled, onSpin]);
 
   return (
-    <button className="spin" onClick={onSpin} disabled={disabled}>
+    <button style={{ ...style, ...disabledLook(disabled) }} onClick={onSpin} disabled={disabled}>
       {spinning ? '…' : 'SPIN'}
     </button>
   );
 }
+
+const style: CSSProperties = {
+  width: 'clamp(80px, 13vw, 100px)', aspectRatio: '1', borderRadius: '50%',
+  marginTop: 'clamp(-20px, calc(40px - 8vw), 0px)', // raised on desktop, flush on phones
+  border: '5px solid #fff3c4', color: colors.dark, fontSize: 22, fontWeight: 900,
+  background: 'radial-gradient(circle at 35% 30%, #ffe27a, #f39a0f 60%, #b25e00)',
+  boxShadow: '0 6px 24px rgb(0 0 0 / 0.5)',
+};

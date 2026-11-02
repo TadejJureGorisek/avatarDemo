@@ -4,7 +4,10 @@ import { Container, Graphics, Text } from 'pixi.js';
 const WIDTH = 760;
 const HEIGHT = 260;
 
-/** Small centred pop-up for free spins announcements. `show()` resolves once it has faded out. */
+/**
+ * Small centred pop-up for free spins announcements: `show()` holds it for a moment and resolves once
+ * it has faded out; `open()` keeps it on screen until `close()`.
+ */
 export class Popup extends Container {
   private text = new Text({
     text: '',
@@ -24,12 +27,22 @@ export class Popup extends Container {
   }
 
   async show(message: string, holdSeconds = 2) {
+    await this.open(message);
+    await gsap.delayedCall(holdSeconds, () => {});
+    await this.close();
+  }
+
+  /** Pops in and stays until `close()`. Resolves once it's fully in. */
+  async open(message: string) {
     this.text.text = message;
     this.visible = true;
     await gsap.timeline()
       .fromTo(this, { alpha: 0 }, { alpha: 1, duration: 0.2 })
-      .fromTo(this.scale, { x: 0.6, y: 0.6 }, { x: 1, y: 1, duration: 0.4, ease: 'back.out(2)' }, 0)
-      .to(this, { alpha: 0, duration: 0.3 }, `+=${holdSeconds}`);
+      .fromTo(this.scale, { x: 0.6, y: 0.6 }, { x: 1, y: 1, duration: 0.4, ease: 'back.out(2)' }, 0);
+  }
+
+  async close() {
+    await gsap.to(this, { alpha: 0, duration: 0.3 });
     this.visible = false;
   }
 }

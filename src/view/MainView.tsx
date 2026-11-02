@@ -21,10 +21,15 @@ import { Wins } from './Wins';
 /** Largest symbol size; boards with more reels or rows get smaller symbols so they still fit. */
 const MAX_CELL = 200;
 const DESIGN = { width: 1600, height: 900 };
-/** Space kept free around the scene, between character and board, and for the message under the board. */
+/** Space kept free around the scene and between character and board. */
 const MARGIN = 20;
 const GAP = 40;
-const MESSAGE_SPACE = 140;
+/** Below the board: frame → message centre, message centre → HUD row, and the HUD row's height (all design px). */
+const MESSAGE_GAP = 40;
+const HUD_GAP = 40;
+const HUD_ROW = 125;
+/** The HUD is laid out for scene scale 0.8 (a 1280×720 window) and zoomed with the scene from there. */
+const HUD_ZOOM_PER_SCENE = 1.25;
 const fill: CSSProperties = { position: 'absolute', inset: 0 };
 
 export function MainView({ engine }: { engine: SlotEngine }) {
@@ -37,22 +42,19 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const betState = (i: number) => ({ bet: bets[i], atMinBet: i === 0, atMaxBet: i === bets.length - 1 });
   const [hud, setHud] = useState<HudState>({
     ready: false, state: 'bet', balance: engine.balance, ...betState(defaultBetIndex),
-    freeSpinsLeft: 0, freeSpinsTotal: 0, freeSpin: false, autoplayLeft: 0,
+    freeSpinsLeft: 0, freeSpin: false, autoplayLeft: 0, freeSpinsReady: false,
   });
   const update = (patch: Partial<HudState>) => setHud((s) => ({ ...s, ...patch }));
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const autoplayLeft = useRef(0);
   const setAutoplay = (spins: number) => update({ autoplayLeft: (autoplayLeft.current = spins) });
-  const hudHeight = useRef(0);
-  const relayout = useRef<() => void>();
   const symbolInfoRef = useRef<SymbolInfo>();
-  // The board frame's on-screen width; the menu panel matches it.
-  const [boardWidth, setBoardWidth] = useState(0);
+  // Where the scene puts the HUD row and how much to zoom it, plus the board's on-screen width for the menu.
+  const [hudLayout, setHudLayout] = useState<HudLayout>({ top: 0, zoom: 1, boardWidth: 0 });
 
   useEffect(() => {
     const app = new Application();
-    createScene(app, host.current!, engine, () => hudHeight.current, setBoardWidth).then(({ layout, ...scene }) => {
-      relayout.current = layout;
+    createScene(app, host.current!, engine, setHudLayout).then((scene) => {
       machine.current = new StateMachine(
         { bet: BetState, spin: SpinState, win: WinState },
         {
@@ -92,7 +94,6 @@ export function MainView({ engine }: { engine: SlotEngine }) {
       void machine.current.run();
     });
     return () => {
-      relayout.current = undefined;
       symbolInfoRef.current = undefined;
       app.destroy(true, { children: true });
     };
@@ -122,11 +123,6 @@ export function MainView({ engine }: { engine: SlotEngine }) {
     spinRequest.current?.();
   }, []);
   const stopAutoplay = useCallback(() => setAutoplay(0), []);
-  const onHudHeight = useCallback((height: number) => {
-    hudHeight.current = height;
-    relayout.current?.();
-  }, []);
-
   return (
     <div style={fill}>
       <div style={fill} ref={host} />
@@ -139,20 +135,20 @@ export function MainView({ engine }: { engine: SlotEngine }) {
         onCheat={requestCheat}
         onStartAutoplay={startAutoplay}
         onStopAutoplay={stopAutoplay}
-        onHeight={onHudHeight}
-        menuWidth={boardWidth}
+        layout={hudLayout}
       />
     </div>
   );
 }
 
-async function createScene(
-  app: Application,
-  host: HTMLElement,
-  engine: SlotEngine,
-  hudHeight: () => number,
-  onBoardWidth: (px: number) => void,
-) {
+/** Where the HUD row goes on screen (px from the top), its zoom, and the board's on-screen width. */
+export interface HudLayout {
+  top: number;
+  zoom: number;
+  boardWidth: number;
+}
+
+async function createScene(app: Application, host: HTMLElement, engine: SlotEngine, onHudLayout: (layout: HudLayout) => void) {
   await app.init({
     resizeTo: host, backgroundAlpha: 0, antialias: true, autoDensity: true,
     resolution: Math.min(devicePixelRatio, 2)
@@ -166,20 +162,24 @@ async function createScene(
   // Character + gap + board, centred as one group; character vertically centred on the board.
   const character = new Character();
   const bounds = character.getLocalBounds();
-  // Symbol size: as big as fits next to the character and above the message, for any reels × rows.
+  // Symbol size: as big as fits next to the character and above the message and HUD row, for any reels × rows.
+  const below = MESSAGE_GAP + HUD_GAP + HUD_ROW;
   const maxWidth = DESIGN.width - 2 * MARGIN - bounds.width - GAP - 2 * FRAME_PAD;
-  const maxHeight = DESIGN.height - 2 * MARGIN - MESSAGE_SPACE - 2 * FRAME_PAD;
+  const maxHeight = DESIGN.height - 2 * MARGIN - below - 2 * FRAME_PAD;
   const cell = Math.floor(Math.min(MAX_CELL, maxWidth / engine.reels, maxHeight / engine.rows));
   const board = new Board(engine.reels, engine.rows, cell, engine.getSymbol, engine.fillerSymbol, engine.generateGrid());
   const left = (DESIGN.width - (bounds.width + GAP + board.boardWidth)) / 2;
-  board.position.set(left + bounds.width + GAP, (DESIGN.height - board.boardHeight) / 2 - 40);
+  // Board, message and HUD row stacked, centred vertically as one block.
+  const stack = 2 * FRAME_PAD + board.boardHeight + below;
+  board.position.set(left + bounds.width + GAP, (DESIGN.height - stack) / 2 + FRAME_PAD);
   character.position.set(left - bounds.x, board.y + board.boardHeight / 2 - (bounds.y + bounds.height / 2));
 
   const wins = new Wins(board);
   wins.position.copyFrom(board.position);
   const message = new Message();
   // Screen centre (the scene is centred horizontally), in line with the SPIN button.
-  message.position.set(DESIGN.width / 2, board.y + board.boardHeight + 70);
+  message.position.set(DESIGN.width / 2, board.y + board.boardHeight + FRAME_PAD + MESSAGE_GAP);
+  const hudTop = message.y + HUD_GAP;
   message.text = 'Press SPIN to play';
   const popup = new Popup();
   popup.position.set(board.x + board.boardWidth / 2, board.y + board.boardHeight / 2);
@@ -188,7 +188,7 @@ async function createScene(
   bigWin.position.copyFrom(popup.position);
 
   const background = new Background();
-  // The 1600x900 design-space scene; it's scaled to fit the screen above the HUD.
+  // The 1600x900 design-space scene; it's scaled to fit the window (the HUD row is part of it).
   const scene = new Container();
   scene.addChild(character, board, wins, message, symbolInfo, bigWin, popup);
   app.stage.addChild(background, scene);
@@ -197,18 +197,17 @@ async function createScene(
   app.stage.hitArea = app.screen;
   app.stage.on('pointertap', () => symbolInfo.hide());
 
-  // Runs on window resize and whenever the HUD reports a new height.
+  // Runs on window resize; tells the HUD where its row is so it sits right under the message.
   const layout = () => {
     const { width, height } = app.screen;
     background.resize(width, height);
-    const available = height - hudHeight();
-    const scale = Math.min(width / DESIGN.width, available / DESIGN.height);
+    const scale = Math.min(width / DESIGN.width, height / DESIGN.height);
     scene.scale.set(scale);
-    scene.position.set((width - DESIGN.width * scale) / 2, (available - DESIGN.height * scale) / 2);
-    onBoardWidth(board.frameWidth * scale);
+    scene.position.set((width - DESIGN.width * scale) / 2, (height - DESIGN.height * scale) / 2);
+    onHudLayout({ top: scene.y + hudTop * scale, zoom: scale * HUD_ZOOM_PER_SCENE, boardWidth: board.frameWidth * scale });
   };
   app.renderer.on('resize', layout);
   layout();
 
-  return { background, board, wins, character, message, popup, bigWin, symbolInfo, layout };
+  return { background, board, wins, character, message, popup, bigWin, symbolInfo };
 }

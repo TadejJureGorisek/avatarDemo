@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import type { GameConfig } from '../../engine/config';
+import type { HudLayout } from '../MainView';
 import type { StateName } from '../states/StateMachine';
 import { AutoplayButton, AUTOPLAY_COUNTS } from './AutoplayButton';
 import { Balance } from './Balance';
@@ -9,8 +10,6 @@ import { CheatMenu, type Cheat } from './CheatMenu';
 import type { HistoryEntry } from './menu/History';
 import { Menu } from './menu/Menu';
 import { SpinButton } from './SpinButton';
-import { colors } from './theme';
-import { useUiScale } from './useUiScale';
 
 export interface HudState {
   ready: boolean;
@@ -21,11 +20,12 @@ export interface HudState {
   atMinBet: boolean;
   atMaxBet: boolean;
   freeSpinsLeft: number;
-  freeSpinsTotal: number;
   /** True while a free spin is playing (including the last one, when freeSpinsLeft is already 0). */
   freeSpin: boolean;
   /** Autoplay spins still to come; 0 when autoplay is off. */
   autoplayLeft: number;
+  /** Free spins were just won and wait for the player to press SPIN to start them. */
+  freeSpinsReady: boolean;
 }
 
 interface Props {
@@ -38,17 +38,15 @@ interface Props {
   onCheat: (cheat: Cheat) => void;
   onStartAutoplay: (spins: number) => void;
   onStopAutoplay: () => void;
-  /** Reports the bottom bar's height whenever it changes, so the scene can fit above it. */
-  onHeight: (height: number) => void;
-  /** On-screen width of the board; the menu panel matches it. */
-  menuWidth: number;
+  /** From the scene: where the row goes (right under the message), its zoom, and the board's width. */
+  layout: HudLayout;
 }
 
 /** The whole UI on top of the canvas. */
-export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, onStartAutoplay, onStopAutoplay, onHeight, menuWidth }: Props) {
+export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, onStartAutoplay, onStopAutoplay, layout }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
-  // Everything in the HUD is laid out at a fixed design size and zoomed by this, like the board.
-  const scale = useUiScale();
+  // Everything in the HUD is laid out at a fixed design size and zoomed with the scene, like the board.
+  const scale = layout.zoom;
   // Mini autoplay pop-up next to SPIN: while it's open, SPIN shows the picked spins and starts autoplay.
   const [autoOpen, setAutoOpen] = useState(false);
   const [autoChoice, setAutoChoice] = useState(AUTOPLAY_COUNTS[0]);
@@ -64,11 +62,13 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   // during free spins (they play themselves), the autoplay spins left during autoplay (pressing it
   // stops autoplay), and the picked spins while the mini autoplay pop-up is open (pressing it starts autoplay).
   const [spinLabel, spinAria] = autoOpen ? [autoChoice, `Start autoplay, ${autoChoice} spins`]
+    : s.freeSpinsReady ? [s.freeSpinsLeft, `Start ${s.freeSpinsLeft} free spins`]
     : inFreeSpins ? [s.freeSpinsLeft, `${s.freeSpinsLeft} free spins left`]
     : autoplay ? [s.autoplayLeft, `Stop autoplay, ${s.autoplayLeft} spins left`]
     : s.state === 'spin' ? [<StopIcon />, 'Stop'] : [<SpinIcon />, 'Spin'];
-  const spinDisabled = !s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay) || (autoOpen && locked)
-    || (stopPressed && !autoplay);
+  // SPIN is live while free spins wait to be started, even though the rest stays locked.
+  const spinDisabled = !s.freeSpinsReady && (!s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay)
+    || (autoOpen && locked) || (stopPressed && !autoplay));
   const pressSpin = () => {
     if (!autoOpen) {
       if (s.state === 'spin' && !autoplay) setStopPressed(true);
@@ -77,43 +77,34 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     setAutoOpen(false);
     onStartAutoplay(autoChoice);
   };
-  const bar = useRef<HTMLDivElement>(null);
-
-  // Report the bar's on-screen (zoomed) height so the scene fits above it; re-measured when it or the scale changes.
-  useLayoutEffect(() => {
-    const measure = () => onHeight(bar.current!.getBoundingClientRect().height);
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(bar.current!);
-    return () => observer.disconnect();
-  }, [onHeight, scale]);
 
   return (
     <>
       {!s.ready && <div style={styles.loading}>Loading…</div>}
-      {inFreeSpins && (
-        <div style={{ ...styles.banner, zoom: scale }}>FREE SPINS: {s.freeSpinsLeft} left · Total {s.freeSpinsTotal.toFixed(2)}</div>
-      )}
-      {/* Menu bottom left, SPIN centre, Balance / Bet / CHEATS stacked bottom right. */}
-      <div style={{ ...styles.bar, zoom: scale }} ref={bar}>
-        <div>
+      {/* One row right under the message: menu, balance | SPIN (centred) + autoplay | bet, cheats.
+          `top` is divided by the zoom because zoom also scales the element's own offsets. */}
+      <div style={{ ...styles.row, zoom: scale, top: layout.top / scale }}>
+        <div style={styles.left}>
+          <div style={styles.menu}>
           <Menu
-            open={menuOpen}
-            disabled={locked}
-            width={menuWidth}
-            scale={scale}
-            onOpenChange={setMenuOpen}
-            config={config}
-            bet={s.bet}
-            atMinBet={s.atMinBet}
-            atMaxBet={s.atMaxBet}
-            onBetChange={onBetChange}
-            history={history}
-            autoplayLeft={s.autoplayLeft}
-            canStartAutoplay={!locked}
-            onStartAutoplay={onStartAutoplay}
-            onStopAutoplay={onStopAutoplay}
+          open={menuOpen}
+          disabled={locked}
+          width={layout.boardWidth}
+          scale={scale}
+          onOpenChange={setMenuOpen}
+          config={config}
+          bet={s.bet}
+          atMinBet={s.atMinBet}
+          atMaxBet={s.atMaxBet}
+          onBetChange={onBetChange}
+          history={history}
+          autoplayLeft={s.autoplayLeft}
+          canStartAutoplay={!locked}
+          onStartAutoplay={onStartAutoplay}
+          onStopAutoplay={onStopAutoplay}
           />
+          </div>
+          <Balance value={s.balance} />
         </div>
         <div style={styles.centre}>
           <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
@@ -127,8 +118,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
             />
           </div>
         </div>
-        <div style={styles.stack}>
-          <Balance value={s.balance} />
+        <div style={styles.right}>
           <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
           <CheatMenu onCheat={onCheat} />
         </div>
@@ -139,19 +129,14 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
 
 const styles = {
   loading: { position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', fontSize: 28 },
-  banner: {
-    position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', padding: '8px 22px',
-    borderRadius: 999, whiteSpace: 'nowrap', fontWeight: 800, color: colors.dark,
-    background: 'linear-gradient(#ffd85a, #e79a12)',
-  },
-  bar: {
-    // The middle three-quarters of the screen, centred, rather than the full width.
-    position: 'absolute', left: '12.5%', right: '12.5%', bottom: 0, padding: '14px 24px',
-    display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'end', gap: 16,
-  },
-  // SPIN stays centred; the small autoplay button hangs off its right side.
+  // One line: SPIN in the exact middle (equal side columns), each side tucked in towards it.
+  row: { position: 'absolute', left: 0, right: 0, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 28 },
+  left: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 28 },
+  // The menu button sits further out than the rest.
+  menu: { marginRight: 60 },
   centre: { position: 'relative' },
-  auto: { position: 'absolute', left: 'calc(100% + 12px)', top: '50%', transform: 'translateY(-50%)' },
-  // Balance, Bet and CHEATS on top of each other, same width, in the bottom-right corner.
-  stack: { justifySelf: 'end', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 6 },
+  // Hangs off SPIN's right side, so SPIN itself stays centred.
+  auto: { position: 'absolute', left: 'calc(100% + 16px)', top: '50%', transform: 'translateY(-50%)' },
+  // Leaves room for the autoplay button between SPIN and the bet.
+  right: { display: 'flex', alignItems: 'center', gap: 28, paddingLeft: 68 },
 } satisfies Record<string, CSSProperties>;

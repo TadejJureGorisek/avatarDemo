@@ -19,7 +19,7 @@ interface Props {
   open: boolean;
   /** Panel width in px (the board's on-screen width); 0 until the scene has laid out. */
   width: number;
-  /** UI scale (see useUiScale); sizes the panel until the board's width is known. */
+  /** HUD zoom (from the scene); sizes the panel until the board's width is known. */
   scale: number;
   onOpenChange: (open: boolean) => void;
   config: GameConfig;

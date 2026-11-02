@@ -30,7 +30,7 @@ export function SpinButton({ label, ariaLabel, disabled, onPress }: Props) {
 }
 
 const style: CSSProperties = {
-  width: 100, aspectRatio: '1', borderRadius: '50%', marginTop: -20,
+  width: 100, aspectRatio: '1', borderRadius: '50%',
   display: 'grid', placeItems: 'center', padding: 0,
   border: '5px solid #fff3c4', color: colors.dark, fontSize: 30, fontWeight: 900,
   background: 'radial-gradient(circle at 35% 30%, #ffe27a, #f39a0f 60%, #b25e00)',

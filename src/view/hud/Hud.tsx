@@ -10,6 +10,7 @@ import type { HistoryEntry } from './menu/History';
 import { Menu } from './menu/Menu';
 import { SpinButton } from './SpinButton';
 import { colors } from './theme';
+import { useUiScale } from './useUiScale';
 
 export interface HudState {
   ready: boolean;
@@ -46,6 +47,8 @@ interface Props {
 /** The whole UI on top of the canvas. */
 export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, onStartAutoplay, onStopAutoplay, onHeight, menuWidth }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
+  // Everything in the HUD is laid out at a fixed design size and zoomed by this, like the board.
+  const scale = useUiScale();
   // Mini autoplay pop-up next to SPIN: while it's open, SPIN shows the picked spins and starts autoplay.
   const [autoOpen, setAutoOpen] = useState(false);
   const [autoChoice, setAutoChoice] = useState(AUTOPLAY_COUNTS[0]);
@@ -67,26 +70,29 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   };
   const bar = useRef<HTMLDivElement>(null);
 
-  // The bar grows when its contents wrap on narrow screens, so measure it instead of assuming a height.
+  // Report the bar's on-screen (zoomed) height so the scene fits above it; re-measured when it or the scale changes.
   useLayoutEffect(() => {
-    const observer = new ResizeObserver(() => onHeight(bar.current!.offsetHeight));
+    const measure = () => onHeight(bar.current!.getBoundingClientRect().height);
+    measure();
+    const observer = new ResizeObserver(measure);
     observer.observe(bar.current!);
     return () => observer.disconnect();
-  }, [onHeight]);
+  }, [onHeight, scale]);
 
   return (
     <>
       {!s.ready && <div style={styles.loading}>Loading…</div>}
       {inFreeSpins && (
-        <div style={styles.banner}>FREE SPINS: {s.freeSpinsLeft} left · Total {s.freeSpinsTotal.toFixed(2)}</div>
+        <div style={{ ...styles.banner, zoom: scale }}>FREE SPINS: {s.freeSpinsLeft} left · Total {s.freeSpinsTotal.toFixed(2)}</div>
       )}
       {/* Menu bottom left, SPIN centre, Balance / Bet / CHEATS stacked bottom right. */}
-      <div style={styles.bar} ref={bar}>
+      <div style={{ ...styles.bar, zoom: scale }} ref={bar}>
         <div>
           <Menu
             open={menuOpen}
             disabled={locked}
             width={menuWidth}
+            scale={scale}
             onOpenChange={setMenuOpen}
             config={config}
             bet={s.bet}
@@ -130,8 +136,8 @@ const styles = {
     background: 'linear-gradient(#ffd85a, #e79a12)',
   },
   bar: {
-    position: 'absolute', left: 0, right: 0, bottom: 0, padding: 'clamp(8px, 1.5vw, 14px) clamp(10px, 2vw, 24px)',
-    display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'end', gap: 'clamp(8px, 1.5vw, 16px)',
+    position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 24px',
+    display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'end', gap: 16,
   },
   // SPIN stays centred; the small autoplay button hangs off its right side.
   centre: { position: 'relative' },

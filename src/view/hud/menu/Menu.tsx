@@ -1,4 +1,5 @@
 import { useRef, useState, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import type { GameConfig } from '../../../engine/config';
 import { colors, disabledLook } from '../theme';
 import { About } from './About';
@@ -16,6 +17,8 @@ interface Props {
   open: boolean;
   /** Panel width in px (the board's on-screen width); 0 until the scene has laid out. */
   width: number;
+  /** UI scale (see useUiScale); the panel's contents are zoomed by it. */
+  scale: number;
   onOpenChange: (open: boolean) => void;
   config: GameConfig;
   bet: number;
@@ -29,19 +32,27 @@ interface Props {
   onStopAutoplay: () => void;
 }
 
-/** Burger button (sits in the bottom bar) and the full-screen menu panel with its four tabs. */
+/**
+ * Burger button (sits in the bottom bar) and the full-screen menu panel with its four tabs. The
+ * overlay is portalled to <body> so the bar's zoom doesn't apply to it; the panel gets its own.
+ */
 export function Menu(p: Props) {
   const [tab, setTab] = useState<Tab>('HOW TO PLAY');
   const content = useRef<HTMLDivElement>(null);
   useDragScroll(content);
+  // Visual size: the board's width and the 620px design height scaled, both capped to the window.
+  // The panel is zoomed by `scale`, so its CSS size is the visual size divided by it.
+  const visualWidth = Math.min(p.width || 860 * p.scale, window.innerWidth - 32);
+  const visualHeight = Math.min(620 * p.scale, window.innerHeight - 32);
+  const panelSize = { zoom: p.scale, width: visualWidth / p.scale, height: visualHeight / p.scale };
 
   return (
     <>
       <button style={{ ...styles.burger, ...disabledLook(p.disabled) }} onClick={() => p.onOpenChange(true)}
         disabled={p.disabled} aria-label="Menu">☰</button>
-      {p.open && (
+      {p.open && createPortal(
         <div style={styles.overlay} onClick={() => p.onOpenChange(false)}>
-          <div style={{ ...styles.panel, width: p.width ? `min(${Math.round(p.width)}px, 100%)` : styles.panel.width }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ ...styles.panel, ...panelSize }} onClick={(e) => e.stopPropagation()}>
             <div style={styles.tabs}>
               {TABS.map((t) => (
                 <button key={t} style={{ ...styles.tab, ...(t === tab ? styles.activeTab : {}) }} onClick={() => setTab(t)}>
@@ -71,7 +82,8 @@ export function Menu(p: Props) {
               {tab === 'HISTORY' && <History entries={p.history} />}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
@@ -89,7 +101,7 @@ const styles = {
   // Fixed size for every tab (as wide as the board, centred on screen), so switching tabs doesn't
   // resize the panel; long tabs scroll inside.
   panel: {
-    width: 'min(860px, 100%)', height: 'min(620px, 100%)', display: 'flex', flexDirection: 'column', borderRadius: 18,
+    display: 'flex', flexDirection: 'column', borderRadius: 18,
     background: '#1a0b3d', border: `3px solid ${colors.gold}`, overflow: 'hidden',
   },
   tabs: { display: 'flex', flexWrap: 'wrap', gap: 4, padding: 8, borderBottom: `2px solid ${colors.border}` },

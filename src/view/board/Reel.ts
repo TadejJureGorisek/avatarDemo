@@ -5,21 +5,25 @@ import { Cell } from './Cell';
 
 /** Full spinning speed in px per second. */
 const SPEED = 2600;
+/** Springy start: how far (in symbols) the reel pulls up before it launches. */
+const WINDUP = 0.15;
+/** Landing: how far (in symbols) the reel overshoots before it springs back. */
+const BOUNCE = 0.2;
 
 /**
- * One column. Holds `rows` visible cells plus one buffer cell. While spinning, cells scroll down
- * and each one that leaves the bottom is recycled to the top with a filler symbol. On stop, the
- * stop symbols are fed in instead (bottom row first) and land with a bounce.
+ * One column. Holds `rows` visible cells plus one spare cell below them. While spinning, cells
+ * scroll down and each one that leaves the bottom is recycled to the top with a filler symbol. On
+ * stop, the stop symbols are fed in instead (bottom row first) and land with a bounce.
  */
 export class Reel extends Container {
   /** The landed symbols, top to bottom. Set to the next result as soon as `stop()` is called. */
   stopSymbols: string[];
-  /** Top to bottom. When landed: rows 0..rows-1, then the hidden buffer cell. */
+  /** Top to bottom. When landed: rows 0..rows-1, then the hidden spare cell. */
   private cells: Cell[];
   private speed = { value: 0 };
   /** Stop symbols still waiting to enter from the top. */
   private queue: string[] = [];
-  /** Cells recycled since `start()`; the old landed symbols are gone once this reaches `rows`. */
+  /** Cells recycled since `start()`: the spare goes first, so the old landed symbols are gone after `rows + 1`. */
   private recycled = 0;
   private landed?: () => void;
 
@@ -48,20 +52,26 @@ export class Reel extends Container {
     return row * this.cellSize + this.cellSize / 2;
   }
 
-  start() {
-    // Put the buffer above the reel so new symbols flow in from the top.
-    const buffer = this.cells.pop()!;
-    buffer.y = this.rowY(-1);
-    this.cells.unshift(buffer);
+  /**
+   * Springy start, after `delay` seconds: the reel pulls up a little (the spare cell below peeks
+   * in), then launches down into the spin. The spare is recycled to the top first as it scrolls out.
+   */
+  start(delay = 0) {
     this.recycled = 0;
-    gsap.to(this.speed, { value: SPEED, duration: 0.25, ease: 'power2.in' });
-    gsap.ticker.add(this.scroll);
+    gsap.timeline({ delay })
+      .to(this.cells, { y: `-=${this.cellSize * WINDUP}`, duration: 0.15, ease: 'power2.out' })
+      .call(() => {
+        gsap.ticker.add(this.scroll);
+      })
+      .to(this.speed, { value: SPEED, duration: 0.25, ease: 'power2.in' });
   }
 
-  /** Bonus anticipation: keep spinning, but visibly slower. */
-  slowDown() {
+  /** Bonus anticipation: rev up to well above full speed, then ease down to a slow crawl until it lands. */
+  anticipate() {
     gsap.killTweensOf(this.speed);
-    gsap.to(this.speed, { value: SPEED * 0.35, duration: 0.4, ease: 'power2.out' });
+    gsap.timeline()
+      .to(this.speed, { value: SPEED * 1.7, duration: 0.3, ease: 'power1.out' })
+      .to(this.speed, { value: SPEED * 0.35, duration: 0.6, ease: 'power2.inOut' });
   }
 
   /** Feeds `stopSymbols` in and resolves once they've landed. */
@@ -80,7 +90,7 @@ export class Reel extends Container {
       cell.y = this.cells[0].y - this.cellSize;
       // Only feed stop symbols once every previously landed symbol has scrolled away, so an early
       // STOP can never show an old and a new symbol together (e.g. two BONUS on one reel).
-      const isStopSymbol = this.queue.length > 0 && this.recycled >= this.rows;
+      const isStopSymbol = this.queue.length > 0 && this.recycled > this.rows;
       cell.setSymbol(this.getSymbol(isStopSymbol ? this.queue.shift()! : this.fillerSymbol()));
       this.cells.unshift(cell);
       this.recycled++;
@@ -89,14 +99,31 @@ export class Reel extends Container {
     }
   };
 
+  /**
+   * Keeps rolling at the current speed until the stop symbols are in place, then overshoots by a
+   * fraction of a symbol (the spare cell, moved above row 0, peeks in) and springs back.
+   */
   private land() {
     gsap.ticker.remove(this.scroll);
     gsap.killTweensOf(this.speed);
+    const speed = Math.max(this.speed.value, SPEED * 0.3);
     this.speed.value = 0;
     const distance = this.rowY(0) - this.cells[0].y;
-    gsap.to(this.cells, {
-      y: `+=${distance}`, duration: 0.35, ease: 'back.out(1.6)',
-      onComplete: () => this.landed?.(),
-    });
+    const bounce = this.cellSize * BOUNCE;
+    const spare = this.cells[this.cells.length - 1];
+
+    gsap.timeline({ onComplete: () => this.landed?.() })
+      .to(this.cells, { y: `+=${distance}`, duration: distance / speed, ease: 'none' })
+      // The spare cell has just left the bottom: put it above row 0 so the overshoot shows a symbol there.
+      .call(() => {
+        spare.setSymbol(this.getSymbol(this.fillerSymbol()));
+        spare.y = this.rowY(-1);
+      })
+      .to(this.cells, { y: `+=${bounce}`, duration: 0.12, ease: 'power2.out' })
+      .to(this.cells, { y: `-=${bounce}`, duration: 0.3, ease: 'power2.inOut' })
+      // Back to the resting layout: rows 0..rows-1, then the spare below the reel.
+      .call(() => {
+        spare.y = this.rowY(this.rows);
+      });
   }
 }

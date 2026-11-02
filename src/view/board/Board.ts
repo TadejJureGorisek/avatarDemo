@@ -5,12 +5,16 @@ import type { Grid } from '../../engine/SlotEngine';
 import { Reel } from './Reel';
 
 const FRAME_PAD = 18;
+/** Seconds between one reel starting and the next. */
+const REEL_START_STAGGER = 0.06;
 
 /** The symbols area: a frame, a mask and `reels` Reel columns of `rows` cells each. */
 export class Board extends Container {
   readonly reels: Reel[];
   readonly boardWidth: number;
   readonly boardHeight: number;
+  /** One glow per reel, lit while that reel is in bonus anticipation. */
+  private glows: Graphics[];
   /** Width including the frame around the reels. */
   get frameWidth() {
     return this.boardWidth + FRAME_PAD * 2;
@@ -44,6 +48,16 @@ export class Board extends Container {
       return reel;
     });
 
+    // Anticipation glow: a gold frame and soft tint over the whole reel, drawn above the symbols.
+    this.glows = this.reels.map((reel) => {
+      const glow = new Graphics()
+        .roundRect(reel.x + 4, 4, cellSize - 8, this.boardHeight - 8, 18)
+        .fill({ color: 0xffc94a, alpha: 0.16 })
+        .stroke({ color: 0xffe27a, width: 8 });
+      glow.visible = false;
+      return this.addChild(glow);
+    });
+
     // Clicks are mapped to a cell by position, since cells are recycled while the reels spin.
     this.eventMode = 'static';
     this.cursor = 'pointer';
@@ -70,8 +84,23 @@ export class Board extends Container {
     return this.reels.flatMap((r) => r.visibleCells);
   }
 
+  /** Starts the reels one after another, each with its springy wind-up. */
   start() {
-    this.reels.forEach((reel) => reel.start());
+    this.reels.forEach((reel, i) => reel.start(i * REEL_START_STAGGER));
+  }
+
+  /** Bonus anticipation on a reel: it speeds up then slows down, and its glow blinks until it lands. */
+  anticipate(reel: number) {
+    this.reels[reel].anticipate();
+    const glow = this.glows[reel];
+    glow.visible = true;
+    gsap.fromTo(glow, { alpha: 0.25 }, { alpha: 1, duration: 0.3, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+  }
+
+  private endAnticipation(reel: number) {
+    const glow = this.glows[reel];
+    gsap.killTweensOf(glow);
+    glow.visible = false;
   }
 
   /**
@@ -83,6 +112,7 @@ export class Board extends Container {
       this.reels.map(async (reel, i) => {
         await Promise.race([new Promise((resolve) => gsap.delayedCall(delays[i], resolve)), skip]);
         await reel.stop(grid[i]);
+        this.endAnticipation(i);
         onReelLanded(i);
       }),
     );

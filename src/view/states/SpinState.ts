@@ -28,8 +28,8 @@ export const SpinState: GameState = {
     // STOP cuts the minimum spin time short, and below makes every reel stop straight away.
     await Promise.race([new Promise((resolve) => gsap.delayedCall(minSpinTime, resolve)), stopPressed]);
 
-    // Anticipation: once reels 1 and 2 both land a scatter, each next reel slows down and spins
-    // longer, for as long as every reel so far has landed one.
+    // Anticipation: once reels 1 and 2 both land a scatter, each next reel slows down, spins longer
+    // and glows, for as long as every reel so far has landed one.
     const chain = scatterChain(engine, result);
     const anticipated = (reel: number) => chain >= 2 && reel >= 2 && reel <= chain && reel < result.grid.length;
     let extra = 0;
@@ -37,7 +37,7 @@ export const SpinState: GameState = {
     await board.stop(result.grid, delays, (reel) => {
       if (!anticipated(reel + 1)) return;
       if (reel === 1) character.startAnticipation();
-      board.reels[reel + 1].slowDown();
+      board.anticipate(reel + 1);
     }, stopPressed);
     if (chain >= 2) {
       await character.play(result.freeSpinsAwarded ? 'bonus_anticipation_win' : 'bonus_anticipation_lose');

@@ -34,7 +34,6 @@ export class Splash extends Container {
   private slides: Slide[] = [];
   private dots: Graphics[] = [];
   private index = 0;
-  builtTop = 0;
   private isOpen = false;
   private loops: gsap.core.Tween[] = [];
 

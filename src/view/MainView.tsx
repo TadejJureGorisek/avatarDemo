@@ -21,7 +21,7 @@ import { Popup } from './Popup';
 import { Splash } from './Splash';
 import { SymbolInfo } from './SymbolInfo';
 import { Wins } from './Wins';
-import { layoutFor, MAX_CELL, sceneFor } from './layout';
+import { MAX_CELL, orientationFor, SCENES, type Orientation, type Scene } from './layout';
 
 const HUD_ZOOM_PER_SCENE = 1.25;
 const fill: CSSProperties = { position: 'absolute', inset: 0 };
@@ -157,52 +157,45 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   const background = new Background();
   const scene = new Container();
   app.stage.addChild(background, scene);
-  const input = { reels: engine.reels, rows: engine.rows, character: character.getLocalBounds(), pad: FRAME_PAD / MAX_CELL };
   let rest: ReturnType<typeof makeRest> | undefined;
-  let placed: ReturnType<typeof layoutFor>;
-  let key = '';
-  let splashFor = '';
+  let current: Orientation | undefined;
+
+  const place = (s: Scene) => {
+    character.scale.set(s.character.scale);
+    character.position.set(s.character.x, s.character.y);
+    title.scale.set(Math.min(s.logo.height / title.texture.height, s.logo.maxWidth / title.texture.width));
+    title.position.set(s.logo.x, s.logo.y);
+    if (!rest) return;
+    const { board, wins, message, popup, bigWin, symbolInfo, splash } = rest;
+    board.scale.set(s.board.cell / MAX_CELL);
+    board.position.set(s.board.x, s.board.y);
+    wins.scale.copyFrom(board.scale);
+    wins.position.copyFrom(board.position);
+    message.position.set(s.message.x, s.message.y);
+    popup.position.set(s.size.width / 2, s.size.height / 2);
+    bigWin.position.copyFrom(popup.position);
+    symbolInfo.hide();
+    splash.layout({ width: s.size.width, ...s.splash });
+  };
 
   const layout = () => {
     const { width, height } = app.screen;
-    const { orientation, size } = sceneFor(width, height, input);
-    if (`${orientation}:${size.height}` !== key) {
-      key = `${orientation}:${size.height}`;
-      placed = layoutFor(orientation, size, input);
-      place(placed);
-      if (rest && splashFor !== orientation) {
-        splashFor = orientation;
-        rest.splash.layout(placed.splash);
-        rest.splash.builtTop = placed.splash.top;
-      } else if (rest) rest.splash.y = rest.splash.pivot.y + placed.splash.top - rest.splash.builtTop;
+    const orientation = orientationFor(width, height);
+    const s = SCENES[orientation];
+    if (orientation !== current) {
+      current = orientation;
+      place(s);
     }
-    const scale = Math.min(width / size.width, height / size.height);
+    const scale = Math.min(width / s.size.width, height / s.size.height);
     scene.scale.set(scale);
-    scene.position.set((width - size.width * scale) / 2, (height - size.height * scale) / 2);
-    background.resize(width, height, scene.y + placed.feet * scale);
+    scene.position.set((width - s.size.width * scale) / 2, (height - s.size.height * scale) / 2);
+    background.resize(width, height, scene.y + s.floor * scale);
     onHudLayout({
-      top: scene.y + placed.hudTop * scale, metersY: scene.y + placed.metersY * scale, left: scene.x, width: size.width * scale,
-      zoom: scale * HUD_ZOOM_PER_SCENE, boardWidth: placed.board.frameWidth * scale, portrait: orientation === 'portrait',
+      top: scene.y + s.hud.top * scale, metersY: scene.y + s.hud.metersY * scale, left: scene.x, width: s.size.width * scale,
+      zoom: scale * HUD_ZOOM_PER_SCENE, boardWidth: (engine.reels + (2 * FRAME_PAD) / MAX_CELL) * s.board.cell * scale,
+      portrait: orientation === 'portrait',
     });
   };
-
-  const place = (p: ReturnType<typeof layoutFor>) => {
-    character.scale.set(p.character.scale);
-    character.position.set(p.character.x, p.character.y);
-    title.scale.set(Math.min(p.logo.height / title.texture.height, p.logo.width / title.texture.width));
-    title.position.set(p.logo.x, p.logo.y);
-    if (!rest) return;
-    const { board, wins, message, popup, bigWin, symbolInfo } = rest;
-    board.scale.set(p.cell / MAX_CELL);
-    board.position.set(p.board.x, p.board.y);
-    wins.scale.copyFrom(board.scale);
-    wins.position.copyFrom(board.position);
-    message.position.set(p.message.x, p.message.y);
-    popup.position.set(p.centre.x, p.centre.y);
-    bigWin.position.copyFrom(popup.position);
-    symbolInfo.hide();
-  };
-
   app.renderer.on('resize', layout);
   layout();
 
@@ -210,7 +203,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   background.addArt();
   rest = makeRest(engine);
   scene.addChild(title, character, ...Object.values(rest));
-  key = '';
+  current = undefined;
   layout();
   app.stage.eventMode = 'static';
   app.stage.hitArea = app.screen;

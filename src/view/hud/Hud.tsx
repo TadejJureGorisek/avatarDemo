@@ -96,7 +96,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   const size = SIZES[layout.portrait ? 'portrait' : 'landscape'];
   const control = { zoom: size.control };
   const menu = (
-    <div style={layout.portrait ? control : { ...control, marginRight: 70 }}>
+    <div style={layout.portrait ? control : { ...control, marginRight: 105 }}>
       <Menu
         open={menuOpen}
         disabled={locked}

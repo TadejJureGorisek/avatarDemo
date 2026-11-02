@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { FitText } from './FitText';
 import { colors, disabledLook, label, meter, value } from './theme';
 
 interface Props {
@@ -11,8 +12,8 @@ interface Props {
 }
 
 const stepButton: CSSProperties = {
-  width: 30, height: 30, border: 'none', borderRadius: '50%',
-  background: colors.gold, color: colors.dark, fontSize: 20, fontWeight: 800,
+  flexShrink: 0, width: 26, height: 26, padding: 0, border: 'none', borderRadius: '50%',
+  background: colors.gold, color: colors.dark, fontSize: 18, fontWeight: 800,
 };
 
 export function BetControl({ bet, disabled, atMin, atMax, onChange }: Props) {
@@ -23,7 +24,7 @@ export function BetControl({ bet, disabled, atMin, atMax, onChange }: Props) {
       <span style={label}>Bet</span>
       <span style={value}>
         <button style={{ ...stepButton, ...disabledLook(minusOff) }} onClick={() => onChange(-1)} disabled={minusOff}>−</button>
-        {bet.toFixed(2)}
+        <FitText text={bet.toFixed(2)} />
         <button style={{ ...stepButton, ...disabledLook(plusOff) }} onClick={() => onChange(1)} disabled={plusOff}>+</button>
       </span>
     </div>

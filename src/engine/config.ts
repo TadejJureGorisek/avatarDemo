@@ -43,6 +43,15 @@ export const config = {
   bets: [0.2, 0.5, 1, 2, 5, 10],
   defaultBetIndex: 2,
   startingBalance: 1000,
+  /** Reel timing in seconds. */
+  timing: {
+    /** Every spin lasts at least this long before the first reel stops. */
+    minSpinTime: 1,
+    /** Gap between one reel stopping and the next. */
+    reelStopStagger: 0.2,
+    /** Extra spinning per remaining reel while the bonus anticipation plays. */
+    anticipationExtra: 0.9,
+  },
 };
 
 export type GameConfig = typeof config;

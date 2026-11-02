@@ -1,3 +1,4 @@
+import gsap from 'gsap';
 import { Container, Graphics } from 'pixi.js';
 import type { SymbolDef } from '../../engine/config';
 import type { Grid } from '../../engine/SlotEngine';
@@ -9,7 +10,14 @@ export class Board extends Container {
   readonly boardWidth: number;
   readonly boardHeight: number;
 
-  constructor(reels: number, rows: number, readonly cellSize: number, getSymbol: (id: string) => SymbolDef, grid: Grid) {
+  constructor(
+    reels: number,
+    rows: number,
+    readonly cellSize: number,
+    getSymbol: (id: string) => SymbolDef,
+    fillerSymbol: () => string,
+    grid: Grid,
+  ) {
     super();
     this.boardWidth = reels * cellSize;
     this.boardHeight = rows * cellSize;
@@ -25,25 +33,35 @@ export class Board extends Container {
     );
 
     this.reels = Array.from({ length: reels }, (_, i) => {
-      const reel = reelLayer.addChild(new Reel(rows, cellSize, getSymbol, grid[i]));
+      const reel = reelLayer.addChild(new Reel(rows, cellSize, getSymbol, fillerSymbol, grid[i]));
       reel.x = i * cellSize;
       return reel;
     });
   }
 
+  /** The landed stop symbols, reel by reel. */
+  get stopSymbols(): Grid {
+    return this.reels.map((r) => r.stopSymbols);
+  }
+
   cell(reel: number, row: number) {
-    return this.reels[reel].cells[row];
+    return this.reels[reel].visibleCells[row];
   }
 
   get cells() {
-    return this.reels.flatMap((r) => r.cells);
+    return this.reels.flatMap((r) => r.visibleCells);
   }
 
-  /** Drops reels one after another; `delays[reel]` (seconds) lets the caller slow reels down for anticipation. */
-  spin(grid: Grid, delays: number[], onReelLanded: (reel: number) => void) {
+  start() {
+    this.reels.forEach((reel) => reel.start());
+  }
+
+  /** Lands `grid` reel by reel; reel i starts stopping `delays[i]` seconds from now. */
+  stop(grid: Grid, delays: number[], onReelLanded: (reel: number) => void) {
     return Promise.all(
       this.reels.map(async (reel, i) => {
-        await reel.drop(grid[i], delays[i]);
+        await new Promise((resolve) => gsap.delayedCall(delays[i], resolve));
+        await reel.stop(grid[i]);
         onReelLanded(i);
       }),
     );

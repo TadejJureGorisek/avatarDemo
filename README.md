@@ -17,11 +17,12 @@ start command is needed.
 ## Features
 
 - 5 reels × 3 rows, **243 ways**, pays left to right from reel 1 (3+ of a kind).
-- Drop-style spin: reels drop out and in one after another. Winning symbols pop (scale up and
-  down) until the next spin, with the win amount shown over the symbols.
+- Spinning reels: all reels spin for at least `timing.minSpinTime`, then each reel lands its
+  **stop symbols** (the result) one after another with a bounce. Timings live in `config.ts`.
+  Winning symbols pop (scale up and down) until the next spin, with the win amount over them.
 - Balance and bet (+/−) in the React HUD, player message below the board. `Space` spins.
 - **BONUS** scatter pays anywhere (3/4/5) and 3+ award **8 free spins** (auto-played, retriggerable).
-- **Anticipation**: once two BONUS symbols have landed, the remaining reels slow down while the
+- **Anticipation**: once two BONUS symbols have landed, the remaining reels spin longer while the
   character plays `bonus_anticipation`, then `bonus_anticipation_win` / `_lose`.
 - Character plays `small_win` on any win and loops `idle` otherwise.
 - **CHEATS** menu (bottom left): *Big win* forces the top symbol across the middle row, *Free spins*
@@ -40,10 +41,10 @@ src/
     states/
       StateMachine.ts  loops Bet → Spin → Win (only on a win) → Bet
       BetState.ts      waits for SPIN (balance check); auto-continues during free spins
-      SpinState.ts     takes the stake, gets the result, drops reels, bonus anticipation
+      SpinState.ts     starts reels, gets the result, min spin time, lands stop symbols, anticipation
       WinState.ts      win pop + amount, pays the win, character reaction
     board/Board.ts     symbols area, creates one Reel per reel
-    board/Reel.ts      one column, creates one Cell per row, drop animation
+    board/Reel.ts      one column: Cell per row + 1 buffer, spins filler, lands `stopSymbols`
     board/Cell.ts      one symbol sprite
     Wins.ts            win pop on winning symbols + win amount over the board
     Character.ts       Spine character

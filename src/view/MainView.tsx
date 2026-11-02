@@ -48,7 +48,10 @@ export function MainView({ engine }: { engine: SlotEngine }) {
       update({ ready: true });
       void machine.run();
     });
-    return () => app.destroy(true, { children: true });
+    return () => {
+      relayout.current = undefined;
+      app.destroy(true, { children: true });
+    };
   }, [engine]);
 
   const changeBet = useCallback((direction: 1 | -1) => {
@@ -84,7 +87,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
 
   // Character + gap + board, centred as one group; character vertically centred on the board.
   const GAP = 40;
-  const board = new Board(engine.reels, engine.rows, CELL, engine.getSymbol, engine.generateGrid());
+  const board = new Board(engine.reels, engine.rows, CELL, engine.getSymbol, engine.fillerSymbol, engine.generateGrid());
   const character = new Character();
   const bounds = character.getLocalBounds();
   const left = (DESIGN.width - (bounds.width + GAP + board.boardWidth)) / 2;

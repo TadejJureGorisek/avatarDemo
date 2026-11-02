@@ -3,11 +3,19 @@ import type { SymbolDef } from '../../engine/config';
 
 export const symbolUrl = (id: string) => `assets/symbols/${id}.png`;
 
-/** One symbol on a reel. Anchored at its centre so it can pop in place. */
+/** One symbol on a reel. Anchored at its centre so it can pop in place. Reused as the reel spins. */
 export class Cell extends Sprite {
-  constructor(readonly def: SymbolDef, private size: number) {
-    super(Assets.get(symbolUrl(def.id)));
+  def!: SymbolDef;
+
+  constructor(def: SymbolDef, private size: number) {
+    super();
     this.anchor.set(0.5);
+    this.setSymbol(def);
+  }
+
+  setSymbol(def: SymbolDef) {
+    this.def = def;
+    this.texture = Assets.get(symbolUrl(def.id));
     this.fit();
   }
 

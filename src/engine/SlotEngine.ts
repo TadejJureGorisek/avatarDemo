@@ -87,6 +87,9 @@ export class SlotEngine {
 
   getSymbol = (id: string) => this.symbols.get(id)!;
 
+  /** Random regular symbol for the blur of a spinning reel; never a scatter, so it can't fake a bonus. */
+  fillerSymbol = () => pickWeighted(this.config.symbols.filter((s) => s.kind === 'regular'), this.random).id;
+
   canSpin(bet: number) {
     return this.freeSpinsLeft > 0 || this.balance >= bet;
   }

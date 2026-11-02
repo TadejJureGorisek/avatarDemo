@@ -33,3 +33,22 @@ export function framedPanel(width: number, height: number, thickness: number, co
   panel.position.set(-width / 2, -height / 2);
   return panel;
 }
+
+/** The plain gold-rimmed panel picture (purple inside), behind the big win count-up. */
+export const PANEL_URL = 'assets/board/panel.png';
+/** In the panel picture (px): how wide its gold band is, and how big the corners are, which never stretch. */
+const PANEL_ART = { band: 50, corner: 90 };
+
+/** The panel, `width` × `height` inside its gold band and centred on (0, 0), the band `band` thick. */
+export function goldPanel(width: number, height: number, band: number) {
+  const scale = band / PANEL_ART.band;
+  const { corner } = PANEL_ART;
+  const panel = new NineSliceSprite({
+    texture: Assets.get(PANEL_URL), leftWidth: corner, rightWidth: corner, topHeight: corner, bottomHeight: corner,
+  });
+  panel.scale.set(scale);
+  panel.width = width / scale + 2 * PANEL_ART.band;
+  panel.height = height / scale + 2 * PANEL_ART.band;
+  panel.position.set(-(width / 2 + band), -(height / 2 + band));
+  return panel;
+}

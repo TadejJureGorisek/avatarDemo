@@ -4,7 +4,7 @@ import type { SlotEngine } from '../engine/SlotEngine';
 import { Background, BACKGROUND_URLS } from './Background';
 import { BigWin } from './BigWin';
 import { Board, FRAME_PAD } from './board/Board';
-import { FRAME_URL } from './Frame';
+import { FRAME_URL, PANEL_URL } from './Frame';
 import { symbolUrl } from './board/Cell';
 import { Character, CHARACTER_ASSETS } from './Character';
 import type { Cheat } from './hud/CheatMenu';
@@ -348,7 +348,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   app.renderer.on('resize', layout);
   layout();
 
-  await Assets.load([...engine.config.symbols.map((s) => symbolUrl(s.id)), ...BACKGROUND_URLS, FRAME_URL]);
+  await Assets.load([...engine.config.symbols.map((s) => symbolUrl(s.id)), ...BACKGROUND_URLS, FRAME_URL, PANEL_URL]);
   background.addArt();
   rest = makeRest(engine);
   scene.addChild(title, character, ...Object.values(rest));

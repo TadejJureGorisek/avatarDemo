@@ -24,11 +24,10 @@ import { Wins } from './Wins';
 /** Largest symbol size; boards with more reels or rows get smaller symbols so they still fit. */
 const MAX_CELL = 200;
 /**
- * The landscape scene's design size, scaled to fit the window. A window taller than
- * `PORTRAIT_AT` × its width gets the portrait scene instead: as wide as this is tall.
+ * The landscape scene's design size, scaled to fit the window. A window tall enough for the whole
+ * portrait layout gets the portrait scene instead: as wide as this is tall.
  */
 const DESIGN = { width: 1600, height: 900 };
-const PORTRAIT_AT = 1.5;
 /** Where the character stands in landscape (of the design height); the background's floor is moved to it. */
 const FLOOR = 0.755;
 /** Space kept free around the scene and between character and board. */
@@ -200,6 +199,13 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   // The design-space scene, scaled to the window (the HUD is part of it).
   const scene = new Container();
   app.stage.addChild(background, scene);
+  // In portrait, the symbol size that fits the character and board side by side across the scene,
+  // and the height the whole portrait layout needs: a window shorter than that gets landscape.
+  const aspect = bounds.width / bounds.height;
+  const PORTRAIT_CELL = Math.floor(Math.min(MAX_CELL,
+    (DESIGN.height - 2 * MARGIN - GAP - 2 * FRAME_PAD - aspect * 2 * FRAME_PAD) / (engine.reels + aspect * engine.rows)));
+  const portraitHeight = 2 * MARGIN + PORTRAIT_LOGO_LIFT + PORTRAIT_LOGO_HEIGHT + LOGO_GAP
+    + engine.rows * PORTRAIT_CELL + 2 * FRAME_PAD + 2 * MESSAGE_GAP + HUD_PORTRAIT;
   // The rest needs the symbols; until they're in, only the character, logo and HUD are placed.
   let rest: ReturnType<typeof makeRest> | undefined;
 
@@ -232,9 +238,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
       splashArea = { top: MARGIN, bottom: messageY - MESSAGE_GAP / 2, dotsY: messageY };
     } else {
       // Character on the board's left, as tall as the board's frame: together as wide as the scene.
-      const aspect = bounds.width / bounds.height;
-      cell = Math.floor(Math.min(MAX_CELL,
-        (D.width - 2 * MARGIN - GAP - 2 * FRAME_PAD - aspect * 2 * FRAME_PAD) / (engine.reels + aspect * engine.rows)));
+      cell = PORTRAIT_CELL;
       const frameHeight = engine.rows * cell + 2 * FRAME_PAD;
       fit = frameHeight / bounds.height;
       const characterWidth = bounds.width * fit;
@@ -246,7 +250,8 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
       const left = (D.width - (characterWidth + GAP + engine.reels * cell + 2 * FRAME_PAD)) / 2;
       boardX = left + characterWidth + GAP + FRAME_PAD;
       // The logo centred on the screen, a little above the rest of the group.
-      [logoX, logoY, logoWidth] = [D.width / 2, top + PORTRAIT_LOGO_HEIGHT / 2 - PORTRAIT_LOGO_LIFT, D.width - 2 * MARGIN];
+      const logoTop = Math.max(MARGIN, top - PORTRAIT_LOGO_LIFT);
+      [logoX, logoY, logoWidth] = [D.width / 2, logoTop + PORTRAIT_LOGO_HEIGHT / 2, D.width - 2 * MARGIN];
       character.x = left - bounds.x * fit;
       feet = boardY + engine.rows * cell + FRAME_PAD;
       // On the splash only SPIN (CONTINUE) shows, so the splash has everything above the SPIN row.
@@ -299,7 +304,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   // background covers the window, with its floor under the character's feet.
   const layout = () => {
     const { width, height } = app.screen;
-    const o: Orientation = height > width * PORTRAIT_AT ? 'portrait' : 'landscape';
+    const o: Orientation = (DESIGN.height * height) / width >= portraitHeight ? 'portrait' : 'landscape';
     const D = o === 'landscape' ? DESIGN : { width: DESIGN.height, height: Math.round((DESIGN.height * height) / width) };
     const key = `${o}:${D.width}x${D.height}`;
     if (key !== current) {

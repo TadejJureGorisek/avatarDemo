@@ -66,13 +66,14 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   const splash = s.state === 'splash';
   const intro = splash || !s.ready;
   const others: CSSProperties = { opacity: intro ? 0 : 1, pointerEvents: intro ? 'none' : undefined, transition: 'opacity 0.5s' };
-  // An arrow (CONTINUE) on the splash, spin icon in the bet state, stop icon while spinning, and
+  // An arrow (CONTINUE) on the splash, spin icon in the bet state (also while won free spins wait
+  // to be started), stop icon while spinning, and
   // numbers otherwise: the free spins left during free spins (they play themselves), the autoplay
   // spins left during autoplay (pressing it stops autoplay), and the picked spins while the mini
   // autoplay pop-up is open (pressing it starts autoplay).
   const [spinLabel, spinAria] = splash ? [<ArrowIcon />, 'Continue']
     : autoOpen ? [autoChoice, `Start autoplay, ${autoChoice} spins`]
-    : s.freeSpinsReady ? [s.freeSpinsLeft, `Start ${s.freeSpinsLeft} free spins`]
+    : s.freeSpinsReady ? [<SpinIcon />, `Start ${s.freeSpinsLeft} free spins`]
     : s.continueReady ? [<SpinIcon />, 'Continue']
     : inFreeSpins ? [s.freeSpinsLeft, `${s.freeSpinsLeft} free spins left`]
     : autoplay ? [s.autoplayLeft, `Stop autoplay, ${s.autoplayLeft} spins left`]

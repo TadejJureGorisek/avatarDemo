@@ -96,7 +96,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   const size = SIZES[layout.portrait ? 'portrait' : 'landscape'];
   const control = { zoom: size.control };
   const menu = (
-    <div style={layout.portrait ? control : { ...control, marginRight: 20 }}>
+    <div style={layout.portrait ? control : { ...control, marginRight: 70 }}>
       <Menu
         open={menuOpen}
         disabled={locked}
@@ -150,7 +150,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     visibility: layout.boardWidth ? 'visible' : 'hidden',
   };
 
-  // Landscape: one row right under the message: menu, balance, bet | SPIN (centred) + autoplay | cheats. Portrait: at the bottom of the screen, balance, bet and cheats, then menu | SPIN + autoplay.
+  // Landscape: one row right under the message: menu, cheats, balance | SPIN (centred) + autoplay | bet. Portrait: at the bottom of the screen, balance, bet and cheats, then menu | SPIN + autoplay.
   return layout.portrait ? (
     <div style={{ ...place, ...styles.stack }}>
       <div style={{ ...styles.pair, ...others }}>{balance}{bet}{cheats}</div>
@@ -162,9 +162,9 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     </div>
   ) : (
     <div style={{ ...place, ...styles.row }}>
-      <div style={{ ...styles.left, ...others }}>{menu}{balance}{bet}</div>
+      <div style={{ ...styles.left, ...others }}>{menu}{cheats}{balance}</div>
       {spin}
-      <div style={{ ...styles.right, ...others }}>{cheats}</div>
+      <div style={{ ...styles.right, ...others }}>{bet}</div>
     </div>
   );
 }

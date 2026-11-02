@@ -117,6 +117,13 @@ export class Splash extends Container {
     if (this.isOpen) this.slides[this.index].onShow?.();
   }
 
+  /** Stops the slides' animations too (the BONUS row bobs forever). */
+  override destroy(options?: Parameters<Container['destroy']>[0]) {
+    window.removeEventListener('keydown', this.onKey);
+    killTweens(this);
+    super.destroy(options);
+  }
+
   /** Shows the current slide and listens for the arrow keys until `close()`. */
   open() {
     this.visible = true;

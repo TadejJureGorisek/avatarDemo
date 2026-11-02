@@ -23,9 +23,13 @@ import { Wins } from './Wins';
 
 /** Largest symbol size; boards with more reels or rows get smaller symbols so they still fit. */
 const MAX_CELL = 200;
-/** The scene's design size: one landscape layout for every window, scaled to fit it. */
+/**
+ * The landscape scene's design size, scaled to fit the window. A window taller than
+ * `PORTRAIT_AT` × its width gets the portrait scene instead: as wide as this is tall.
+ */
 const DESIGN = { width: 1600, height: 900 };
-/** Where the character stands (of the design height); the background's floor is moved to it. */
+const PORTRAIT_AT = 1.2;
+/** Where the character stands in landscape (of the design height); the background's floor is moved to it. */
 const FLOOR = 0.755;
 /** Space kept free around the scene and between character and board. */
 const MARGIN = 20;
@@ -34,10 +38,14 @@ const GAP = 40;
 const MESSAGE_GAP = 40;
 const HUD_GAP = 40;
 const HUD_ROW = 125;
+/** The portrait HUD's height (two rows at the bottom of the screen). */
+const HUD_PORTRAIT = 490;
 /** The HUD is laid out for scene scale 0.8 (a 1280×720 window) and zoomed with the scene from there. */
 const HUD_ZOOM_PER_SCENE = 1.25;
 /** The logo above the character (in game and on the splash), and the gap under it (design px). */
 const LOGO_HEIGHT = 170;
+const PORTRAIT_LOGO_HEIGHT = 230;
+const PORTRAIT_SPLASH_LOGO_HEIGHT = 260;
 const LOGO_GAP = 10;
 const fill: CSSProperties = { position: 'absolute', inset: 0 };
 
@@ -59,7 +67,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const setAutoplay = (spins: number) => update({ autoplayLeft: (autoplayLeft.current = spins) });
   const symbolInfoRef = useRef<SymbolInfo>();
   // Where the scene puts the HUD row and how much to zoom it, plus the board's on-screen width for the menu.
-  const [hudLayout, setHudLayout] = useState<HudLayout>({ top: 0, left: 0, width: 0, zoom: 1, boardWidth: 0 });
+  const [hudLayout, setHudLayout] = useState<HudLayout>({ top: 0, left: 0, width: 0, zoom: 1, boardWidth: 0, portrait: false });
 
   useEffect(() => {
     const app = new Application();
@@ -150,15 +158,19 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   );
 }
 
-/** Where the HUD row goes on screen (px), its zoom, and the board's on-screen width. */
+/** Where the HUD goes on screen (px), its zoom, the board's on-screen width, and its arrangement. */
 export interface HudLayout {
   top: number;
-  /** The scene's left edge and width on screen: the row is centred on it. */
+  /** The scene's left edge and width on screen: the HUD is centred on it. */
   left: number;
   width: number;
   zoom: number;
   boardWidth: number;
+  /** Portrait: two rows at the bottom of the screen, with bigger controls. */
+  portrait: boolean;
 }
+
+type Orientation = 'landscape' | 'portrait';
 
 async function createScene(app: Application, host: HTMLElement, engine: SlotEngine, onHudLayout: (layout: HudLayout) => void) {
   await app.init({
@@ -168,50 +180,130 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   app.canvas.style.display = 'block'; // inline canvases add a few px of line-box overflow
   host.appendChild(app.canvas);
 
-  // The character (and logo) come first: their size sets the layout, so the HUD row (with "Loading…"
+  // The character (and logo) come first: their size sets the layout, so the HUD (with "Loading…"
   // where SPIN goes) is in place while the rest loads.
   Assets.add(CHARACTER_ASSETS);
   await Assets.load([...CHARACTER_ASSETS.map((a) => a.alias), LOGO_URL]);
 
-  // Logo over character, next to the board, centred as one group; the character stands on the floor.
   const character = new Character();
   const bounds = character.getLocalBounds();
-  // Symbol size: as big as fits next to the character and above the message and HUD row, for any reels × rows.
-  const below = MESSAGE_GAP + HUD_GAP + HUD_ROW;
-  const maxWidth = DESIGN.width - 2 * MARGIN - bounds.width - GAP - 2 * FRAME_PAD;
-  const maxHeight = DESIGN.height - 2 * MARGIN - below - 2 * FRAME_PAD;
-  const cell = Math.floor(Math.min(MAX_CELL, maxWidth / engine.reels, maxHeight / engine.rows));
-  const boardWidth = engine.reels * cell;
-  const boardHeight = engine.rows * cell;
-  const boardY = (DESIGN.height - (2 * FRAME_PAD + boardHeight + below)) / 2 + FRAME_PAD;
-  const floor = FLOOR * DESIGN.height;
-  // The character shrinks if it has to, to fit under the logo and above the floor.
-  const fit = Math.min(1, (floor - (boardY - FRAME_PAD) - LOGO_HEIGHT - LOGO_GAP) / bounds.height);
-  character.scale.set(fit);
-  const characterWidth = bounds.width * fit;
-  const left = (DESIGN.width - (characterWidth + GAP + boardWidth)) / 2;
-  const boardX = left + characterWidth + GAP;
-  character.position.set(left - bounds.x * fit, floor - (bounds.y + bounds.height) * fit);
-  const title = logo(LOGO_HEIGHT, characterWidth + GAP);
-  title.position.set(left + characterWidth / 2, boardY - FRAME_PAD + LOGO_HEIGHT / 2);
-  const messageY = boardY + boardHeight + FRAME_PAD + MESSAGE_GAP;
-  const hudTop = messageY + HUD_GAP;
-
+  const title = logo(1);
   const background = new Background();
-  // The design-space scene, scaled to fit the window (the HUD row is part of it).
+  // The design-space scene, scaled to the window (the HUD is part of it).
   const scene = new Container();
   app.stage.addChild(background, scene);
-  // Runs on window resize: the scene as big as fits, centred; the background covers the window,
-  // with its floor under the character's feet.
+  // The rest needs the symbols; until they're in, only the character, logo and HUD are placed.
+  let rest: ReturnType<typeof makeRest> | undefined;
+
+  /**
+   * Places everything in a scene of size `D`: one landscape layout (logo over the character, next
+   * to the board, HUD row under the message), or for a portrait window the logo over the board,
+   * the character on its left, and the HUD at the bottom. Returns where the HUD goes, the board
+   * frame's width and where the character's feet are (design px).
+   */
+  const arrange = (o: Orientation, D: { width: number; height: number }) => {
+    let cell: number, boardY: number, boardX: number, fit: number, feet: number, hudTop: number, logoX: number, logoY: number, logoWidth: number;
+    let splashArea: { top: number; bottom: number; dotsY: number };
+    if (o === 'landscape') {
+      // Symbol size: as big as fits next to the character and above the message and HUD row.
+      const below = MESSAGE_GAP + HUD_GAP + HUD_ROW;
+      const maxWidth = D.width - 2 * MARGIN - bounds.width - GAP - 2 * FRAME_PAD;
+      const maxHeight = D.height - 2 * MARGIN - below - 2 * FRAME_PAD;
+      cell = Math.floor(Math.min(MAX_CELL, maxWidth / engine.reels, maxHeight / engine.rows));
+      boardY = (D.height - (2 * FRAME_PAD + engine.rows * cell + below)) / 2 + FRAME_PAD;
+      feet = FLOOR * D.height;
+      // The character shrinks if it has to, to fit under the logo and above the floor.
+      fit = Math.min(1, (feet - (boardY - FRAME_PAD) - LOGO_HEIGHT - LOGO_GAP) / bounds.height);
+      const characterWidth = bounds.width * fit;
+      const left = (D.width - (characterWidth + GAP + engine.reels * cell)) / 2;
+      boardX = left + characterWidth + GAP;
+      [logoX, logoY, logoWidth] = [left + characterWidth / 2, boardY - FRAME_PAD + LOGO_HEIGHT / 2, characterWidth + GAP];
+      character.x = left - bounds.x * fit;
+      const messageY = boardY + engine.rows * cell + FRAME_PAD + MESSAGE_GAP;
+      hudTop = messageY + HUD_GAP;
+      splashArea = { top: MARGIN, bottom: messageY - MESSAGE_GAP / 2, dotsY: messageY };
+    } else {
+      // Character on the board's left, as tall as the board's frame: together as wide as the scene.
+      const aspect = bounds.width / bounds.height;
+      cell = Math.floor(Math.min(MAX_CELL,
+        (D.width - 2 * MARGIN - GAP - 2 * FRAME_PAD - aspect * 2 * FRAME_PAD) / (engine.reels + aspect * engine.rows)));
+      const frameHeight = engine.rows * cell + 2 * FRAME_PAD;
+      fit = frameHeight / bounds.height;
+      const characterWidth = bounds.width * fit;
+      // The HUD at the bottom; logo, board row and message centred in the room above it.
+      hudTop = D.height - MARGIN - HUD_PORTRAIT;
+      const group = PORTRAIT_LOGO_HEIGHT + LOGO_GAP + frameHeight + 2 * MESSAGE_GAP;
+      const top = MARGIN + (hudTop - MARGIN - group) / 2;
+      boardY = top + PORTRAIT_LOGO_HEIGHT + LOGO_GAP + FRAME_PAD;
+      const left = (D.width - (characterWidth + GAP + engine.reels * cell + 2 * FRAME_PAD)) / 2;
+      boardX = left + characterWidth + GAP + FRAME_PAD;
+      [logoX, logoY, logoWidth] = [boardX + (engine.reels * cell) / 2, top + PORTRAIT_LOGO_HEIGHT / 2, engine.reels * cell];
+      character.x = left - bounds.x * fit;
+      feet = boardY + engine.rows * cell + FRAME_PAD;
+      splashArea = { top: MARGIN, bottom: hudTop - 2 * MESSAGE_GAP, dotsY: hudTop - MESSAGE_GAP };
+    }
+    character.scale.set(fit);
+    character.y = feet - (bounds.y + bounds.height) * fit;
+    const logoHeight = o === 'landscape' ? LOGO_HEIGHT : PORTRAIT_LOGO_HEIGHT;
+    title.scale.set(Math.min(logoHeight / title.texture.height, logoWidth / title.texture.width));
+    title.position.set(logoX, logoY);
+    if (rest) {
+      const { board, wins, message, popup, bigWin, symbolInfo } = rest;
+      board.scale.set(cell / MAX_CELL); // built at the largest symbol size
+      board.position.set(boardX, boardY);
+      wins.scale.copyFrom(board.scale);
+      wins.position.copyFrom(board.position);
+      // Screen centre (the scene is centred horizontally), in line with the SPIN button.
+      message.position.set(D.width / 2, boardY + engine.rows * cell + FRAME_PAD + MESSAGE_GAP);
+      // Pop-ups in the middle of the screen.
+      popup.position.set(D.width / 2, D.height / 2);
+      bigWin.position.copyFrom(popup.position);
+      symbolInfo.hide();
+    }
+    const splash = { width: D.width, ...splashArea, logoHeight: o === 'landscape' ? LOGO_HEIGHT : PORTRAIT_SPLASH_LOGO_HEIGHT };
+    return { hudTop, boardWidth: engine.reels * cell + 2 * FRAME_PAD * (cell / MAX_CELL), feet, splash };
+  };
+
+  let placed: ReturnType<typeof arrange> | undefined;
+  let current = '';
+  let splashBuilt = '';
+  let splashTimer: ReturnType<typeof setTimeout> | undefined;
+  // The splash is rebuilt for a new layout right away when the orientation flips, and otherwise
+  // only once the window has stopped changing size.
+  const layoutSplash = (now: boolean) => {
+    if (!rest || !placed) return;
+    clearTimeout(splashTimer);
+    const key = JSON.stringify(placed.splash);
+    const build = () => {
+      if (!rest || !placed || key === splashBuilt) return;
+      splashBuilt = key;
+      rest.splash.layout(placed.splash);
+    };
+    if (now) build();
+    else splashTimer = setTimeout(build, 250);
+  };
+
+  // Runs on window resize. A landscape window gets the landscape scene, as big as fits and centred;
+  // a portrait one the portrait scene, as wide as the window and as tall as its shape. The
+  // background covers the window, with its floor under the character's feet.
   const layout = () => {
     const { width, height } = app.screen;
-    const scale = Math.min(width / DESIGN.width, height / DESIGN.height);
+    const o: Orientation = height > width * PORTRAIT_AT ? 'portrait' : 'landscape';
+    const D = o === 'landscape' ? DESIGN : { width: DESIGN.height, height: Math.round((DESIGN.height * height) / width) };
+    const key = `${o}:${D.width}x${D.height}`;
+    if (key !== current) {
+      const flipped = !current.startsWith(o);
+      current = key;
+      placed = arrange(o, D);
+      layoutSplash(flipped);
+    }
+    const scale = Math.min(width / D.width, height / D.height);
     scene.scale.set(scale);
-    scene.position.set((width - DESIGN.width * scale) / 2, (height - DESIGN.height * scale) / 2);
-    background.resize(width, height, scene.y + floor * scale);
+    scene.position.set((width - D.width * scale) / 2, (height - D.height * scale) / 2);
+    background.resize(width, height, scene.y + placed!.feet * scale);
     onHudLayout({
-      top: scene.y + hudTop * scale, left: scene.x, width: DESIGN.width * scale,
-      zoom: scale * HUD_ZOOM_PER_SCENE, boardWidth: (boardWidth + 2 * FRAME_PAD) * scale,
+      top: scene.y + placed!.hudTop * scale, left: scene.x, width: D.width * scale,
+      zoom: scale * HUD_ZOOM_PER_SCENE, boardWidth: placed!.boardWidth * scale, portrait: o === 'portrait',
     });
   };
   app.renderer.on('resize', layout);
@@ -219,28 +311,26 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
 
   await Assets.load([...engine.config.symbols.map((s) => symbolUrl(s.id)), ...BACKGROUND_URLS]);
   background.addArt();
-  const board = new Board(engine.reels, engine.rows, cell, engine.getSymbol, engine.fillerSymbol, engine.generateGrid());
-  board.position.set(boardX, boardY);
-  const wins = new Wins(board);
-  wins.position.copyFrom(board.position);
-  const message = new Message();
-  // Screen centre (the scene is centred horizontally), in line with the SPIN button.
-  message.position.set(DESIGN.width / 2, messageY);
-  message.text = 'Press SPIN to play';
-  // Pop-ups in the middle of the screen.
-  const popup = new Popup();
-  popup.position.set(DESIGN.width / 2, DESIGN.height / 2);
-  const symbolInfo = new SymbolInfo();
-  const bigWin = new BigWin(engine.config.bigWins);
-  bigWin.position.copyFrom(popup.position);
-  // The intro fills the space above the HUD row, with its dots where the message goes.
-  const splash = new Splash(engine.config);
-  splash.layout({ width: DESIGN.width, top: MARGIN, bottom: messageY - MESSAGE_GAP / 2, dotsY: messageY, logoHeight: LOGO_HEIGHT });
-  scene.addChild(title, character, board, wins, message, symbolInfo, bigWin, popup, splash);
+  rest = makeRest(engine);
+  scene.addChild(title, character, ...Object.values(rest));
+  // Lay out again, now with everything in.
+  current = '';
+  layout();
   // A click anywhere off the board closes the symbol pop-up.
   app.stage.eventMode = 'static';
   app.stage.hitArea = app.screen;
-  app.stage.on('pointertap', () => symbolInfo.hide());
+  app.stage.on('pointertap', () => rest!.symbolInfo.hide());
 
-  return { background, board, wins, character, logo: title, message, popup, bigWin, symbolInfo, splash };
+  return { background, character, logo: title, ...rest };
+}
+
+/** Everything that needs the symbols loaded, in drawing order; `arrange` places it. */
+function makeRest(engine: SlotEngine) {
+  const board = new Board(engine.reels, engine.rows, MAX_CELL, engine.getSymbol, engine.fillerSymbol, engine.generateGrid());
+  const message = new Message();
+  message.text = 'Press SPIN to play';
+  return {
+    board, wins: new Wins(board), message, symbolInfo: new SymbolInfo(),
+    bigWin: new BigWin(engine.config.bigWins), popup: new Popup(), splash: new Splash(engine.config),
+  };
 }

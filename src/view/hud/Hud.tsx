@@ -91,8 +91,12 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     onStartAutoplay(autoChoice);
   };
 
+  // Each control's size relative to its own design size: SPIN stands out most, then autoplay;
+  // in portrait, where the HUD has the whole bottom of the screen, they're all bigger still.
+  const size = SIZES[layout.portrait ? 'portrait' : 'landscape'];
+  const control = { zoom: size.control };
   const menu = (
-    <div style={styles.menu}>
+    <div style={layout.portrait ? control : { ...control, marginRight: 55 }}>
       <Menu
         open={menuOpen}
         disabled={locked}
@@ -112,16 +116,16 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
       />
     </div>
   );
-  const balance = <div style={styles.control}><Balance value={s.balance} /></div>;
+  const balance = <div style={control}><Balance value={s.balance} /></div>;
   const spin = (
     <div style={styles.centre}>
-      <div style={styles.spin}>
+      <div style={{ zoom: size.spin }}>
         {s.ready
           ? <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
           : <div style={styles.loading}>Loading…</div>}
       </div>
       <div style={{ ...styles.auto, ...others }}>
-        <div style={styles.autoSize}>
+        <div style={{ zoom: size.autoplay }}>
           <AutoplayButton
             open={autoOpen}
             choice={autoChoice}
@@ -134,11 +138,11 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     </div>
   );
   const bet = (
-    <div style={styles.control}>
+    <div style={control}>
       <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
     </div>
   );
-  const cheats = <div style={styles.control}><CheatMenu onCheat={onCheat} /></div>;
+  const cheats = <div style={control}><CheatMenu onCheat={onCheat} /></div>;
   // Its position and width are divided by the zoom, because zoom scales those too. Hidden until
   // the scene has placed it (layout.boardWidth is 0 until then).
   const place: CSSProperties = {
@@ -146,15 +150,29 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     visibility: layout.boardWidth ? 'visible' : 'hidden',
   };
 
-  // One row right under the message: menu, balance | SPIN (centred) + autoplay | bet, cheats.
-  return (
-    <div style={{ ...place, ...styles.row }}>
-      <div style={{ ...styles.left, ...others }}>{menu}{balance}</div>
+  // Landscape: one row right under the message: menu, balance, bet, SPIN + autoplay, cheats. Portrait: at the bottom of the screen, balance, bet and cheats, then menu | SPIN + autoplay.
+  return layout.portrait ? (
+    <div style={{ ...place, ...styles.stack }}>
+      <div style={{ ...styles.pair, ...others }}>{balance}{bet}{cheats}</div>
+      <div style={styles.row}>
+        <div style={{ ...styles.left, ...others }}>{menu}</div>
+        {spin}
+        <div style={{ ...styles.right, ...others, paddingLeft: 110 }} />
+      </div>
+    </div>
+  ) : (
+    <div style={{ ...place, ...styles.line }}>
+      <div style={{ ...styles.left, ...others }}>{menu}{balance}{bet}</div>
       {spin}
-      <div style={{ ...styles.right, ...others }}>{bet}{cheats}</div>
+      <div style={{ ...styles.right, ...others }}>{cheats}</div>
     </div>
   );
 }
+
+const SIZES = {
+  landscape: { control: 1.1, spin: 1.2, autoplay: 1.15 },
+  portrait: { control: 1.43, spin: 2.4, autoplay: 1.725 },
+};
 
 const styles = {
   // Takes SPIN's place (and size) while the game loads, so nothing moves when SPIN appears.
@@ -162,15 +180,14 @@ const styles = {
   // One line: SPIN in the exact middle (equal side columns), each side tucked in towards it.
   row: { display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 28 },
   left: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 28 },
-  // Size of each control relative to its own design size: SPIN stands out most, then autoplay.
-  control: { zoom: 1.1 },
-  spin: { zoom: 1.2 },
-  autoSize: { zoom: 1.15 },
-  // The menu button sits further out than the rest.
-  menu: { zoom: 1.1, marginRight: 55 },
+  // Portrait: the balance and bet row above the SPIN row.
+  stack: { display: 'flex', flexDirection: 'column', gap: 20 },
+  pair: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28 },
   centre: { position: 'relative' },
   // Hangs off SPIN's right side, so SPIN itself stays centred.
   auto: { position: 'absolute', left: 'calc(100% + 16px)', top: '50%', transform: 'translateY(-50%)' },
-  // Leaves room for the autoplay button between SPIN and the bet.
+  // Landscape: the whole row centred, left to right.
+  line: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28 },
+  // Leaves room for the autoplay button that hangs off SPIN.
   right: { display: 'flex', alignItems: 'center', gap: 28, paddingLeft: 80 },
 } satisfies Record<string, CSSProperties>;

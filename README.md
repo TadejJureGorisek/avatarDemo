@@ -1,4 +1,4 @@
-# Ways Slot – Game Developer Test
+# AvatarUX Slot – Game Developer Test
 
 A 5×3, 243-ways slot prototype built with **TypeScript + PixiJS 8**, a **React** HUD and the provided
 character animated with the **Spine 4.2 runtime** (`@esotericsoftware/spine-pixi-v8@4.2`).

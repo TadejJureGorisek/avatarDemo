@@ -145,7 +145,8 @@ const styles = {
     background: 'linear-gradient(#ffd85a, #e79a12)',
   },
   bar: {
-    position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 24px',
+    // The middle three-quarters of the screen, centred, rather than the full width.
+    position: 'absolute', left: '12.5%', right: '12.5%', bottom: 0, padding: '14px 24px',
     display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'end', gap: 16,
   },
   // SPIN stays centred; the small autoplay button hangs off its right side.

@@ -18,6 +18,7 @@ export const SplashState: GameState = {
     // game, not after it. A press before Bet is waiting does nothing.
     updateHud({ state: 'bet' });
     background.setFreeSpins(false);
+    background.setSplash(false);
     // The game starts coming in halfway through the splash zooming away.
     void splash.close();
     game.forEach((o) => (o.visible = true));

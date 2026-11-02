@@ -1,7 +1,7 @@
 import { Application, Assets, Container } from 'pixi.js';
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { SlotEngine } from '../engine/SlotEngine';
-import { Background } from './Background';
+import { Background, BACKGROUND_URLS } from './Background';
 import { BigWin } from './BigWin';
 import { Board, FRAME_PAD } from './board/Board';
 import { symbolUrl } from './board/Cell';
@@ -218,7 +218,8 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   app.renderer.on('resize', layout);
   layout();
 
-  await Assets.load(engine.config.symbols.map((s) => symbolUrl(s.id)));
+  await Assets.load([...engine.config.symbols.map((s) => symbolUrl(s.id)), ...Object.values(BACKGROUND_URLS)]);
+  background.addArt();
   const board = new Board(engine.reels, engine.rows, cell, engine.getSymbol, engine.fillerSymbol, engine.generateGrid());
   board.position.set(boardX, boardY);
   const wins = new Wins(board);

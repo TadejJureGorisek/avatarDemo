@@ -185,7 +185,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
 
 const SIZES = {
   landscape: { control: 1.1, spin: 1.2, autoplay: 1.15 },
-  portrait: { control: 1.43, spin: 2.4, autoplay: 1.725 },
+  portrait: { control: 1.43, spin: 1.9, autoplay: 1.725 },
 };
 
 const styles = {

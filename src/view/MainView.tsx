@@ -24,10 +24,12 @@ import { Wins } from './Wins';
 /** Largest symbol size; boards with more reels or rows get smaller symbols so they still fit. */
 const MAX_CELL = 200;
 /**
- * The landscape scene's design size, scaled to fit the window. A window tall enough for the whole
- * portrait layout gets the portrait scene instead: as wide as this is tall.
+ * The landscape scene's design size, scaled to fit the window. A window at least `PORTRAIT_AT` ×
+ * taller than wide (any phone held upright) gets the portrait scene instead: as wide as this is
+ * tall, and as tall as the window's shape (at least as tall as the portrait layout needs).
  */
 const DESIGN = { width: 1600, height: 900 };
+const PORTRAIT_AT = 1.25;
 /** Where the character stands in landscape (of the design height); the background's floor is moved to it. */
 const FLOOR = 0.755;
 /** Space kept free around the scene and between character and board. */
@@ -38,7 +40,7 @@ const MESSAGE_GAP = 40;
 const HUD_GAP = 40;
 const HUD_ROW = 125;
 /** The portrait HUD's height (two rows at the bottom of the screen). */
-const HUD_PORTRAIT = 620;
+const HUD_PORTRAIT = 550;
 /** How far down the portrait HUD the SPIN button starts (design px). */
 const PORTRAIT_SPIN_TOP = 233;
 /** The HUD is laid out for scene scale 0.8 (a 1280×720 window) and zoomed with the scene from there. */
@@ -200,7 +202,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   const scene = new Container();
   app.stage.addChild(background, scene);
   // In portrait, the symbol size that fits the character and board side by side across the scene,
-  // and the height the whole portrait layout needs: a window shorter than that gets landscape.
+  // and the height the whole portrait layout needs (a shorter window scales it down to fit).
   const aspect = bounds.width / bounds.height;
   const PORTRAIT_CELL = Math.floor(Math.min(MAX_CELL,
     (DESIGN.height - 2 * MARGIN - GAP - 2 * FRAME_PAD - aspect * 2 * FRAME_PAD) / (engine.reels + aspect * engine.rows)));
@@ -304,8 +306,9 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   // background covers the window, with its floor under the character's feet.
   const layout = () => {
     const { width, height } = app.screen;
-    const o: Orientation = (DESIGN.height * height) / width >= portraitHeight ? 'portrait' : 'landscape';
-    const D = o === 'landscape' ? DESIGN : { width: DESIGN.height, height: Math.round((DESIGN.height * height) / width) };
+    const o: Orientation = height >= width * PORTRAIT_AT ? 'portrait' : 'landscape';
+    const D = o === 'landscape' ? DESIGN
+      : { width: DESIGN.height, height: Math.max(portraitHeight, Math.round((DESIGN.height * height) / width)) };
     const key = `${o}:${D.width}x${D.height}`;
     if (key !== current) {
       const flipped = !current.startsWith(o);

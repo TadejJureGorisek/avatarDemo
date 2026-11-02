@@ -16,12 +16,11 @@ const CELL = 200;
 const DESIGN = { width: 1600, height: 900 };
 const HUD_HEIGHT = 110;
 
-/** The whole game: builds the Pixi scene (board, wins, character) and the HUD, then runs the state machine. */
 export function MainView({ engine }: { engine: SlotEngine }) {
-  const { bets, defaultBetIndex } = engine.config;
   const host = useRef<HTMLDivElement>(null);
-  const betIndex = useRef(defaultBetIndex);
   const spinRequest = useRef<(cheat?: Cheat) => void>();
+  const { bets, defaultBetIndex } = engine.config;
+  const betIndex = useRef(defaultBetIndex);
   const [hud, setHud] = useState<HudState>({
     ready: false, state: 'bet', balance: engine.balance, bet: bets[defaultBetIndex],
     freeSpinsLeft: 0, freeSpinsTotal: 0, message: 'Press SPIN to play',
@@ -35,7 +34,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
         { bet: BetState, spin: SpinState, win: WinState },
         {
           engine, ...scene,
-          bet: () => bets[betIndex.current],
+          bet: () => engine.config.bets[betIndex.current],
           updateHud: update,
           waitForSpin: () => new Promise((resolve) => (spinRequest.current = resolve)),
         },
@@ -45,7 +44,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
       void machine.run();
     });
     return () => app.destroy(true, { children: true });
-  }, [engine, bets]);
+  }, [engine]);
 
   const changeBet = useCallback((direction: 1 | -1) => {
     betIndex.current = Math.max(0, Math.min(bets.length - 1, betIndex.current + direction));
@@ -64,16 +63,16 @@ export function MainView({ engine }: { engine: SlotEngine }) {
 }
 
 async function createScene(app: Application, host: HTMLElement, engine: SlotEngine) {
-  await app.init({ resizeTo: host, backgroundAlpha: 0, antialias: true, autoDensity: true,
-    resolution: Math.min(devicePixelRatio, 2) });
+  await app.init({
+    resizeTo: host, backgroundAlpha: 0, antialias: true, autoDensity: true,
+    resolution: Math.min(devicePixelRatio, 2)
+  });
   host.appendChild(app.canvas);
 
   Assets.add(CHARACTER_ASSETS);
   await Assets.load([...engine.config.symbols.map((s) => symbolUrl(s.id)), ...CHARACTER_ASSETS.map((a) => a.alias)]);
 
-  // Board size comes from the engine, so nothing in the view hardcodes 5x3.
   const board = new Board(engine.reels, engine.rows, CELL, engine.getSymbol, engine.generateGrid());
-  // Character on the left, board on the right.
   board.position.set(DESIGN.width - board.boardWidth - 60, (DESIGN.height - board.boardHeight) / 2 - 40);
   const wins = new Wins(board);
   wins.position.copyFrom(board.position);
@@ -88,8 +87,10 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   // Letterbox the 1600x900 scene above the HUD.
   const layout = () => {
     const { width, height } = app.screen;
-    const fill = new FillGradient({ type: 'linear', start: { x: 0, y: 0 }, end: { x: 0, y: 1 }, textureSpace: 'local',
-      colorStops: [{ offset: 0, color: 0x3b0f8c }, { offset: 1, color: 0x12052e }] });
+    const fill = new FillGradient({
+      type: 'linear', start: { x: 0, y: 0 }, end: { x: 0, y: 1 }, textureSpace: 'local',
+      colorStops: [{ offset: 0, color: 0x3b0f8c }, { offset: 1, color: 0x12052e }]
+    });
     background.clear().rect(0, 0, width, height).fill(fill);
     const scale = Math.min(width / DESIGN.width, (height - HUD_HEIGHT) / DESIGN.height);
     root.scale.set(scale);

@@ -41,8 +41,12 @@ const HUD_GAP = 40;
 const HUD_ROW = 125;
 /** The portrait HUD's height (two rows at the bottom of the screen). */
 const HUD_PORTRAIT = 550;
-/** How far down the portrait HUD the SPIN button starts (design px). */
-const PORTRAIT_SPIN_TOP = 233;
+/**
+ * Of the portrait HUD: the block at the bottom (cheats over the SPIN row) and how far down it SPIN
+ * starts. Balance and bet sit on their own, centred between the message and that block.
+ */
+const PORTRAIT_SPIN_BLOCK = 360;
+const PORTRAIT_SPIN_TOP = 92;
 /** The HUD is laid out for scene scale 0.8 (a 1280×720 window) and zoomed with the scene from there. */
 const HUD_ZOOM_PER_SCENE = 1.25;
 /** The logo above the character (in game and on the splash), and the gap under it (design px). */
@@ -76,7 +80,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const setAutoplay = (spins: number) => update({ autoplayLeft: (autoplayLeft.current = spins) });
   const symbolInfoRef = useRef<SymbolInfo>();
   // Where the scene puts the HUD row and how much to zoom it, plus the board's on-screen width for the menu.
-  const [hudLayout, setHudLayout] = useState<HudLayout>({ top: 0, left: 0, width: 0, zoom: 1, boardWidth: 0, portrait: false });
+  const [hudLayout, setHudLayout] = useState<HudLayout>({ top: 0, metersY: 0, left: 0, width: 0, zoom: 1, boardWidth: 0, portrait: false });
 
   useEffect(() => {
     const app = new Application();
@@ -173,6 +177,8 @@ export function MainView({ engine }: { engine: SlotEngine }) {
 /** Where the HUD goes on screen (px), its zoom, the board's on-screen width, and its arrangement. */
 export interface HudLayout {
   top: number;
+  /** Portrait: where the balance and bet row is centred (px from the top). */
+  metersY: number;
   /** The scene's left edge and width on screen: the HUD is centred on it. */
   left: number;
   width: number;
@@ -222,6 +228,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
    */
   const arrange = (o: Orientation, D: { width: number; height: number }) => {
     let cell: number, boardY: number, boardX: number, fit: number, feet: number, hudTop: number, logoX: number, logoY: number, logoWidth: number;
+    let metersY = 0;
     let splashArea: { top: number; bottom: number; dotsY: number };
     if (o === 'landscape') {
       // Symbol size: as big as fits next to the character and above the message and HUD row.
@@ -248,9 +255,10 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
       fit = frameHeight / bounds.height;
       const characterWidth = bounds.width * fit;
       // The HUD at the bottom; logo, board row and message centred in the room above it.
-      hudTop = D.height - MARGIN - HUD_PORTRAIT;
+      const groupBottom = D.height - MARGIN - HUD_PORTRAIT;
+      hudTop = D.height - MARGIN - PORTRAIT_SPIN_BLOCK;
       const group = PORTRAIT_LOGO_HEIGHT + LOGO_GAP + frameHeight + 2 * MESSAGE_GAP;
-      const top = MARGIN + (hudTop - MARGIN - group) / 2;
+      const top = MARGIN + (groupBottom - MARGIN - group) / 2;
       boardY = top + PORTRAIT_LOGO_HEIGHT + LOGO_GAP + FRAME_PAD;
       const left = (D.width - (characterWidth + PORTRAIT_GAP + engine.reels * cell + 2 * FRAME_PAD)) / 2;
       boardX = left + characterWidth + PORTRAIT_GAP + FRAME_PAD;
@@ -259,6 +267,8 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
       [logoX, logoY, logoWidth] = [D.width / 2, logoTop + PORTRAIT_LOGO_HEIGHT / 2, D.width - 2 * MARGIN];
       character.x = left - bounds.x * fit;
       feet = boardY + engine.rows * cell + FRAME_PAD;
+      // Balance and bet halfway between the message's bottom and the cheats + SPIN block.
+      metersY = (boardY + engine.rows * cell + FRAME_PAD + 2 * MESSAGE_GAP + hudTop) / 2;
       // On the splash only SPIN (CONTINUE) shows, so the splash has everything above the SPIN row.
       const spinTop = hudTop + PORTRAIT_SPIN_TOP;
       splashArea = { top: MARGIN, bottom: spinTop - 2 * MESSAGE_GAP, dotsY: spinTop - MESSAGE_GAP };
@@ -282,7 +292,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
       symbolInfo.hide();
     }
     const splash = { width: D.width, ...splashArea, logoHeight: o === 'landscape' ? LOGO_HEIGHT : PORTRAIT_SPLASH_LOGO_HEIGHT };
-    return { hudTop, boardWidth: engine.reels * cell + 2 * FRAME_PAD * (cell / MAX_CELL), feet, splash };
+    return { hudTop, metersY, boardWidth: engine.reels * cell + 2 * FRAME_PAD * (cell / MAX_CELL), feet, splash };
   };
 
   let placed: ReturnType<typeof arrange> | undefined;
@@ -324,7 +334,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
     scene.position.set((width - D.width * scale) / 2, (height - D.height * scale) / 2);
     background.resize(width, height, scene.y + placed!.feet * scale);
     onHudLayout({
-      top: scene.y + placed!.hudTop * scale, left: scene.x, width: D.width * scale,
+      top: scene.y + placed!.hudTop * scale, metersY: scene.y + placed!.metersY * scale, left: scene.x, width: D.width * scale,
       zoom: scale * HUD_ZOOM_PER_SCENE, boardWidth: placed!.boardWidth * scale, portrait: o === 'portrait',
     });
   };

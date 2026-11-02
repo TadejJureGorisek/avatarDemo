@@ -120,7 +120,8 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
       />
     </div>
   );
-  const balance = <div style={control}><Balance value={s.balance} /></div>;
+  const meters = { zoom: size.meters };
+  const balance = <div style={meters}><Balance value={s.balance} /></div>;
   const spin = (
     <div style={styles.centre}>
       <div style={{ zoom: size.spin }}>
@@ -149,7 +150,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     </div>
   );
   const bet = (
-    <div style={control}>
+    <div style={meters}>
       <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
     </div>
   );
@@ -163,17 +164,20 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
 
   // Landscape: one row right under the message: menu and cheats at the left edge, then balance |
   // SPIN (centred), with turbo and autoplay at its sides | bet. Portrait: at the bottom of the
-  // screen, balance and bet, cheats under them, then menu | SPIN with turbo and autoplay.
+  // screen, cheats over menu | SPIN with turbo and autoplay, and balance and bet on their own,
+  // halfway between that and the message.
   return layout.portrait ? (
-    <div style={{ ...place, ...styles.stack }}>
-      <div style={{ ...styles.pair, ...others }}>{balance}{bet}</div>
+    <>
+      <div style={{ ...place, ...styles.pair, ...others, top: layout.metersY / scale, transform: 'translateY(-50%)' }}>{balance}{bet}</div>
+      <div style={{ ...place, ...styles.stack }}>
       <div style={{ ...styles.pair, ...others }}>{cheats}</div>
       <div style={styles.row}>
         <div style={{ ...styles.left, ...others, paddingRight: 110 }}>{menu}</div>
         {spin}
         <div style={{ ...styles.right, ...others, paddingLeft: 110 }} />
       </div>
-    </div>
+      </div>
+    </>
   ) : (
     <div style={{ ...place, ...styles.row }}>
       <div style={{ ...styles.left, ...styles.edge, ...others }}>{menu}<div style={{ marginRight: 'auto' }}>{cheats}</div>{balance}</div>
@@ -184,8 +188,8 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
 }
 
 const SIZES = {
-  landscape: { control: 1.1, spin: 1.2, autoplay: 1.15 },
-  portrait: { control: 1.43, spin: 1.9, autoplay: 1.725 },
+  landscape: { control: 1.1, meters: 1.1, spin: 1.2, autoplay: 1.15 },
+  portrait: { control: 1.43, meters: 1.25, spin: 1.9, autoplay: 1.725 },
 };
 
 const styles = {

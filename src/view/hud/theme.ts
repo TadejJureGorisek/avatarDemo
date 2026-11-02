@@ -10,7 +10,7 @@ export const meter: CSSProperties = {
   background: colors.panel, border: `2px solid ${colors.border}`,
 };
 
-export const label: CSSProperties = { fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.7 };
+export const label: CSSProperties = { fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.7, textAlign: 'center' };
 
 export const value: CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 4, height: 34, fontWeight: 800, fontVariantNumeric: 'tabular-nums',

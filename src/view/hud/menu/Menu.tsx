@@ -9,6 +9,8 @@ import { HowToPlay } from './HowToPlay';
 import { useDragScroll } from './useDragScroll';
 
 const TABS = ['HOW TO PLAY', 'ABOUT THE GAME', 'AUTOPLAY', 'HISTORY'] as const;
+/** The panel's design size, before zoom. */
+const PANEL = { width: 600, height: 620 };
 type Tab = (typeof TABS)[number];
 
 interface Props {
@@ -17,7 +19,7 @@ interface Props {
   open: boolean;
   /** Panel width in px (the board's on-screen width); 0 until the scene has laid out. */
   width: number;
-  /** UI scale (see useUiScale); the panel's contents are zoomed by it. */
+  /** UI scale (see useUiScale); sizes the panel until the board's width is known. */
   scale: number;
   onOpenChange: (open: boolean) => void;
   config: GameConfig;
@@ -40,11 +42,11 @@ export function Menu(p: Props) {
   const [tab, setTab] = useState<Tab>('HOW TO PLAY');
   const content = useRef<HTMLDivElement>(null);
   useDragScroll(content);
-  // Visual size: the board's width and the 620px design height scaled, both capped to the window.
-  // The panel is zoomed by `scale`, so its CSS size is the visual size divided by it.
-  const visualWidth = Math.min(p.width || 860 * p.scale, window.innerWidth - 32);
-  const visualHeight = Math.min(620 * p.scale, window.innerHeight - 32);
-  const panelSize = { zoom: p.scale, width: visualWidth / p.scale, height: visualHeight / p.scale };
+  // The panel is always laid out at PANEL size (so its text wraps the same way at any window size)
+  // and zoomed to the board's on-screen width, or smaller if the window is too short or narrow.
+  const zoom = Math.min((p.width || PANEL.width * p.scale) / PANEL.width,
+    (window.innerWidth - 32) / PANEL.width, (window.innerHeight - 32) / PANEL.height);
+  const panelSize = { zoom, width: PANEL.width, height: PANEL.height };
 
   return (
     <>

@@ -23,13 +23,16 @@ start command is needed.
 - Balance and bet (+/−) in the React HUD, player message below the board. The main button is
   SPIN, then STOP while spinning (lands the reels early), and shows the free spins left during
   free spins. `Space` presses it.
-- **BONUS** scatter pays anywhere (3/4/5) and 3+ award **8 free spins** (auto-played, retriggerable).
-- **Anticipation**: once two BONUS symbols have landed, the remaining reels spin longer while the
-  character plays `bonus_anticipation`, then `bonus_anticipation_win` / `_lose`.
+- **BONUS** scatter: at most one per reel, pays anywhere (3/4/5). Five (one on every reel) award
+  **8 free spins** (auto-played, retriggerable), with pop-ups for the award and the round's total.
+- **Anticipation**: once reels 1 and 2 both land a BONUS, the next reel slows down and spins longer
+  while the others keep full speed; every further BONUS slows the reel after it. The character
+  plays `bonus_anticipation`, then `bonus_anticipation_win` / `_lose`.
 - Character plays `small_win` on any win and loops `idle` otherwise.
-- **CHEATS** menu (below Balance and Bet): *Big win* forces the top symbol across the middle row, *Free spins*
-  forces 3 BONUS. Handled in `BetState` via `SlotEngine.forceNext()`.
-- RNG: `crypto.getRandomValues`. Paytable tuned by simulation to RTP ≈ 96%, hit rate ≈ 13%.
+- **CHEATS** menu (below Balance and Bet): *Big win* forces the top symbol across the middle row,
+  *Free spins* forces a BONUS on every reel. Handled in `BetState` via `SlotEngine.forceNext()`.
+- RNG: `crypto.getRandomValues`. Paytable tuned by simulation to RTP ≈ 94%, hit rate ≈ 13%.
+  With 5 scatters needed, free spins trigger naturally only about 1 in 250,000 spins.
 
 ## Structure
 

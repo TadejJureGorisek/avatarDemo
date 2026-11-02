@@ -124,10 +124,14 @@ export class SlotEngine {
       const top = this.config.symbols.find((s) => s.kind === 'regular')!;
       grid.forEach((column) => (column[middle] = top.id));
     } else if (this.scatter) {
-      // Spread the scatters out (reels 1, 3, 5 on a 5-reel board) so the anticipation plays.
+      // Spread the scatters out (one per reel when minScatters equals the reel count) so the anticipation plays.
+      const { id } = this.scatter;
       const { minScatters } = this.config.freeSpins;
       for (let i = 0; i < minScatters; i++) {
-        grid[Math.round((i * (this.reels - 1)) / Math.max(1, minScatters - 1))][middle] = this.scatter.id;
+        const column = grid[Math.round((i * (this.reels - 1)) / Math.max(1, minScatters - 1))];
+        // Keep the one-scatter-per-reel rule: swap out any scatter the random board already had there.
+        column.forEach((symbol, row) => symbol === id && (column[row] = this.fillerSymbol()));
+        column[middle] = id;
       }
     }
     this.forcedGrid = grid;

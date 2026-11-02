@@ -38,8 +38,9 @@ export const config = {
     // Scatter: pays anywhere, multiplier of the bet.
     { id: 'BONUS', kind: 'scatter', weight: 3, pays: { 3: 2, 4: 10, 5: 50 } },
   ] as SymbolDef[],
+  /** At most one scatter on a reel, so `minScatters: 5` means one BONUS on every reel. */
   maxScattersPerReel: 1,
-  freeSpins: { minScatters: 3, awarded: 8 },
+  freeSpins: { minScatters: 5, awarded: 8 },
   bets: [0.2, 0.5, 1, 2, 5, 10],
   defaultBetIndex: 2,
   startingBalance: 1000,

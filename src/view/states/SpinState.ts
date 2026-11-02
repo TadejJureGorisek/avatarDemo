@@ -1,5 +1,5 @@
 import gsap from 'gsap';
-import { countSymbol, type SlotEngine, type SpinResult } from '../../engine/SlotEngine';
+import type { SlotEngine, SpinResult } from '../../engine/SlotEngine';
 import { freeSpinsMessage } from './freeSpinsMessage';
 import type { GameState } from './StateMachine';
 
@@ -27,12 +27,18 @@ export const SpinState: GameState = {
     // STOP cuts the minimum spin time short, and below makes every reel stop straight away.
     await Promise.race([new Promise((resolve) => gsap.delayedCall(minSpinTime, resolve)), stopPressed]);
 
-    // Once one more scatter would trigger free spins, the remaining reels spin longer while the character anticipates.
-    const anticipationReel = findAnticipationReel(engine, result);
-    const delays = result.grid.map((_, reel) =>
-      reel * reelStopStagger + (anticipationReel >= 0 && reel > anticipationReel ? (reel - anticipationReel) * anticipationExtra : 0));
-    await board.stop(result.grid, delays, (reel) => reel === anticipationReel && character.startAnticipation(), stopPressed);
-    if (anticipationReel >= 0) {
+    // Anticipation: once reels 1 and 2 both land a scatter, each next reel slows down and spins
+    // longer, for as long as every reel so far has landed one.
+    const chain = scatterChain(engine, result);
+    const anticipated = (reel: number) => chain >= 2 && reel >= 2 && reel <= chain && reel < result.grid.length;
+    let extra = 0;
+    const delays = result.grid.map((_, reel) => reel * reelStopStagger + (extra += anticipated(reel) ? anticipationExtra : 0));
+    await board.stop(result.grid, delays, (reel) => {
+      if (!anticipated(reel + 1)) return;
+      if (reel === 1) character.startAnticipation();
+      board.reels[reel + 1].slowDown();
+    }, stopPressed);
+    if (chain >= 2) {
       await character.play(result.freeSpinsAwarded ? 'bonus_anticipation_win' : 'bonus_anticipation_lose');
     }
 
@@ -47,10 +53,9 @@ export const SpinState: GameState = {
   },
 };
 
-function findAnticipationReel(engine: SlotEngine, { grid }: SpinResult) {
-  if (!engine.scatter) return -1;
-  for (let reel = 0; reel < grid.length - 1; reel++) {
-    if (countSymbol(grid, engine.scatter.id, reel) >= engine.config.freeSpins.minScatters - 1) return reel;
-  }
-  return -1;
+/** How many reels in a row, from the left, landed a scatter. */
+function scatterChain(engine: SlotEngine, { grid }: SpinResult) {
+  const id = engine.scatter?.id;
+  const chain = grid.findIndex((column) => !column.includes(id!));
+  return id ? (chain < 0 ? grid.length : chain) : 0;
 }

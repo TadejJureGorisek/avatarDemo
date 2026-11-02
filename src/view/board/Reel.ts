@@ -19,6 +19,8 @@ export class Reel extends Container {
   private speed = { value: 0 };
   /** Stop symbols still waiting to enter from the top. */
   private queue: string[] = [];
+  /** Cells recycled since `start()`; the old landed symbols are gone once this reaches `rows`. */
+  private recycled = 0;
   private landed?: () => void;
 
   constructor(
@@ -51,8 +53,15 @@ export class Reel extends Container {
     const buffer = this.cells.pop()!;
     buffer.y = this.rowY(-1);
     this.cells.unshift(buffer);
+    this.recycled = 0;
     gsap.to(this.speed, { value: SPEED, duration: 0.25, ease: 'power2.in' });
     gsap.ticker.add(this.scroll);
+  }
+
+  /** Bonus anticipation: keep spinning, but visibly slower. */
+  slowDown() {
+    gsap.killTweensOf(this.speed);
+    gsap.to(this.speed, { value: SPEED * 0.35, duration: 0.4, ease: 'power2.out' });
   }
 
   /** Feeds `stopSymbols` in and resolves once they've landed. */
@@ -69,9 +78,12 @@ export class Reel extends Container {
     while (this.cells[this.cells.length - 1].y >= this.rowY(this.rows)) {
       const cell = this.cells.pop()!;
       cell.y = this.cells[0].y - this.cellSize;
-      const isStopSymbol = this.queue.length > 0;
+      // Only feed stop symbols once every previously landed symbol has scrolled away, so an early
+      // STOP can never show an old and a new symbol together (e.g. two BONUS on one reel).
+      const isStopSymbol = this.queue.length > 0 && this.recycled >= this.rows;
       cell.setSymbol(this.getSymbol(isStopSymbol ? this.queue.shift()! : this.fillerSymbol()));
       this.cells.unshift(cell);
+      this.recycled++;
       // The row-0 stop symbol just entered: all stop symbols are on the strip, so land.
       if (isStopSymbol && !this.queue.length) return this.land();
     }

@@ -7,13 +7,16 @@ import type { GameState } from './StateMachine';
  * fading in), then on to Bet.
  */
 export const SplashState: GameState = {
-  async enter({ splash, background, character, board, wins, message, waitForSpin }) {
+  async enter({ splash, background, character, board, wins, message, updateHud, waitForSpin }) {
     const game = [character, board, wins, message];
     game.forEach((o) => (o.visible = false));
     // Just a hint of the free spins gold, eased slowly so flicking past the slide doesn't flash.
     splash.onFreeSpins = (showing) => background.setGold(showing ? 0.35 : 0);
     splash.open();
     await waitForSpin();
+    // The HUD turns into the game's straight away (SPIN icon, the other controls fading in), with the
+    // game, not after it. A press before Bet is waiting does nothing.
+    updateHud({ state: 'bet' });
     background.setFreeSpins(false);
     // The game starts coming in halfway through the splash zooming away.
     void splash.close();

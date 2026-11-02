@@ -49,6 +49,9 @@ const HUD_ZOOM_PER_SCENE = 1.25;
 const LOGO_HEIGHT = 170;
 const PORTRAIT_LOGO_HEIGHT = 230;
 const PORTRAIT_SPLASH_LOGO_HEIGHT = 260;
+/** Portrait: the room at the screen's sides and between character and board, kept small so both are as big as fits. */
+const PORTRAIT_SIDE = 8;
+const PORTRAIT_GAP = 10;
 /** How far the portrait logo sits above its place in the group (design px). */
 const PORTRAIT_LOGO_LIFT = 60;
 const LOGO_GAP = 10;
@@ -205,7 +208,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   // and the height the whole portrait layout needs (a shorter window scales it down to fit).
   const aspect = bounds.width / bounds.height;
   const PORTRAIT_CELL = Math.floor(Math.min(MAX_CELL,
-    (DESIGN.height - 2 * MARGIN - GAP - 2 * FRAME_PAD - aspect * 2 * FRAME_PAD) / (engine.reels + aspect * engine.rows)));
+    (DESIGN.height - 2 * PORTRAIT_SIDE - PORTRAIT_GAP - 2 * FRAME_PAD - aspect * 2 * FRAME_PAD) / (engine.reels + aspect * engine.rows)));
   const portraitHeight = 2 * MARGIN + PORTRAIT_LOGO_LIFT + PORTRAIT_LOGO_HEIGHT + LOGO_GAP
     + engine.rows * PORTRAIT_CELL + 2 * FRAME_PAD + 2 * MESSAGE_GAP + HUD_PORTRAIT;
   // The rest needs the symbols; until they're in, only the character, logo and HUD are placed.
@@ -249,8 +252,8 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
       const group = PORTRAIT_LOGO_HEIGHT + LOGO_GAP + frameHeight + 2 * MESSAGE_GAP;
       const top = MARGIN + (hudTop - MARGIN - group) / 2;
       boardY = top + PORTRAIT_LOGO_HEIGHT + LOGO_GAP + FRAME_PAD;
-      const left = (D.width - (characterWidth + GAP + engine.reels * cell + 2 * FRAME_PAD)) / 2;
-      boardX = left + characterWidth + GAP + FRAME_PAD;
+      const left = (D.width - (characterWidth + PORTRAIT_GAP + engine.reels * cell + 2 * FRAME_PAD)) / 2;
+      boardX = left + characterWidth + PORTRAIT_GAP + FRAME_PAD;
       // The logo centred on the screen, a little above the rest of the group.
       const logoTop = Math.max(MARGIN, top - PORTRAIT_LOGO_LIFT);
       [logoX, logoY, logoWidth] = [D.width / 2, logoTop + PORTRAIT_LOGO_HEIGHT / 2, D.width - 2 * MARGIN];

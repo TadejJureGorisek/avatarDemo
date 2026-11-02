@@ -21,6 +21,7 @@ export const BetState: GameState = {
       const total = engine.freeSpinsTotal;
       const announcement = total > 0 ? `CONGRATULATIONS,\nYOU WON: ${total.toFixed(2)} $` : 'Free spins complete!';
       updateHud({ balance: engine.balance });
+      ctx.resumeAutoplay();
       if (ctx.autoplayRunning()) {
         await popup.show(announcement);
       } else {

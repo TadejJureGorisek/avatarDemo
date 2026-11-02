@@ -35,6 +35,9 @@ export interface GameContext {
   turbo: () => boolean;
   autoplayRunning: () => boolean;
   stopAutoplay: () => void;
+  /** Holds autoplay while free spins are started and played; `resumeAutoplay` gives the spins back. */
+  pauseAutoplay: () => void;
+  resumeAutoplay: () => void;
   recordSpin: (entry: HistoryEntry) => void;
   result?: SpinResult;
 }

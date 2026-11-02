@@ -41,6 +41,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const update = (patch: Partial<HudState>) => setHud((s) => ({ ...s, ...patch }));
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const autoplayLeft = useRef(0);
+  const pausedAutoplay = useRef(0);
   const turbo = useRef(false);
   const setAutoplay = (spins: number) => update({ autoplayLeft: (autoplayLeft.current = spins) });
   const symbolInfoRef = useRef<SymbolInfo>();
@@ -66,6 +67,14 @@ export function MainView({ engine }: { engine: SlotEngine }) {
           autoplayRunning: () => autoplayLeft.current > 0,
           turbo: () => turbo.current,
           stopAutoplay: () => setAutoplay(0),
+          pauseAutoplay: () => {
+            pausedAutoplay.current = autoplayLeft.current;
+            setAutoplay(0);
+          },
+          resumeAutoplay: () => {
+            if (pausedAutoplay.current) setAutoplay(pausedAutoplay.current);
+            pausedAutoplay.current = 0;
+          },
           recordSpin: (entry) => setHistory((h) => [entry, ...h].slice(0, 50)),
         },
         (state) => update({ state }),

@@ -26,12 +26,13 @@ export const WinState: GameState = {
       ? `CONGRATULATIONS,\nYOU WON ${r.freeSpinsAwarded} ADDITIONAL FREE SPINS!`
       : `CONGRATULATIONS,\nYOU WON ${r.freeSpinsAwarded} FREE SPINS`;
 
-    if (r.isFreeSpin || ctx.autoplayRunning()) {
+    if (r.isFreeSpin) {
       await popup.show(announcement);
       background.setFreeSpins(true);
       return 'bet';
     }
 
+    if (ctx.autoplayRunning()) ctx.pauseAutoplay();
     await popup.open(announcement);
     message.text = 'Press SPIN to start free spins!';
     updateHud({ freeSpinsReady: true });

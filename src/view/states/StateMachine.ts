@@ -1,4 +1,5 @@
 import type { SlotEngine, SpinResult } from '../../engine/SlotEngine';
+import type { Background } from '../Background';
 import type { BigWin } from '../BigWin';
 import type { Board } from '../board/Board';
 import type { Character } from '../Character';
@@ -15,6 +16,7 @@ export type StateName = 'bet' | 'spin' | 'win';
 /** Everything a state needs, shared across states. */
 export interface GameContext {
   engine: SlotEngine;
+  background: Background;
   board: Board;
   wins: Wins;
   character: Character;

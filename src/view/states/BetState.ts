@@ -11,16 +11,18 @@ const pause = (seconds: number) => new Promise((resolve) => gsap.delayedCall(sec
  * themselves (free spins first; autoplay carries on after them).
  */
 export const BetState: GameState = {
-  async enter({ engine, result, bet, message, popup, updateHud, waitForSpin, takeAutoSpin, stopAutoplay }) {
+  async enter({ engine, background, result, bet, message, popup, updateHud, waitForSpin, takeAutoSpin, stopAutoplay }) {
     if (engine.freeSpinsLeft) {
       await pause(FREE_SPIN_PAUSE_S);
       return 'spin';
     }
 
-    // The last free spin just finished: announce the round's total.
+    // The last free spin just finished: pay the round's total into the balance and announce it.
     if (result?.isFreeSpin) {
       const total = engine.freeSpinsTotal;
+      updateHud({ balance: engine.balance });
       await popup.show(total > 0 ? `CONGRATULATIONS,\nYOU WON: ${total.toFixed(2)} $` : 'Free spins complete!');
+      background.setFreeSpins(false);
     }
 
     updateHud({ freeSpin: false });

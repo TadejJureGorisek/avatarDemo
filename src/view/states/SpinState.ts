@@ -17,7 +17,8 @@ export const SpinState: GameState = {
     const stopPressed = ctx.waitForStop();
     const result = (ctx.result = engine.spin(ctx.bet()));
     updateHud({
-      balance: engine.balance - result.totalWin, // the win is added in WinState
+      // Free spin wins are held back until the round ends (BetState); a base win is added in WinState.
+      balance: engine.balance - (result.isFreeSpin ? engine.freeSpinsTotal : result.totalWin),
       freeSpinsLeft: engine.freeSpinsLeft - result.freeSpinsAwarded,
       freeSpin: result.isFreeSpin,
     });

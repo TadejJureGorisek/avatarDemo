@@ -185,5 +185,5 @@ async function createScene(
   app.renderer.on('resize', layout);
   layout();
 
-  return { board, wins, character, message, popup, bigWin, symbolInfo, layout };
+  return { background, board, wins, character, message, popup, bigWin, symbolInfo, layout };
 }

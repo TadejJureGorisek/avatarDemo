@@ -6,6 +6,7 @@ import type { HudState } from '../hud/Hud';
 import type { HistoryEntry } from '../hud/menu/History';
 import type { Message } from '../Message';
 import type { Popup } from '../Popup';
+import type { SymbolInfo } from '../SymbolInfo';
 import type { Wins } from '../Wins';
 
 export type StateName = 'bet' | 'spin' | 'win';
@@ -18,6 +19,7 @@ export interface GameContext {
   character: Character;
   message: Message;
   popup: Popup;
+  symbolInfo: SymbolInfo;
   bet: () => number;
   updateHud: (patch: Partial<HudState>) => void;
   /** Resolves when the player presses SPIN, or picks a cheat from the cheat menu. */

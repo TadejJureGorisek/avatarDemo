@@ -13,6 +13,7 @@ export const SpinState: GameState = {
     const { minSpinTime, reelStopStagger, anticipationExtra } = engine.config.timing;
 
     wins.clear();
+    ctx.symbolInfo.hide();
     board.start();
     const stopPressed = ctx.waitForStop();
     const result = (ctx.result = engine.spin(ctx.bet()));

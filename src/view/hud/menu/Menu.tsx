@@ -14,6 +14,9 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   config: GameConfig;
   bet: number;
+  atMinBet: boolean;
+  atMaxBet: boolean;
+  onBetChange: (direction: 1 | -1) => void;
   history: HistoryEntry[];
   autoplayLeft: number;
   canStartAutoplay: boolean;
@@ -21,7 +24,7 @@ interface Props {
   onStopAutoplay: () => void;
 }
 
-/** Burger button (top right) and the menu panel with its four tabs. */
+/** Burger button (sits in the bottom bar) and the full-screen menu panel with its four tabs. */
 export function Menu(p: Props) {
   const [tab, setTab] = useState<Tab>('HOW TO PLAY');
 
@@ -44,6 +47,10 @@ export function Menu(p: Props) {
               {tab === 'ABOUT THE GAME' && <About config={p.config} />}
               {tab === 'AUTOPLAY' && (
                 <Autoplay
+                  bet={p.bet}
+                  atMinBet={p.atMinBet}
+                  atMaxBet={p.atMaxBet}
+                  onBetChange={p.onBetChange}
                   autoplayLeft={p.autoplayLeft}
                   canStart={p.canStartAutoplay}
                   onStart={(n) => {
@@ -64,11 +71,11 @@ export function Menu(p: Props) {
 
 const styles = {
   burger: {
-    position: 'absolute', top: 12, right: 12, width: 44, height: 44, borderRadius: 10, cursor: 'pointer',
+    width: 52, height: 52, borderRadius: 12, cursor: 'pointer',
     fontSize: 24, border: `2px solid ${colors.border}`, background: colors.panel, color: colors.gold,
   },
   overlay: {
-    position: 'absolute', inset: 0, zIndex: 10, display: 'grid', placeItems: 'center', padding: 16,
+    position: 'fixed', inset: 0, zIndex: 10, display: 'grid', placeItems: 'center', padding: 16,
     background: 'rgb(0 0 0 / 0.6)',
   },
   panel: {

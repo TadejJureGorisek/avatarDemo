@@ -1,5 +1,5 @@
 import gsap from 'gsap';
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Rectangle } from 'pixi.js';
 import type { SymbolDef } from '../../engine/config';
 import type { Grid } from '../../engine/SlotEngine';
 import { Reel } from './Reel';
@@ -37,7 +37,19 @@ export class Board extends Container {
       reel.x = i * cellSize;
       return reel;
     });
+
+    // Clicks are mapped to a cell by position, since cells are recycled while the reels spin.
+    this.eventMode = 'static';
+    this.cursor = 'pointer';
+    this.hitArea = new Rectangle(0, 0, this.boardWidth, this.boardHeight);
+    this.on('pointertap', (e) => {
+      e.stopPropagation();
+      const p = this.toLocal(e.global);
+      this.onCellTap?.(Math.floor(p.x / cellSize), Math.floor(p.y / cellSize));
+    });
   }
+
+  onCellTap?: (reel: number, row: number) => void;
 
   /** The landed stop symbols, reel by reel. */
   get stopSymbols(): Grid {

@@ -14,6 +14,7 @@ import { StateMachine } from './states/StateMachine';
 import { WinState } from './states/WinState';
 import { Message } from './Message';
 import { Popup } from './Popup';
+import { SymbolInfo } from './SymbolInfo';
 import { Wins } from './Wins';
 
 const CELL = 200;
@@ -57,6 +58,14 @@ export function MainView({ engine }: { engine: SlotEngine }) {
         },
         (state) => update({ state }),
       );
+      // Clicking a landed symbol shows what it pays; not while the reels spin.
+      const { board, symbolInfo } = scene;
+      board.onCellTap = (reel, row) => {
+        if (machine.current?.current === 'spin') return;
+        const cell = board.cell(reel, row);
+        symbolInfo.show(cell.def, engine.config.bets[betIndex.current], board.x + (reel + 0.5) * CELL,
+          board.y + (row + 0.5) * CELL, reel < engine.reels / 2);
+      };
       update({ ready: true });
       void machine.current.run();
     });
@@ -135,12 +144,17 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   message.text = 'Press SPIN to play';
   const popup = new Popup();
   popup.position.set(board.x + board.boardWidth / 2, board.y + board.boardHeight / 2);
+  const symbolInfo = new SymbolInfo();
 
   const background = new Background();
   // The 1600x900 design-space scene; it's scaled to fit the screen above the HUD.
   const scene = new Container();
-  scene.addChild(character, board, wins, message, popup);
+  scene.addChild(character, board, wins, message, symbolInfo, popup);
   app.stage.addChild(background, scene);
+  // A click anywhere off the board closes the symbol pop-up.
+  app.stage.eventMode = 'static';
+  app.stage.hitArea = app.screen;
+  app.stage.on('pointertap', () => symbolInfo.hide());
 
   // Runs on window resize and whenever the HUD reports a new height.
   const layout = () => {
@@ -154,5 +168,5 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   app.renderer.on('resize', layout);
   layout();
 
-  return { board, wins, character, message, popup, layout };
+  return { board, wins, character, message, popup, symbolInfo, layout };
 }

@@ -61,31 +61,33 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   return (
     <>
       {!s.ready && <div style={styles.loading}>Loading…</div>}
-      <Menu
-        open={menuOpen}
-        onOpenChange={setMenuOpen}
-        config={config}
-        bet={s.bet}
-        history={history}
-        autoplayLeft={s.autoplayLeft}
-        canStartAutoplay={!locked}
-        onStartAutoplay={onStartAutoplay}
-        onStopAutoplay={onStopAutoplay}
-      />
       {inFreeSpins && (
         <div style={styles.banner}>FREE SPINS: {s.freeSpinsLeft} left · Total {s.freeSpinsTotal.toFixed(2)}</div>
       )}
+      {/* Menu bottom left, SPIN centre, Balance / Bet / CHEATS stacked bottom right. */}
       <div style={styles.bar} ref={bar}>
-        <div style={styles.left}>
-          <div style={styles.group}>
-            <Balance value={s.balance} />
-            <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
-          </div>
-          <CheatMenu disabled={locked} onCheat={onCheat} />
+        <div>
+          <Menu
+            open={menuOpen}
+            onOpenChange={setMenuOpen}
+            config={config}
+            bet={s.bet}
+            atMinBet={s.atMinBet}
+            atMaxBet={s.atMaxBet}
+            onBetChange={onBetChange}
+            history={history}
+            autoplayLeft={s.autoplayLeft}
+            canStartAutoplay={!locked}
+            onStartAutoplay={onStartAutoplay}
+            onStopAutoplay={onStopAutoplay}
+          />
         </div>
         <SpinButton label={spinLabel} disabled={spinDisabled} onPress={onSpin} />
-        {/* Empty right column keeps SPIN centred. */}
-        <div />
+        <div style={styles.stack}>
+          <Balance value={s.balance} />
+          <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
+          <CheatMenu disabled={locked} onCheat={onCheat} />
+        </div>
       </div>
     </>
   );
@@ -100,10 +102,8 @@ const styles = {
   },
   bar: {
     position: 'absolute', left: 0, right: 0, bottom: 0, padding: 'clamp(8px, 1.5vw, 14px) clamp(10px, 2vw, 24px)',
-    display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 'clamp(8px, 1.5vw, 16px)',
+    display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'end', gap: 'clamp(8px, 1.5vw, 16px)',
   },
-  // Balance + Bet, with CHEATS underneath.
-  left: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 },
-  // Wraps into a column on narrow screens.
-  group: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'clamp(4px, 1.2vw, 14px)' },
+  // Balance, Bet and CHEATS on top of each other, same width, in the bottom-right corner.
+  stack: { justifySelf: 'end', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 6 },
 } satisfies Record<string, CSSProperties>;

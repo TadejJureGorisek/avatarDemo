@@ -26,7 +26,7 @@ export function HowToPlay({ config, bet }: { config: GameConfig; bet: number }) 
         <div style={grid}>
           {config.symbols.map((s) => (
             <div key={s.id} style={item}>
-              <img src={symbolUrl(s.id)} alt={s.id} width={56} height={56} />
+              <img src={symbolUrl(s.id)} alt={s.id} width={64} height={64} />
               <div style={{ textAlign: 'left' }}>
                 {Object.entries(s.pays).sort(([a], [b]) => Number(b) - Number(a)).map(([count, pay]) => (
                   <div key={count}><b>{count}×</b> {(pay * bet).toFixed(2)}</div>
@@ -41,5 +41,5 @@ export function HowToPlay({ config, bet }: { config: GameConfig; bet: number }) 
 }
 
 // Two columns of symbols, each symbol centred in its column.
-const grid: CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px' };
-const item: CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, fontSize: 14 };
+const grid: CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 24px' };
+const item: CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, fontSize: 18 };

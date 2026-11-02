@@ -49,5 +49,5 @@ function Table({ entries }: { entries: HistoryEntry[] }) {
   );
 }
 
-const table: CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 14 };
+const table: CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 17 };
 const cell: CSSProperties = { textAlign: 'center', padding: '6px 8px', borderBottom: '1px solid rgb(255 255 255 / 0.1)' };

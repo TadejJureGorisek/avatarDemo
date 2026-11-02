@@ -26,8 +26,9 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const machine = useRef<StateMachine>();
   const { bets, defaultBetIndex } = engine.config;
   const betIndex = useRef(defaultBetIndex);
+  const betState = (i: number) => ({ bet: bets[i], atMinBet: i === 0, atMaxBet: i === bets.length - 1 });
   const [hud, setHud] = useState<HudState>({
-    ready: false, state: 'bet', balance: engine.balance, bet: bets[defaultBetIndex],
+    ready: false, state: 'bet', balance: engine.balance, ...betState(defaultBetIndex),
     freeSpinsLeft: 0, freeSpinsTotal: 0, freeSpin: false,
   });
   const update = (patch: Partial<HudState>) => setHud((s) => ({ ...s, ...patch }));
@@ -60,7 +61,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
 
   const changeBet = useCallback((direction: 1 | -1) => {
     betIndex.current = Math.max(0, Math.min(bets.length - 1, betIndex.current + direction));
-    update({ bet: bets[betIndex.current] });
+    update(betState(betIndex.current));
   }, [bets]);
 
   // One button: SPIN in the bet state, STOP while the reels spin.

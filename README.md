@@ -31,8 +31,8 @@ start command is needed.
 - Character plays `small_win` on any win and loops `idle` otherwise.
 - **CHEATS** menu (below Balance and Bet): *Big win* forces the top symbol across the middle row,
   *Free spins* forces a BONUS on every reel. Handled in `BetState` via `SlotEngine.forceNext()`.
-- RNG: `crypto.getRandomValues`. Paytable tuned by simulation to RTP ≈ 94%, hit rate ≈ 13%.
-  With 5 scatters needed, free spins trigger naturally only about 1 in 250,000 spins.
+- RNG: `crypto.getRandomValues`. Tuned by simulation (6M spins): RTP ≈ 96%, hit rate ≈ 28%,
+  free spins about 1 in 320 spins.
 
 ## Structure
 

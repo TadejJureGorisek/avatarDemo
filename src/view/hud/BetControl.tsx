@@ -4,6 +4,9 @@ import { colors, disabledLook, label, meter, value } from './theme';
 interface Props {
   bet: number;
   disabled: boolean;
+  /** Lowest / highest bet reached, so − / + have nowhere to go. */
+  atMin: boolean;
+  atMax: boolean;
   onChange: (direction: 1 | -1) => void;
 }
 
@@ -12,15 +15,16 @@ const stepButton: CSSProperties = {
   background: colors.gold, color: colors.dark, fontSize: 20, fontWeight: 800,
 };
 
-export function BetControl({ bet, disabled, onChange }: Props) {
-  const button = { ...stepButton, ...disabledLook(disabled) };
+export function BetControl({ bet, disabled, atMin, atMax, onChange }: Props) {
+  const minusOff = disabled || atMin;
+  const plusOff = disabled || atMax;
   return (
     <div style={meter}>
       <span style={label}>Bet</span>
       <span style={value}>
-        <button style={button} onClick={() => onChange(-1)} disabled={disabled}>−</button>
+        <button style={{ ...stepButton, ...disabledLook(minusOff) }} onClick={() => onChange(-1)} disabled={minusOff}>−</button>
         {bet.toFixed(2)}
-        <button style={button} onClick={() => onChange(1)} disabled={disabled}>+</button>
+        <button style={{ ...stepButton, ...disabledLook(plusOff) }} onClick={() => onChange(1)} disabled={plusOff}>+</button>
       </span>
     </div>
   );

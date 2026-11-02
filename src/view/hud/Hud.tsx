@@ -12,6 +12,8 @@ export interface HudState {
   state: StateName;
   balance: number;
   bet: number;
+  atMinBet: boolean;
+  atMaxBet: boolean;
   freeSpinsLeft: number;
   freeSpinsTotal: number;
   /** True while a free spin is playing (including the last one, when freeSpinsLeft is already 0). */
@@ -53,7 +55,7 @@ export function Hud({ state: s, onSpin, onBetChange, onCheat, onHeight }: Props)
         <div style={styles.left}>
           <div style={styles.group}>
             <Balance value={s.balance} />
-            <BetControl bet={s.bet} disabled={locked} onChange={onBetChange} />
+            <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
           </div>
           <CheatMenu disabled={locked} onCheat={onCheat} />
         </div>

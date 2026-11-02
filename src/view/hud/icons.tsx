@@ -42,3 +42,13 @@ export function ArrowIcon({ size = 44 }: { size?: number }) {
     </svg>
   );
 }
+
+/** Lightning bolt: TURBO. */
+export function TurboIcon({ size = 26 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
+      <path d="M13.5 2 5 13.5h6L9.5 22 19 9.5h-6.2z" fill="currentColor" stroke="currentColor" strokeWidth={1.2}
+        strokeLinejoin="round" />
+    </svg>
+  );
+}

@@ -39,13 +39,17 @@ const MESSAGE_GAP = 40;
 const HUD_GAP = 40;
 const HUD_ROW = 125;
 /** The portrait HUD's height (two rows at the bottom of the screen). */
-const HUD_PORTRAIT = 490;
+const HUD_PORTRAIT = 620;
+/** Of that, the bottom row with SPIN. */
+const PORTRAIT_SPIN_ROW = 340;
 /** The HUD is laid out for scene scale 0.8 (a 1280×720 window) and zoomed with the scene from there. */
 const HUD_ZOOM_PER_SCENE = 1.25;
 /** The logo above the character (in game and on the splash), and the gap under it (design px). */
 const LOGO_HEIGHT = 170;
 const PORTRAIT_LOGO_HEIGHT = 230;
 const PORTRAIT_SPLASH_LOGO_HEIGHT = 260;
+/** How far the portrait logo sits above its place in the group (design px). */
+const PORTRAIT_LOGO_LIFT = 60;
 const LOGO_GAP = 10;
 const fill: CSSProperties = { position: 'absolute', inset: 0 };
 
@@ -59,11 +63,12 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const betState = (i: number) => ({ bet: bets[i], atMinBet: i === 0, atMaxBet: i === bets.length - 1 });
   const [hud, setHud] = useState<HudState>({
     ready: false, state: 'splash', balance: engine.balance, ...betState(defaultBetIndex),
-    freeSpinsLeft: 0, freeSpin: false, autoplayLeft: 0, freeSpinsReady: false, continueReady: false,
+    freeSpinsLeft: 0, freeSpin: false, autoplayLeft: 0, freeSpinsReady: false, continueReady: false, turbo: false,
   });
   const update = (patch: Partial<HudState>) => setHud((s) => ({ ...s, ...patch }));
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const autoplayLeft = useRef(0);
+  const turbo = useRef(false);
   const setAutoplay = (spins: number) => update({ autoplayLeft: (autoplayLeft.current = spins) });
   const symbolInfoRef = useRef<SymbolInfo>();
   // Where the scene puts the HUD row and how much to zoom it, plus the board's on-screen width for the menu.
@@ -87,6 +92,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
           waitForStop: () => new Promise((resolve) => (stopRequest.current = resolve)),
           takeAutoSpin: () => autoplayLeft.current > 0 && (setAutoplay(autoplayLeft.current - 1), true),
           autoplayRunning: () => autoplayLeft.current > 0,
+          turbo: () => turbo.current,
           stopAutoplay: () => setAutoplay(0),
           recordSpin: (entry) => setHistory((h) => [entry, ...h].slice(0, 50)),
         },
@@ -140,6 +146,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
     spinRequest.current?.();
   }, []);
   const stopAutoplay = useCallback(() => setAutoplay(0), []);
+  const toggleTurbo = useCallback(() => update({ turbo: (turbo.current = !turbo.current) }), []);
   return (
     <div style={fill}>
       <div style={fill} ref={host} />
@@ -152,6 +159,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
         onCheat={requestCheat}
         onStartAutoplay={startAutoplay}
         onStopAutoplay={stopAutoplay}
+        onToggleTurbo={toggleTurbo}
         layout={hudLayout}
       />
     </div>
@@ -237,10 +245,13 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
       boardY = top + PORTRAIT_LOGO_HEIGHT + LOGO_GAP + FRAME_PAD;
       const left = (D.width - (characterWidth + GAP + engine.reels * cell + 2 * FRAME_PAD)) / 2;
       boardX = left + characterWidth + GAP + FRAME_PAD;
-      [logoX, logoY, logoWidth] = [boardX + (engine.reels * cell) / 2, top + PORTRAIT_LOGO_HEIGHT / 2, engine.reels * cell];
+      // The logo centred on the screen, a little above the rest of the group.
+      [logoX, logoY, logoWidth] = [D.width / 2, top + PORTRAIT_LOGO_HEIGHT / 2 - PORTRAIT_LOGO_LIFT, D.width - 2 * MARGIN];
       character.x = left - bounds.x * fit;
       feet = boardY + engine.rows * cell + FRAME_PAD;
-      splashArea = { top: MARGIN, bottom: hudTop - 2 * MESSAGE_GAP, dotsY: hudTop - MESSAGE_GAP };
+      // On the splash only SPIN (CONTINUE) shows, so the splash has everything above the SPIN row.
+      const spinRowTop = D.height - MARGIN - PORTRAIT_SPIN_ROW;
+      splashArea = { top: MARGIN, bottom: spinRowTop - 2 * MESSAGE_GAP, dotsY: spinRowTop - MESSAGE_GAP };
     }
     character.scale.set(fit);
     character.y = feet - (bounds.y + bounds.height) * fit;

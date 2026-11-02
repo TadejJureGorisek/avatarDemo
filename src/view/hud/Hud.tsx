@@ -10,6 +10,7 @@ import { CheatMenu, type Cheat } from './CheatMenu';
 import type { HistoryEntry } from './menu/History';
 import { Menu } from './menu/Menu';
 import { SpinButton } from './SpinButton';
+import { TurboButton } from './TurboButton';
 import { colors } from './theme';
 
 export interface HudState {
@@ -29,6 +30,8 @@ export interface HudState {
   freeSpinsReady: boolean;
   /** Free spins just ended and the result waits for the player to press SPIN to continue. */
   continueReady: boolean;
+  /** TURBO is on: spins run faster. */
+  turbo: boolean;
 }
 
 interface Props {
@@ -41,12 +44,13 @@ interface Props {
   onCheat: (cheat: Cheat) => void;
   onStartAutoplay: (spins: number) => void;
   onStopAutoplay: () => void;
+  onToggleTurbo: () => void;
   /** From the scene: where the row goes (right under the message), its zoom, and the board's width. */
   layout: HudLayout;
 }
 
 /** The whole UI on top of the canvas. */
-export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, onStartAutoplay, onStopAutoplay, layout }: Props) {
+export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, onStartAutoplay, onStopAutoplay, onToggleTurbo, layout }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   // Everything in the HUD is laid out at a fixed design size and zoomed with the scene, like the board.
   const scale = layout.zoom;
@@ -96,7 +100,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   const size = SIZES[layout.portrait ? 'portrait' : 'landscape'];
   const control = { zoom: size.control };
   const menu = (
-    <div style={layout.portrait ? control : { ...control, marginRight: 4 }}>
+    <div style={control}>
       <Menu
         open={menuOpen}
         disabled={locked}
@@ -124,6 +128,13 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
           ? <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
           : <div style={styles.loading}>Loading…</div>}
       </div>
+      {/* Turbo and autoplay hang off SPIN's sides, so SPIN itself stays centred. Turbo can be
+          switched any time, even mid-spin (it applies from the next spin). */}
+      <div style={{ ...styles.turbo, ...others }}>
+        <div style={{ zoom: size.autoplay }}>
+          <TurboButton on={s.turbo} disabled={!s.ready || s.state === 'splash'} onToggle={onToggleTurbo} />
+        </div>
+      </div>
       <div style={{ ...styles.auto, ...others }}>
         <div style={{ zoom: size.autoplay }}>
           <AutoplayButton
@@ -142,7 +153,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
       <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
     </div>
   );
-  const cheats = <div style={layout.portrait ? control : { ...control, marginRight: 101 }}><CheatMenu onCheat={onCheat} /></div>;
+  const cheats = <div style={control}><CheatMenu onCheat={onCheat} /></div>;
   // Its position and width are divided by the zoom, because zoom scales those too. Hidden until
   // the scene has placed it (layout.boardWidth is 0 until then).
   const place: CSSProperties = {
@@ -150,19 +161,22 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     visibility: layout.boardWidth ? 'visible' : 'hidden',
   };
 
-  // Landscape: one row right under the message: menu, cheats, balance | SPIN (centred) + autoplay | bet. Portrait: at the bottom of the screen, balance, bet and cheats, then menu | SPIN + autoplay.
+  // Landscape: one row right under the message: menu and cheats at the left edge, then balance |
+  // SPIN (centred), with turbo and autoplay at its sides | bet. Portrait: at the bottom of the
+  // screen, balance and bet, cheats under them, then menu | SPIN with turbo and autoplay.
   return layout.portrait ? (
     <div style={{ ...place, ...styles.stack }}>
-      <div style={{ ...styles.pair, ...others }}>{balance}{bet}{cheats}</div>
+      <div style={{ ...styles.pair, ...others }}>{balance}{bet}</div>
+      <div style={{ ...styles.pair, ...others }}>{cheats}</div>
       <div style={styles.row}>
-        <div style={{ ...styles.left, ...others }}>{menu}</div>
+        <div style={{ ...styles.left, ...others, paddingRight: 110 }}>{menu}</div>
         {spin}
         <div style={{ ...styles.right, ...others, paddingLeft: 110 }} />
       </div>
     </div>
   ) : (
     <div style={{ ...place, ...styles.row }}>
-      <div style={{ ...styles.left, ...others }}>{menu}{cheats}{balance}</div>
+      <div style={{ ...styles.left, ...styles.edge, ...others }}>{menu}<div style={{ marginRight: 'auto' }}>{cheats}</div>{balance}</div>
       {spin}
       <div style={{ ...styles.right, ...others }}>{bet}</div>
     </div>
@@ -179,13 +193,17 @@ const styles = {
   loading: { width: 110, height: 110, display: 'grid', placeItems: 'center', fontSize: 22, fontWeight: 800, color: colors.gold },
   // One line: SPIN in the exact middle (equal side columns), each side tucked in towards it.
   row: { display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 28 },
-  left: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 28 },
+  // Each side leaves room for the button hanging off SPIN (turbo / autoplay), the same on both, so
+  // balance and bet sit the same distance from SPIN.
+  left: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 28, paddingRight: 80 },
+  // Landscape: menu and cheats keep to the row's left edge, so the left side never pushes SPIN off centre.
+  edge: { justifyContent: 'flex-start', gap: 30, paddingLeft: 40 },
   // Portrait: the balance and bet row above the SPIN row.
-  stack: { display: 'flex', flexDirection: 'column', gap: 20 },
+  stack: { display: 'flex', flexDirection: 'column', gap: 24 },
   pair: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28 },
   centre: { position: 'relative' },
-  // Hangs off SPIN's right side, so SPIN itself stays centred.
+  // Hang off SPIN's sides, so SPIN itself stays centred.
   auto: { position: 'absolute', left: 'calc(100% + 16px)', top: '50%', transform: 'translateY(-50%)' },
-  // Leaves room for the autoplay button that hangs off SPIN.
+  turbo: { position: 'absolute', right: 'calc(100% + 16px)', top: '50%', transform: 'translateY(-50%)' },
   right: { display: 'flex', alignItems: 'center', gap: 28, paddingLeft: 80 },
 } satisfies Record<string, CSSProperties>;

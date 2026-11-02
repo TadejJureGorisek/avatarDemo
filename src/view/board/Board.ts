@@ -17,6 +17,8 @@ export class Board extends Container {
   private glows: Graphics[];
   /** STOP was pressed this spin: every reel races in, and no more anticipation. */
   private hurried = false;
+  /** This spin is a turbo one: STOP lands every reel at once. */
+  private turbo = false;
   /** Width including the frame around the reels. */
   get frameWidth() {
     return this.boardWidth + FRAME_PAD * 2;
@@ -86,10 +88,11 @@ export class Board extends Container {
     return this.reels.flatMap((r) => r.visibleCells);
   }
 
-  /** Starts the reels one after another, each with its springy wind-up. */
-  start() {
+  /** Starts the reels one after another, each with its springy wind-up, `turbo` × as fast. */
+  start(turbo = 1) {
     this.hurried = false;
-    this.reels.forEach((reel, i) => reel.start(i * REEL_START_STAGGER));
+    this.turbo = turbo > 1;
+    this.reels.forEach((reel, i) => reel.start((i * REEL_START_STAGGER) / turbo, turbo));
   }
 
   /** Bonus anticipation on a reel: it speeds up then slows down, and its glow blinks until it lands. */
@@ -109,14 +112,14 @@ export class Board extends Container {
 
   /**
    * Lands `grid` reel by reel; reel i starts stopping `delays[i]` seconds from now.
-   * Once `skip` resolves (player pressed STOP), every reel stops straight away, racing in fast,
-   * and any anticipation is dropped.
+   * Once `skip` resolves (player pressed STOP), every reel stops straight away, racing in fast (or
+   * landing at once in turbo), and any anticipation is dropped.
    */
   stop(grid: Grid, delays: number[], onReelLanded: (reel: number) => void, skip: Promise<void>) {
     void skip.then(() => {
       this.hurried = true;
       this.reels.forEach((reel, i) => {
-        reel.hurry();
+        reel.hurry(this.turbo);
         this.endAnticipation(i);
       });
     });

@@ -23,6 +23,8 @@ export class Reel extends Container {
   /** Top to bottom. When landed: rows 0..rows-1, then the hidden spare cell. */
   private cells: Cell[];
   private speed = { value: 0 };
+  /** Full speed this spin (px per second): faster with turbo. */
+  private fullSpeed = 0;
   /** Stop symbols still waiting to enter from the top. */
   private queue: string[] = [];
   /** Cells recycled since `start()`: the spare goes first, so the old landed symbols are gone after `rows + 1`. */
@@ -30,6 +32,10 @@ export class Reel extends Container {
   private landed?: () => void;
   /** Set by STOP for this spin: race in and land with a short, snappy bounce. */
   private hurried = false;
+  /** Set by STOP during a turbo spin: land on the stop symbols straight away. */
+  private instant = false;
+  /** The springy start (an instant stop cuts it short). */
+  private starting?: gsap.core.Timeline;
 
   constructor(
     private rows: number,
@@ -57,40 +63,70 @@ export class Reel extends Container {
   }
 
   /**
-   * Springy start, after `delay` seconds: the reel pulls up a little (the spare cell below peeks
+   * Springy start, after `delay` seconds, up to `turbo` × full speed: the reel pulls up a little (the spare cell below peeks
    * in), then launches down into the spin. The spare is recycled to the top first as it scrolls out.
    */
-  start(delay = 0) {
+  start(delay = 0, turbo = 1) {
     this.recycled = 0;
+    this.fullSpeed = SPEED * this.cellSize * turbo;
     this.hurried = false;
-    gsap.timeline({ delay })
+    this.instant = false;
+    this.starting = gsap.timeline({ delay })
       .to(this.cells, { y: `-=${this.cellSize * WINDUP}`, duration: 0.15, ease: 'power2.out' })
       .call(() => {
         gsap.ticker.add(this.scroll);
       })
-      .to(this.speed, { value: SPEED * this.cellSize, duration: 0.25, ease: 'power2.in' });
+      .to(this.speed, { value: this.fullSpeed, duration: 0.25, ease: 'power2.in' });
   }
 
   /** Bonus anticipation: rev up to well above full speed, then ease down to a slow crawl until it lands. */
   anticipate() {
     gsap.killTweensOf(this.speed);
     gsap.timeline()
-      .to(this.speed, { value: SPEED * this.cellSize * 1.7, duration: 0.3, ease: 'power1.out' })
-      .to(this.speed, { value: SPEED * this.cellSize * 0.35, duration: 0.6, ease: 'power2.inOut' });
+      .to(this.speed, { value: this.fullSpeed * 1.7, duration: 0.3, ease: 'power1.out' })
+      .to(this.speed, { value: this.fullSpeed * 0.35, duration: 0.6, ease: 'power2.inOut' });
   }
 
-  /** STOP: jump to well above full speed (cancelling any wind-up or anticipation easing) and land snappily. */
-  hurry() {
+  /**
+   * STOP: jump to well above full speed (cancelling any wind-up or anticipation easing) and land
+   * snappily; or, when `instant` (turbo), land on the stop symbols right away.
+   */
+  hurry(instant = false) {
     this.hurried = true;
+    this.instant = instant;
+    if (instant && this.landed) this.snap();
     gsap.killTweensOf(this.speed);
-    this.speed.value = SPEED * this.cellSize * HURRY;
+    this.speed.value = this.fullSpeed * HURRY;
   }
 
   /** Feeds `stopSymbols` in and resolves once they've landed. */
   stop(stopSymbols: string[]) {
     this.stopSymbols = stopSymbols;
     this.queue = [...stopSymbols].reverse();
-    return new Promise<void>((resolve) => (this.landed = resolve));
+    const landed = new Promise<void>((resolve) => (this.landed = resolve));
+    if (this.instant) this.snap();
+    return landed;
+  }
+
+  /** Puts the stop symbols in place at once (cutting any spin or landing short) and lands. */
+  private snap() {
+    this.starting?.kill();
+    gsap.ticker.remove(this.scroll);
+    gsap.killTweensOf([this.speed, this.cells]);
+    this.speed.value = 0;
+    this.queue = [];
+    this.cells.forEach((cell, row) => {
+      cell.setSymbol(this.getSymbol(row < this.rows ? this.stopSymbols[row] : this.fillerSymbol()));
+      cell.y = this.rowY(row);
+    });
+    this.finish();
+  }
+
+  /** Resolves `stop()` (once). */
+  private finish() {
+    const landed = this.landed;
+    this.landed = undefined;
+    landed?.();
   }
 
   private scroll = (_time: number, deltaMs: number) => {
@@ -118,14 +154,14 @@ export class Reel extends Container {
   private land() {
     gsap.ticker.remove(this.scroll);
     gsap.killTweensOf(this.speed);
-    const speed = Math.max(this.speed.value, SPEED * this.cellSize * 0.3);
+    const speed = Math.max(this.speed.value, this.fullSpeed * 0.3);
     this.speed.value = 0;
     const distance = this.rowY(0) - this.cells[0].y;
     const bounce = this.cellSize * BOUNCE * (this.hurried ? 0.4 : 1);
     const [overshoot, settle] = this.hurried ? [0.06, 0.12] : [0.12, 0.3];
     const spare = this.cells[this.cells.length - 1];
 
-    gsap.timeline({ onComplete: () => this.landed?.() })
+    gsap.timeline({ onComplete: () => this.finish() })
       .to(this.cells, { y: `+=${distance}`, duration: distance / speed, ease: 'none' })
       // The spare cell has just left the bottom: put it above row 0 so the overshoot shows a symbol there.
       .call(() => {

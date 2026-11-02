@@ -36,6 +36,8 @@ export interface GameContext {
   waitForStop: () => Promise<void>;
   /** Uses up one autoplay spin; false when autoplay is off or finished. */
   takeAutoSpin: () => boolean;
+  /** True while TURBO is on: spins run faster. */
+  turbo: () => boolean;
   /** True while more autoplay spins are still to come. */
   autoplayRunning: () => boolean;
   stopAutoplay: () => void;

@@ -69,6 +69,8 @@ export const config = {
     reelStopStagger: 0.2,
     /** Extra spinning per remaining reel while the bonus anticipation plays. */
     anticipationExtra: 0.9,
+    /** With TURBO on, the reels spin this many times faster and every wait above is that much shorter. */
+    turboSpeed: 2,
   },
 };
 

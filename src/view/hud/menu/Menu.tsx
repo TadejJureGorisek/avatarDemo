@@ -1,4 +1,5 @@
 import { useRef, useState, type CSSProperties } from 'react';
+import { Icon } from '../Icon';
 import { createPortal } from 'react-dom';
 import type { GameConfig } from '../../../engine/config';
 import { colors, disabledLook } from '../theme';
@@ -41,7 +42,7 @@ export function Menu(p: Props) {
   return (
     <>
       <button style={{ ...styles.burger, ...disabledLook(p.disabled) }} onClick={() => p.onOpenChange(true)}
-        disabled={p.disabled} aria-label="Menu">☰</button>
+        disabled={p.disabled} aria-label="Menu"><Icon name="menu" size={26} /></button>
       {p.open && createPortal(
         <div style={styles.overlay} onClick={() => p.onOpenChange(false)}>
           <div style={{ ...styles.panel, ...panelSize }} onClick={(e) => e.stopPropagation()}>
@@ -51,7 +52,7 @@ export function Menu(p: Props) {
                   {t}
                 </button>
               ))}
-              <button style={styles.close} onClick={() => p.onOpenChange(false)} aria-label="Close">✕</button>
+              <button style={styles.close} onClick={() => p.onOpenChange(false)} aria-label="Close"><Icon name="close" size={18} /></button>
             </div>
             <div style={styles.content} ref={content}>
               {tab === 'HOW TO PLAY' && <HowToPlay config={p.config} bet={p.bet} />}
@@ -84,7 +85,8 @@ export function Menu(p: Props) {
 const styles = {
   burger: {
     width: 52, height: 52, borderRadius: 12, cursor: 'pointer',
-    fontSize: 24, border: `2px solid ${colors.border}`, background: colors.panel, color: colors.gold,
+    display: 'grid', placeItems: 'center', padding: 0,
+    border: `2px solid ${colors.border}`, background: colors.panel, color: colors.gold,
   },
   overlay: {
     position: 'fixed', inset: 0, zIndex: 10, display: 'grid', placeItems: 'center', padding: 16,
@@ -101,7 +103,8 @@ const styles = {
   },
   activeTab: { background: colors.gold, color: colors.dark },
   close: {
-    marginLeft: 'auto', width: 36, borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 18,
+    marginLeft: 'auto', width: 36, borderRadius: 8, border: 'none', cursor: 'pointer',
+    display: 'grid', placeItems: 'center',
     background: 'transparent', color: '#fff',
   },
   content: {

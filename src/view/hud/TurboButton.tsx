@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { TurboIcon } from './icons';
+import { Icon } from './Icon';
 import { colors, disabledLook } from './theme';
 
 interface Props {
@@ -17,7 +17,7 @@ export function TurboButton({ on, disabled, onToggle }: Props) {
       aria-label={on ? 'Turbo on' : 'Turbo off'}
       aria-pressed={on}
     >
-      <TurboIcon />
+      <Icon name="turbo" size={26} />
     </button>
   );
 }

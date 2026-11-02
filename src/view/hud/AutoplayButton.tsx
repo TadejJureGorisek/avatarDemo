@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { AutoplayIcon } from './icons';
+import { Icon } from './Icon';
 import { colors, disabledLook } from './theme';
 
 export const AUTOPLAY_COUNTS = [10, 25, 50, 100];
@@ -30,7 +30,7 @@ export function AutoplayButton({ open, choice, disabled, onToggle, onChoose }: P
         onClick={onToggle}
         aria-label={open ? 'Close autoplay' : 'Autoplay'}
       >
-        {open ? '✕' : <AutoplayIcon />}
+        <Icon name={open ? 'close' : 'autoplay'} size={open ? 20 : 26} />
       </button>
     </div>
   );

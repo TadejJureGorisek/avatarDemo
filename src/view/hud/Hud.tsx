@@ -4,7 +4,7 @@ import type { HudLayout } from '../MainView';
 import type { StateName } from '../states/StateMachine';
 import { AutoplayButton, AUTOPLAY_COUNTS } from './AutoplayButton';
 import { Balance } from './Balance';
-import { ArrowIcon, SpinIcon, StopIcon } from './icons';
+import { Icon } from './Icon';
 import { BetControl } from './BetControl';
 import { CheatMenu, type Cheat } from './CheatMenu';
 import type { HistoryEntry } from './menu/History';
@@ -56,13 +56,13 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   const splash = s.state === 'splash';
   const intro = splash || !s.ready;
   const others: CSSProperties = { opacity: intro ? 0 : 1, pointerEvents: intro ? 'none' : undefined, transition: 'opacity 0.5s' };
-  const [spinLabel, spinAria] = splash ? [<ArrowIcon />, 'Continue']
+  const [spinLabel, spinAria] = splash ? [<Icon name="continue" size={44} />, 'Continue']
     : autoOpen ? [autoChoice, `Start autoplay, ${autoChoice} spins`]
-    : s.freeSpinsReady ? [<SpinIcon />, `Start ${s.freeSpinsLeft} free spins`]
-    : s.continueReady ? [<SpinIcon />, 'Continue']
+    : s.freeSpinsReady ? [<Icon name="spin" size={44} />, `Start ${s.freeSpinsLeft} free spins`]
+    : s.continueReady ? [<Icon name="spin" size={44} />, 'Continue']
     : inFreeSpins ? [s.freeSpinsLeft, `${s.freeSpinsLeft} free spins left`]
     : autoplay ? [s.autoplayLeft, `Stop autoplay, ${s.autoplayLeft} spins left`]
-    : s.state === 'spin' ? [<StopIcon />, 'Stop'] : [<SpinIcon />, 'Spin'];
+    : s.state === 'spin' ? [<Icon name="stop" size={30} />, 'Stop'] : [<Icon name="spin" size={44} />, 'Spin'];
   const spinDisabled = !s.freeSpinsReady && !s.continueReady && (!s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay)
     || (autoOpen && locked) || (stopPressed && !autoplay));
   const pressSpin = () => {

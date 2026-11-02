@@ -78,8 +78,9 @@ const styles = {
     position: 'fixed', inset: 0, zIndex: 10, display: 'grid', placeItems: 'center', padding: 16,
     background: 'rgb(0 0 0 / 0.6)',
   },
+  // Fixed size for every tab, so switching tabs doesn't resize the panel; long tabs scroll inside.
   panel: {
-    width: 'min(860px, 100%)', maxHeight: '100%', display: 'flex', flexDirection: 'column', borderRadius: 18,
+    width: 'min(860px, 100%)', height: 'min(620px, 100%)', display: 'flex', flexDirection: 'column', borderRadius: 18,
     background: '#1a0b3d', border: `3px solid ${colors.gold}`, overflow: 'hidden',
   },
   tabs: { display: 'flex', flexWrap: 'wrap', gap: 4, padding: 8, borderBottom: `2px solid ${colors.border}` },
@@ -92,5 +93,5 @@ const styles = {
     marginLeft: 'auto', width: 36, borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 18,
     background: 'transparent', color: '#fff',
   },
-  content: { padding: '12px 20px 20px', overflow: 'auto' },
+  content: { flex: 1, minHeight: 0, padding: '12px 20px 20px', overflow: 'auto' },
 } satisfies Record<string, CSSProperties>;

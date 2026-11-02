@@ -37,10 +37,12 @@ interface Props {
   onStopAutoplay: () => void;
   /** Reports the bottom bar's height whenever it changes, so the scene can fit above it. */
   onHeight: (height: number) => void;
+  /** On-screen width of the board; the menu panel matches it. */
+  menuWidth: number;
 }
 
 /** The whole UI on top of the canvas. */
-export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, onStartAutoplay, onStopAutoplay, onHeight }: Props) {
+export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, onStartAutoplay, onStopAutoplay, onHeight, menuWidth }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const inFreeSpins = s.freeSpin || s.freeSpinsLeft > 0;
   const autoplay = s.autoplayLeft > 0;
@@ -69,6 +71,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
         <div>
           <Menu
             open={menuOpen}
+            width={menuWidth}
             onOpenChange={setMenuOpen}
             config={config}
             bet={s.bet}

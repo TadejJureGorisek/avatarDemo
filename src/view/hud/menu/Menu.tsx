@@ -1,16 +1,19 @@
-import { useState, type CSSProperties } from 'react';
+import { useRef, useState, type CSSProperties } from 'react';
 import type { GameConfig } from '../../../engine/config';
 import { colors } from '../theme';
 import { About } from './About';
 import { Autoplay } from './Autoplay';
 import { History, type HistoryEntry } from './History';
 import { HowToPlay } from './HowToPlay';
+import { useDragScroll } from './useDragScroll';
 
 const TABS = ['HOW TO PLAY', 'ABOUT THE GAME', 'AUTOPLAY', 'HISTORY'] as const;
 type Tab = (typeof TABS)[number];
 
 interface Props {
   open: boolean;
+  /** Panel width in px (the board's on-screen width); 0 until the scene has laid out. */
+  width: number;
   onOpenChange: (open: boolean) => void;
   config: GameConfig;
   bet: number;
@@ -27,13 +30,15 @@ interface Props {
 /** Burger button (sits in the bottom bar) and the full-screen menu panel with its four tabs. */
 export function Menu(p: Props) {
   const [tab, setTab] = useState<Tab>('HOW TO PLAY');
+  const content = useRef<HTMLDivElement>(null);
+  useDragScroll(content);
 
   return (
     <>
       <button style={styles.burger} onClick={() => p.onOpenChange(true)} aria-label="Menu">☰</button>
       {p.open && (
         <div style={styles.overlay} onClick={() => p.onOpenChange(false)}>
-          <div style={styles.panel} onClick={(e) => e.stopPropagation()}>
+          <div style={{ ...styles.panel, width: p.width ? `min(${Math.round(p.width)}px, 100%)` : styles.panel.width }} onClick={(e) => e.stopPropagation()}>
             <div style={styles.tabs}>
               {TABS.map((t) => (
                 <button key={t} style={{ ...styles.tab, ...(t === tab ? styles.activeTab : {}) }} onClick={() => setTab(t)}>
@@ -42,7 +47,7 @@ export function Menu(p: Props) {
               ))}
               <button style={styles.close} onClick={() => p.onOpenChange(false)} aria-label="Close">✕</button>
             </div>
-            <div style={styles.content}>
+            <div style={styles.content} ref={content}>
               {tab === 'HOW TO PLAY' && <HowToPlay config={p.config} bet={p.bet} />}
               {tab === 'ABOUT THE GAME' && <About config={p.config} />}
               {tab === 'AUTOPLAY' && (
@@ -78,7 +83,8 @@ const styles = {
     position: 'fixed', inset: 0, zIndex: 10, display: 'grid', placeItems: 'center', padding: 16,
     background: 'rgb(0 0 0 / 0.6)',
   },
-  // Fixed size for every tab, so switching tabs doesn't resize the panel; long tabs scroll inside.
+  // Fixed size for every tab (as wide as the board, centred on screen), so switching tabs doesn't
+  // resize the panel; long tabs scroll inside.
   panel: {
     width: 'min(860px, 100%)', height: 'min(620px, 100%)', display: 'flex', flexDirection: 'column', borderRadius: 18,
     background: '#1a0b3d', border: `3px solid ${colors.gold}`, overflow: 'hidden',
@@ -93,5 +99,9 @@ const styles = {
     marginLeft: 'auto', width: 36, borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 18,
     background: 'transparent', color: '#fff',
   },
-  content: { flex: 1, minHeight: 0, padding: '12px 20px 20px', overflow: 'auto' },
+  // Themed scrollbar (thin gold thumb on the dark panel) via the standard properties, so no CSS file.
+  content: {
+    flex: 1, minHeight: 0, padding: '12px 20px 20px', overflow: 'auto',
+    scrollbarWidth: 'thin', scrollbarColor: `${colors.gold} ${colors.panel}`,
+  },
 } satisfies Record<string, CSSProperties>;

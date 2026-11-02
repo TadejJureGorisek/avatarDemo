@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { Section, TabTitle } from './Section';
 
 export interface HistoryEntry {
   time: Date;
@@ -10,7 +11,17 @@ export interface HistoryEntry {
 
 /** Last spins, newest first. */
 export function History({ entries }: { entries: HistoryEntry[] }) {
-  if (!entries.length) return <p>No spins yet.</p>;
+  return (
+    <>
+      <TabTitle>HISTORY</TabTitle>
+      <Section subtitle="Last 50 spins">
+        {entries.length ? <Table entries={entries} /> : 'No spins yet.'}
+      </Section>
+    </>
+  );
+}
+
+function Table({ entries }: { entries: HistoryEntry[] }) {
   return (
     <table style={table}>
       <thead>
@@ -39,4 +50,4 @@ export function History({ entries }: { entries: HistoryEntry[] }) {
 }
 
 const table: CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 14 };
-const cell: CSSProperties = { textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid rgb(255 255 255 / 0.1)' };
+const cell: CSSProperties = { textAlign: 'center', padding: '6px 8px', borderBottom: '1px solid rgb(255 255 255 / 0.1)' };

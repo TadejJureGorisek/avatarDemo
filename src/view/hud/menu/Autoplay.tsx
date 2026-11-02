@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { BetControl } from '../BetControl';
 import { colors, disabledLook } from '../theme';
+import { Section, TabTitle } from './Section';
 
 const COUNTS = [10, 25, 50, 100];
 
@@ -21,25 +22,36 @@ export function Autoplay({ bet, atMinBet, atMaxBet, onBetChange, autoplayLeft, c
   if (autoplayLeft > 0) {
     return (
       <>
-        <p>Autoplay running: {autoplayLeft} spins left.</p>
-        <button style={button} onClick={onStop}>Stop autoplay</button>
+        <TabTitle>AUTOPLAY</TabTitle>
+        <Section subtitle="Running">
+          <p style={{ margin: '0 0 12px' }}>{autoplayLeft} spins left.</p>
+          <button style={button} onClick={onStop}>Stop autoplay</button>
+        </Section>
       </>
     );
   }
   return (
     <>
-      <p>Spins play automatically at this bet. Autoplay stops if your balance runs out; free spins play first, then autoplay carries on.</p>
-      <div style={{ display: 'inline-flex', marginBottom: 14 }}>
-        <BetControl bet={bet} disabled={!canStart} atMin={atMinBet} atMax={atMaxBet} onChange={onBetChange} />
-      </div>
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        {COUNTS.map((n) => (
-          <button key={n} style={{ ...button, ...disabledLook(!canStart) }} disabled={!canStart} onClick={() => onStart(n)}>
-            {n} spins
-          </button>
-        ))}
-      </div>
-      {!canStart && <p style={{ opacity: 0.7 }}>Wait for the current spin to finish.</p>}
+      <TabTitle>AUTOPLAY</TabTitle>
+      <Section subtitle="How it works">
+        Spins play automatically at this bet. Autoplay stops if your balance runs out; free spins play
+        first, then autoplay carries on.
+      </Section>
+      <Section subtitle="Bet">
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <BetControl bet={bet} disabled={!canStart} atMin={atMinBet} atMax={atMaxBet} onChange={onBetChange} />
+        </div>
+      </Section>
+      <Section subtitle="Number of spins">
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {COUNTS.map((n) => (
+            <button key={n} style={{ ...button, ...disabledLook(!canStart) }} disabled={!canStart} onClick={() => onStart(n)}>
+              {n} spins
+            </button>
+          ))}
+        </div>
+        {!canStart && <p style={{ margin: '10px 0 0' }}>Wait for the current spin to finish.</p>}
+      </Section>
     </>
   );
 }

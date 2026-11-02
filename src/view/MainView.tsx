@@ -41,10 +41,12 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const hudHeight = useRef(0);
   const relayout = useRef<() => void>();
   const symbolInfoRef = useRef<SymbolInfo>();
+  // The board frame's on-screen width; the menu panel matches it.
+  const [boardWidth, setBoardWidth] = useState(0);
 
   useEffect(() => {
     const app = new Application();
-    createScene(app, host.current!, engine, () => hudHeight.current).then(({ layout, ...scene }) => {
+    createScene(app, host.current!, engine, () => hudHeight.current, setBoardWidth).then(({ layout, ...scene }) => {
       relayout.current = layout;
       machine.current = new StateMachine(
         { bet: BetState, spin: SpinState, win: WinState },
@@ -116,12 +118,19 @@ export function MainView({ engine }: { engine: SlotEngine }) {
         onStartAutoplay={startAutoplay}
         onStopAutoplay={stopAutoplay}
         onHeight={onHudHeight}
+        menuWidth={boardWidth}
       />
     </div>
   );
 }
 
-async function createScene(app: Application, host: HTMLElement, engine: SlotEngine, hudHeight: () => number) {
+async function createScene(
+  app: Application,
+  host: HTMLElement,
+  engine: SlotEngine,
+  hudHeight: () => number,
+  onBoardWidth: (px: number) => void,
+) {
   await app.init({
     resizeTo: host, backgroundAlpha: 0, antialias: true, autoDensity: true,
     resolution: Math.min(devicePixelRatio, 2)
@@ -171,6 +180,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
     const scale = Math.min(width / DESIGN.width, available / DESIGN.height);
     scene.scale.set(scale);
     scene.position.set((width - DESIGN.width * scale) / 2, (available - DESIGN.height * scale) / 2);
+    onBoardWidth(board.frameWidth * scale);
   };
   app.renderer.on('resize', layout);
   layout();

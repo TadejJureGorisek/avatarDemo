@@ -4,11 +4,17 @@ import type { SymbolDef } from '../../engine/config';
 import type { Grid } from '../../engine/SlotEngine';
 import { Reel } from './Reel';
 
+const FRAME_PAD = 18;
+
 /** The symbols area: a frame, a mask and `reels` Reel columns of `rows` cells each. */
 export class Board extends Container {
   readonly reels: Reel[];
   readonly boardWidth: number;
   readonly boardHeight: number;
+  /** Width including the frame around the reels. */
+  get frameWidth() {
+    return this.boardWidth + FRAME_PAD * 2;
+  }
 
   constructor(
     reels: number,
@@ -26,7 +32,7 @@ export class Board extends Container {
     const mask = new Graphics().rect(0, 0, this.boardWidth, this.boardHeight).fill(0xffffff);
     reelLayer.mask = mask;
     this.addChild(
-      new Graphics().roundRect(-18, -18, this.boardWidth + 36, this.boardHeight + 36, 28)
+      new Graphics().roundRect(-FRAME_PAD, -FRAME_PAD, this.frameWidth, this.boardHeight + FRAME_PAD * 2, 28)
         .fill({ color: 0x1a0b3d, alpha: 0.85 }).stroke({ color: 0xffc94a, width: 6 }),
       reelLayer,
       mask,

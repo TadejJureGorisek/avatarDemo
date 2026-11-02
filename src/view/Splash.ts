@@ -1,7 +1,7 @@
 import gsap from 'gsap';
 import { Assets, Container, Graphics, Rectangle, Sprite, Text, type FederatedPointerEvent } from 'pixi.js';
 import type { GameConfig } from '../engine/config';
-import { BigWin } from './BigWin';
+import { BigWin, BIG_WIN_SIZE } from './BigWin';
 import { symbolUrl } from './board/Cell';
 import { Character } from './Character';
 import { logo } from './Logo';
@@ -191,7 +191,7 @@ export class Splash extends Container {
     // The count-up animates the panel's own scale, so the fit goes on the slide's picture holder instead.
     const s: Slide = slide(x, titleY, textY, 'BIG WINS',
       `Win ${bigWins[0].x}× your bet or more for a big win.\nGo all the way to ${top.title}!`, bigWin,
-      Math.min(1, box.height / 420, box.width / 900));
+      Math.min(1, box.height / BIG_WIN_SIZE.height, box.width / BIG_WIN_SIZE.width));
     let looping = false;
     s.onShow = async () => {
       if (looping) return;

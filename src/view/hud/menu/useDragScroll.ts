@@ -3,10 +3,7 @@ import { useEffect, type RefObject } from 'react';
 /** Movement (px) before a press turns into a drag, so plain clicks on buttons still work. */
 const THRESHOLD = 5;
 
-/**
- * Click-and-drag scrolling with the mouse. Touch swipes already scroll natively, so those are
- * left to the browser.
- */
+/** Click-and-drag scrolling for the mouse; touch already scrolls natively. */
 export function useDragScroll(ref: RefObject<HTMLElement>) {
   useEffect(() => {
     const el = ref.current;

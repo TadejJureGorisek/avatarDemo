@@ -6,7 +6,7 @@ export const CHARACTER_ASSETS = [
   { alias: 'characterAtlas', src: 'assets/character/character.atlas' },
 ];
 
-/** Spine 4.2 character. Track 0 loops idle; reactions play once and queue idle back in. */
+/** Spine 4.2. Track 0 loops idle; reactions play once and queue idle back in. */
 export class Character extends Container {
   private spine = Spine.from({ skeleton: 'characterSkeleton', atlas: 'characterAtlas', scale: 0.95 });
 

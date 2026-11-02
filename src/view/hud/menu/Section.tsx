@@ -1,12 +1,10 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { colors } from '../theme';
 
-/** Big gold heading at the top of a menu tab. */
 export function TabTitle({ children }: { children: ReactNode }) {
   return <h2 style={styles.title}>{children}</h2>;
 }
 
-/** One centred block of a menu tab: a subtitle and its content. */
 export function Section({ subtitle, children }: { subtitle: string; children: ReactNode }) {
   return (
     <section style={styles.section}>

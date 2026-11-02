@@ -1,6 +1,5 @@
 import { Text } from 'pixi.js';
 
-/** Player message ("Press SPIN to play", "Win on 3 ways!"...) centred below the board. */
 export class Message extends Text {
   constructor() {
     super({
@@ -12,10 +11,7 @@ export class Message extends Text {
     this.anchor.set(0.5);
   }
 
-  /**
-   * Free spins play themselves, so never "Press SPIN": the round's running total ("Good luck!"
-   * while it's 0), or the final total once `roundOver`.
-   */
+  /** Free spins play themselves, so this replaces "Press SPIN" with the round's running or final total. */
   showFreeSpinsTotal(total: number, roundOver = false) {
     this.text = roundOver
       ? `Free spins total: ${total.toFixed(2)}`

@@ -16,10 +16,7 @@ interface Props {
   onCheat: (cheat: Cheat) => void;
 }
 
-/**
- * Demo shortcuts: force the next spin to land a big win tier or to trigger free spins. Always
- * available, so a cheat can also be lined up for the next spin of free spins or autoplay.
- */
+// Never locked, so a cheat can also be lined up for the next spin of free spins or autoplay.
 export function CheatMenu({ onCheat }: Props) {
   const [open, setOpen] = useState(false);
   const pick = (cheat: Cheat) => {

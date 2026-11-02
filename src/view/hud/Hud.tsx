@@ -15,22 +15,20 @@ import { colors } from './theme';
 
 export interface HudState {
   ready: boolean;
-  /** Current game state; controls are only live in the bet state. */
+  /** Controls are only live in the bet state. */
   state: StateName;
   balance: number;
   bet: number;
   atMinBet: boolean;
   atMaxBet: boolean;
   freeSpinsLeft: number;
-  /** True while a free spin is playing (including the last one, when freeSpinsLeft is already 0). */
+  /** A free spin is playing (including the last one, when freeSpinsLeft is already 0). */
   freeSpin: boolean;
-  /** Autoplay spins still to come; 0 when autoplay is off. */
   autoplayLeft: number;
   /** Free spins were just won and wait for the player to press SPIN to start them. */
   freeSpinsReady: boolean;
   /** Free spins just ended and the result waits for the player to press SPIN to continue. */
   continueReady: boolean;
-  /** TURBO is on: spins run faster. */
   turbo: boolean;
 }
 
@@ -38,23 +36,22 @@ interface Props {
   state: HudState;
   config: GameConfig;
   history: HistoryEntry[];
-  /** SPIN / STOP, or stops autoplay while it runs. */
+  /** Also stops autoplay while it runs. */
   onSpin: () => void;
   onBetChange: (direction: 1 | -1) => void;
   onCheat: (cheat: Cheat) => void;
   onStartAutoplay: (spins: number) => void;
   onStopAutoplay: () => void;
   onToggleTurbo: () => void;
-  /** From the scene: where the row goes (right under the message), its zoom, and the board's width. */
+  /** From the scene: where the HUD goes, its zoom, and the board's width. */
   layout: HudLayout;
 }
 
-/** The whole UI on top of the canvas. */
 export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, onStartAutoplay, onStopAutoplay, onToggleTurbo, layout }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
-  // Everything in the HUD is laid out at a fixed design size and zoomed with the scene, like the board.
+  // The HUD is laid out at a fixed design size and zoomed with the scene, like the board.
   const scale = layout.zoom;
-  // Mini autoplay pop-up next to SPIN: while it's open, SPIN shows the picked spins and starts autoplay.
+  // While the autoplay pop-up is open, SPIN shows the picked spins and starts autoplay.
   const [autoOpen, setAutoOpen] = useState(false);
   const [autoChoice, setAutoChoice] = useState(AUTOPLAY_COUNTS[0]);
   // Once STOP is pressed the button stays off until the reels have landed and it's SPIN again.
@@ -70,11 +67,8 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   const splash = s.state === 'splash';
   const intro = splash || !s.ready;
   const others: CSSProperties = { opacity: intro ? 0 : 1, pointerEvents: intro ? 'none' : undefined, transition: 'opacity 0.5s' };
-  // An arrow (CONTINUE) on the splash, spin icon in the bet state (also while won free spins wait
-  // to be started), stop icon while spinning, and
-  // numbers otherwise: the free spins left during free spins (they play themselves), the autoplay
-  // spins left during autoplay (pressing it stops autoplay), and the picked spins while the mini
-  // autoplay pop-up is open (pressing it starts autoplay).
+  // Numbers instead of an icon: free spins left (they play themselves), autoplay spins left
+  // (pressing stops autoplay), or the picked spins while the autoplay pop-up is open.
   const [spinLabel, spinAria] = splash ? [<ArrowIcon />, 'Continue']
     : autoOpen ? [autoChoice, `Start autoplay, ${autoChoice} spins`]
     : s.freeSpinsReady ? [<SpinIcon />, `Start ${s.freeSpinsLeft} free spins`]
@@ -95,8 +89,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     onStartAutoplay(autoChoice);
   };
 
-  // Each control's size relative to its own design size: SPIN stands out most, then autoplay;
-  // in portrait, where the HUD has the whole bottom of the screen, they're all bigger still.
+  // Zoom per control: SPIN stands out most, then autoplay; portrait has room for bigger controls.
   const size = SIZES[layout.portrait ? 'portrait' : 'landscape'];
   const control = { zoom: size.control };
   const menu = (
@@ -129,11 +122,10 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
           ? <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
           : <div style={styles.loading}>Loading…</div>}
       </div>
-      {/* Turbo and autoplay hang off SPIN's sides, so SPIN itself stays centred. Turbo can be
-          switched any time, even mid-spin (it applies from the next spin). */}
+      {/* Turbo can be switched any time, even mid-spin (it applies from the next spin). */}
       <div style={{ ...styles.turbo, ...others }}>
         <div style={{ zoom: size.autoplay }}>
-          <TurboButton on={s.turbo} disabled={!s.ready || s.state === 'splash'} onToggle={onToggleTurbo} />
+          <TurboButton on={s.turbo} disabled={!s.ready || splash} onToggle={onToggleTurbo} />
         </div>
       </div>
       <div style={{ ...styles.auto, ...others }}>
@@ -162,10 +154,8 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     visibility: layout.boardWidth ? 'visible' : 'hidden',
   };
 
-  // Landscape: one row right under the message: menu and cheats at the left edge, then balance |
-  // SPIN (centred), with turbo and autoplay at its sides | bet. Portrait: at the bottom of the
-  // screen, cheats over menu | SPIN with turbo and autoplay, and balance and bet on their own,
-  // halfway between that and the message.
+  // Landscape: one row under the message (menu, cheats, balance | SPIN | bet). Portrait: cheats over
+  // menu | SPIN at the bottom, with balance and bet halfway between that and the message.
   return layout.portrait ? (
     <>
       <div style={{ ...place, ...styles.pair, ...others, top: layout.metersY / scale, transform: 'translateY(-50%)' }}>{balance}{bet}</div>
@@ -197,12 +187,10 @@ const styles = {
   loading: { width: 110, height: 110, display: 'grid', placeItems: 'center', fontSize: 22, fontWeight: 800, color: colors.gold },
   // One line: SPIN in the exact middle (equal side columns), each side tucked in towards it.
   row: { display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 28 },
-  // Each side leaves room for the button hanging off SPIN (turbo / autoplay), the same on both, so
-  // balance and bet sit the same distance from SPIN.
+  // Padding leaves room for turbo / autoplay hanging off SPIN, equal on both sides.
   left: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 28, paddingRight: 80 },
   // Landscape: menu and cheats keep to the row's left edge, so the left side never pushes SPIN off centre.
   edge: { justifyContent: 'flex-start', gap: 30, paddingLeft: 40 },
-  // Portrait: the balance and bet row above the SPIN row.
   stack: { display: 'flex', flexDirection: 'column', gap: 24 },
   pair: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28 },
   centre: { position: 'relative' },

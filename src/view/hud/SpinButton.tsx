@@ -2,15 +2,13 @@ import { useEffect, type CSSProperties, type ReactNode } from 'react';
 import { colors, disabledLook } from './theme';
 
 interface Props {
-  /** An icon (spin / stop) or a number (free spins left, autoplay spins). */
   label: ReactNode;
-  /** Spoken name for screen readers, since the label is often just an icon. */
   ariaLabel: string;
   disabled: boolean;
   onPress: () => void;
 }
 
-/** The main button; also pressed with Space. */
+/** Also pressed with Space. */
 export function SpinButton({ label, ariaLabel, disabled, onPress }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

@@ -1,7 +1,6 @@
 import type { GameConfig } from '../../../engine/config';
 import { Section, TabTitle } from './Section';
 
-/** Game facts for the player. */
 export function About({ config }: { config: GameConfig }) {
   const { reels, rows, bets, freeSpins } = config;
   return (

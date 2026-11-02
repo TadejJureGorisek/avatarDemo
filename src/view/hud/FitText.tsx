@@ -1,22 +1,24 @@
 import { useLayoutEffect, useRef } from 'react';
 
-/** One line of text that shrinks its font (from `maxSize` px down) to fit the space it's given. */
-export function FitText({ text, maxSize = 26 }: { text: string; maxSize?: number }) {
+const MAX_SIZE = 26;
+
+/** One line of text that shrinks its font from MAX_SIZE px down to fit its box. */
+export function FitText({ text }: { text: string }) {
   const box = useRef<HTMLSpanElement>(null);
   const inner = useRef<HTMLSpanElement>(null);
 
   useLayoutEffect(() => {
     const fit = () => {
       const el = inner.current!;
-      el.style.fontSize = `${maxSize}px`;
+      el.style.fontSize = `${MAX_SIZE}px`;
       const ratio = box.current!.clientWidth / el.scrollWidth;
-      if (ratio < 1) el.style.fontSize = `${Math.floor(maxSize * ratio)}px`;
+      if (ratio < 1) el.style.fontSize = `${Math.floor(MAX_SIZE * ratio)}px`;
     };
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(box.current!);
     return () => observer.disconnect();
-  }, [text, maxSize]);
+  }, [text]);
 
   return (
     <span ref={box} style={{ flex: 1, minWidth: 0, overflow: 'hidden', textAlign: 'center' }}>

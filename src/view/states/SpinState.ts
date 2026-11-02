@@ -2,18 +2,12 @@ import gsap from 'gsap';
 import type { SlotEngine, SpinResult } from '../../engine/SlotEngine';
 import type { GameState } from './StateMachine';
 
-/**
- * Starts the reels, takes the stake and gets the result, keeps spinning for at least
- * `timing.minSpinTime`, then lands the stop symbols reel by reel, with bonus anticipation. With
- * turbo on, all of it runs `timing.turboSpeed` × as fast.
- */
 export const SpinState: GameState = {
   async enter(ctx) {
     const { engine, board, wins, character, message, updateHud } = ctx;
     // Turbo speeds the reels up and shortens every wait by the same factor.
-    const { turboSpeed } = engine.config.timing;
+    const { turboSpeed, minSpinTime, reelStopStagger, anticipationExtra } = engine.config.timing;
     const turbo = ctx.turbo() ? turboSpeed : 1;
-    const { minSpinTime, reelStopStagger, anticipationExtra } = engine.config.timing;
 
     wins.clear();
     ctx.symbolInfo.hide();
@@ -32,7 +26,7 @@ export const SpinState: GameState = {
     if (result.isFreeSpin) message.showFreeSpinsTotal(engine.freeSpinsTotal - result.totalWin);
     else message.text = 'Good luck!';
 
-    // STOP cuts the minimum spin time short, and below makes every reel stop straight away.
+    // STOP cuts the minimum spin time short, and board.stop then lands every reel straight away.
     await Promise.race([new Promise((resolve) => gsap.delayedCall(minSpinTime / turbo, resolve)), stopPressed]);
 
     // Anticipation: once reels 1 and 2 both land a scatter, each next reel slows down, spins longer
@@ -64,7 +58,7 @@ export const SpinState: GameState = {
   },
 };
 
-/** How many reels in a row, from the left, landed a scatter. */
+/** Consecutive reels from the left that landed a scatter. */
 function scatterChain(engine: SlotEngine, { grid }: SpinResult) {
   const id = engine.scatter?.id;
   const chain = grid.findIndex((column) => !column.includes(id!));

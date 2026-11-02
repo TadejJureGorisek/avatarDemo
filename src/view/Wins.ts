@@ -4,7 +4,7 @@ import type { Win } from '../engine/SlotEngine';
 import type { Board } from './board/Board';
 import type { Cell } from './board/Cell';
 
-/** Win presentation: winning cells pop (scale up and down) until the next spin, with the amount over the symbols. */
+/** Winning cells pulse until the next spin, with the amount over the symbols. */
 export class Wins extends Container {
   private winning: Cell[] = [];
   private amount = new Text({
@@ -20,7 +20,7 @@ export class Wins extends Container {
     this.addChild(this.amount);
   }
 
-  /** Pops the winning symbols; the amount shows now, or later via `showAmount` (after a big win count-up). */
+  /** Without `withAmount`, call `showAmount` later (after a big win count-up). */
   show(wins: Win[], total: number, withAmount = true) {
     this.clear();
     if (!wins.length) return;

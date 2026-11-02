@@ -1,4 +1,3 @@
-// Pure game logic, no rendering: RNG, grid generation, ways evaluation, wallet and free spins.
 import type { GameConfig, SymbolDef } from './config';
 
 /** grid[reel][row] = symbol id. */
@@ -20,8 +19,7 @@ export interface SpinResult {
   freeSpinsAwarded: number;
 }
 
-/** Swap for a seeded or server-side RNG if needed. */
-export const cryptoRandom = () => crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
+const cryptoRandom = () => crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
@@ -30,11 +28,11 @@ function pickWeighted(symbols: SymbolDef[], random: () => number): SymbolDef {
   return symbols.find((s) => (roll -= s.weight) < 0) ?? symbols[symbols.length - 1];
 }
 
-export const countSymbol = (grid: Grid, id: string, upToReel = grid.length - 1) =>
+const countSymbol = (grid: Grid, id: string, upToReel = grid.length - 1) =>
   grid.slice(0, upToReel + 1).flat().filter((s) => s === id).length;
 
 /** Left-to-right ways: a symbol (or wild) on consecutive reels from reel 1; ways = product of matches per reel. */
-export function evaluate(grid: Grid, symbols: SymbolDef[], bet: number): Win[] {
+function evaluate(grid: Grid, symbols: SymbolDef[], bet: number): Win[] {
   const wilds = new Set(symbols.filter((s) => s.kind === 'wild').map((s) => s.id));
   const wins: Win[] = [];
 
@@ -76,7 +74,6 @@ export class SlotEngine {
     this.symbols = new Map(config.symbols.map((s) => [s.id, s]));
   }
 
-  /** Board size, passed down to the view so nothing there hardcodes 5x3. */
   get reels() {
     return this.config.reels;
   }
@@ -116,7 +113,7 @@ export class SlotEngine {
     return { grid, wins, totalWin, isFreeSpin, freeSpinsAwarded };
   }
 
-  /** Demo cheat: the next spin lands an exact big win tier (see `config.winCheats`), or enough BONUS for free spins. */
+  /** Demo cheat: the next spin lands an exact big win tier (`config.winCheats`) or enough BONUS for free spins. */
   forceNext(cheat: keyof GameConfig['winCheats'] | 'freeSpins') {
     const middle = Math.floor(this.rows / 2);
     if (cheat !== 'freeSpins') {

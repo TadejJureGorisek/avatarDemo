@@ -1,17 +1,10 @@
 import { Assets, Container, Graphics, NineSliceSprite } from 'pixi.js';
 
-/** The gold frame picture, used around the reels and the pop-ups. */
 export const FRAME_URL = 'assets/board/frame.png';
-/**
- * In the frame picture (px): where its see-through opening starts, from the left and right and from
- * the top and bottom, and how big the corner pieces are, which never stretch.
- */
+/** In the frame picture (px): where its see-through opening starts on each side, and the non-stretching corner size. */
 const ART = { insetX: 91, insetY: 104, corner: 150 };
 
-/**
- * The gold frame around a `width` × `height` area whose top left is at (0, 0): stretched to fit,
- * `thickness` thick at the top and bottom (its inner rim just overlaps the area's edges).
- */
+/** Frame around a `width` × `height` area at (0, 0), `thickness` thick at the top and bottom. */
 export function goldFrame(width: number, height: number, thickness: number) {
   const { insetX, insetY, corner } = ART;
   const scale = thickness / insetY;
@@ -25,7 +18,7 @@ export function goldFrame(width: number, height: number, thickness: number) {
   return frame;
 }
 
-/** A pop-up panel centred on (0, 0): a dark `color` fill inside the gold frame. */
+/** Centred on (0, 0). */
 export function framedPanel(width: number, height: number, thickness: number, color: number, alpha = 0.95) {
   const panel = new Container();
   const frame = goldFrame(width, height, thickness);
@@ -34,12 +27,11 @@ export function framedPanel(width: number, height: number, thickness: number, co
   return panel;
 }
 
-/** The plain gold-rimmed panel picture (purple inside), behind the big win count-up. */
 export const PANEL_URL = 'assets/board/panel.png';
-/** In the panel picture (px): how wide its gold band is, and how big the corners are, which never stretch. */
+/** In the panel picture (px): gold band width and non-stretching corner size. */
 const PANEL_ART = { band: 50, corner: 90 };
 
-/** The panel, `width` × `height` inside its gold band and centred on (0, 0), the band `band` thick. */
+/** `width` × `height` inside the band, centred on (0, 0). */
 export function goldPanel(width: number, height: number, band: number) {
   const scale = band / PANEL_ART.band;
   const { corner } = PANEL_ART;

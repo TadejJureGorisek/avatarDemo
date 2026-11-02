@@ -1,9 +1,8 @@
 import type { CSSProperties } from 'react';
+import { AUTOPLAY_COUNTS } from '../AutoplayButton';
 import { BetControl } from '../BetControl';
 import { colors, disabledLook } from '../theme';
 import { Section, TabTitle } from './Section';
-
-const COUNTS = [10, 25, 50, 100];
 
 interface Props {
   bet: number;
@@ -17,7 +16,6 @@ interface Props {
   onStop: () => void;
 }
 
-/** Set the bet and pick a number of spins to play automatically, or stop a running autoplay. */
 export function Autoplay({ bet, atMinBet, atMaxBet, onBetChange, autoplayLeft, canStart, onStart, onStop }: Props) {
   if (autoplayLeft > 0) {
     return (
@@ -44,7 +42,7 @@ export function Autoplay({ bet, atMinBet, atMaxBet, onBetChange, autoplayLeft, c
       </Section>
       <Section subtitle="Number of spins">
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {COUNTS.map((n) => (
+          {AUTOPLAY_COUNTS.map((n) => (
             <button key={n} style={{ ...button, ...disabledLook(!canStart) }} disabled={!canStart} onClick={() => onStart(n)}>
               {n} spins
             </button>

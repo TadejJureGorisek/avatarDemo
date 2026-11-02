@@ -15,7 +15,6 @@ import type { Wins } from '../Wins';
 
 export type StateName = 'splash' | 'bet' | 'spin' | 'win';
 
-/** Everything a state needs, shared across states. */
 export interface GameContext {
   engine: SlotEngine;
   background: Background;
@@ -30,25 +29,21 @@ export interface GameContext {
   splash: Splash;
   bet: () => number;
   updateHud: (patch: Partial<HudState>) => void;
-  /** Resolves when the player presses SPIN, or picks a cheat from the cheat menu. */
+  /** Also resolves (with the cheat) when one is picked from the cheat menu. */
   waitForSpin: () => Promise<Cheat | undefined>;
-  /** Resolves when the player presses STOP during the spin. */
   waitForStop: () => Promise<void>;
   /** Uses up one autoplay spin; false when autoplay is off or finished. */
   takeAutoSpin: () => boolean;
-  /** True while TURBO is on: spins run faster. */
   turbo: () => boolean;
-  /** True while more autoplay spins are still to come. */
   autoplayRunning: () => boolean;
   stopAutoplay: () => void;
-  /** Adds a finished spin to the HISTORY tab. */
   recordSpin: (entry: HistoryEntry) => void;
   /** Result of the last spin, set by SpinState for WinState. */
   result?: SpinResult;
 }
 
 export interface GameState {
-  /** Runs the state and resolves with the next one. */
+  /** Resolves with the next state. */
   enter(ctx: GameContext): Promise<StateName>;
 }
 

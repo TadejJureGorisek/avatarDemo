@@ -9,7 +9,6 @@ export interface HistoryEntry {
   freeSpinsAwarded: number;
 }
 
-/** Last spins, newest first. */
 export function History({ entries }: { entries: HistoryEntry[] }) {
   return (
     <>

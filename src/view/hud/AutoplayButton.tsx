@@ -6,14 +6,13 @@ export const AUTOPLAY_COUNTS = [10, 25, 50, 100];
 
 interface Props {
   open: boolean;
-  /** Spins picked in the mini pop-up; SPIN shows it and starts autoplay with it. */
+  /** Spins picked in the pop-up; SPIN shows it and starts autoplay with it. */
   choice: number;
   disabled: boolean;
   onToggle: () => void;
   onChoose: (spins: number) => void;
 }
 
-/** Small button next to SPIN: opens a mini pop-up to pick the autoplay spins, and shows ✕ to close it. */
 export function AutoplayButton({ open, choice, disabled, onToggle, onChoose }: Props) {
   return (
     <div style={styles.wrap}>

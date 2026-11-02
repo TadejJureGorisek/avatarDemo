@@ -7,16 +7,13 @@ const PAD = 20;
 const ICON = 130;
 const MIN_HEIGHT = 170;
 
-/**
- * Small pop-up next to a clicked symbol: its picture and what it pays at the current bet. It sizes
- * itself to the text every time, so long lines ("Pays anywhere", big pays at high bets) always fit.
- */
+/** Pays of a clicked symbol at the current bet. Resizes to its text every time so long lines fit. */
 export class SymbolInfo extends Container {
   private panel = new Graphics();
   private icon = new Sprite();
   private def?: SymbolDef;
   private bet = 0;
-  /** Where the clicked cell is, to place the pop-up beside it; kept so a resize can re-place it. */
+  /** Kept so a re-layout can place it beside the clicked cell again. */
   private anchorAt = { x: 0, y: 0, cellSize: 0, right: true };
   private text = new Text({
     text: '',
@@ -42,7 +39,7 @@ export class SymbolInfo extends Container {
     gsap.fromTo(this, { alpha: 0 }, { alpha: 1, duration: 0.15 });
   }
 
-  /** Re-prices the shown symbol, so the pays follow bet changes while the pop-up is open. */
+  /** Lets the pays follow bet changes while open. */
   setBet(bet: number) {
     this.bet = bet;
     if (!this.def) return;
@@ -57,7 +54,6 @@ export class SymbolInfo extends Container {
     this.visible = false;
   }
 
-  /** Grows the panel around the icon and text, then places it beside the clicked cell. */
   private layout() {
     const textX = PAD + ICON + PAD;
     const width = textX + this.text.width + PAD;

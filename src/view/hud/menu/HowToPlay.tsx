@@ -3,7 +3,6 @@ import type { GameConfig } from '../../../engine/config';
 import { symbolUrl } from '../../board/Cell';
 import { Section, TabTitle } from './Section';
 
-/** Rules and the paytable at the current bet. */
 export function HowToPlay({ config, bet }: { config: GameConfig; bet: number }) {
   const { reels, rows, freeSpins } = config;
   return (
@@ -40,6 +39,5 @@ export function HowToPlay({ config, bet }: { config: GameConfig; bet: number }) 
   );
 }
 
-// Two columns of symbols, each symbol centred in its column.
 const grid: CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 24px' };
 const item: CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, fontSize: 18 };

@@ -1,10 +1,5 @@
 import type { GameState } from './StateMachine';
 
-/**
- * Shows the win (symbols keep popping until the next spin), plays the big win count-up when the
- * win reaches a tier, pays it into the balance (free spin wins wait for the end of the round),
- * then back to Bet. Newly won free spins wait for the player to press SPIN, then start right away.
- */
 export const WinState: GameState = {
   async enter(ctx) {
     const { engine, background, wins, character, message, popup, bigWin, bet, updateHud, result } = ctx;
@@ -32,15 +27,14 @@ export const WinState: GameState = {
       ? `CONGRATULATIONS,\nYOU WON ${r.freeSpinsAwarded} ADDITIONAL FREE SPINS!`
       : `CONGRATULATIONS,\nYOU WON ${r.freeSpinsAwarded} FREE SPINS`;
 
-    // A retrigger mid-round, or autoplay (which presses SPIN by itself): announce and carry on.
+    // Retrigger mid-round, or autoplay (which presses SPIN itself): don't wait for the player.
     if (r.isFreeSpin || ctx.autoplayRunning()) {
       await popup.show(announcement);
       background.setFreeSpins(true);
       return 'bet';
     }
 
-    // First award: the pop-up stays up until the player presses SPIN (a cheat counts, and applies to
-    // the first free spin), then it closes as the background turns gold and the round starts.
+    // A cheat picked here counts as SPIN and applies to the first free spin.
     await popup.open(announcement);
     message.text = 'Press SPIN to start free spins!';
     updateHud({ freeSpinsReady: true });

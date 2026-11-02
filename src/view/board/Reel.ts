@@ -3,38 +3,34 @@ import { Container } from 'pixi.js';
 import type { SymbolDef } from '../../engine/config';
 import { Cell } from './Cell';
 
-/** Full spinning speed in symbols per second, so it looks the same whatever the symbol size. */
+/** Full spinning speed in symbols per second (independent of symbol size). */
 const SPEED = 13;
-/** Springy start: how far (in symbols) the reel pulls up before it launches. */
+/** Wind-up before launching, in symbols. */
 const WINDUP = 0.15;
-/** Landing: how far (in symbols) the reel overshoots before it springs back. */
+/** Landing overshoot, in symbols. */
 const BOUNCE = 0.2;
-/** After STOP: how much faster than full speed the reel races to its stop symbols. */
+/** Speed multiplier after STOP. */
 const HURRY = 4;
 
 /**
- * One column. Holds `rows` visible cells plus one spare cell below them. While spinning, cells
- * scroll down and each one that leaves the bottom is recycled to the top with a filler symbol. On
- * stop, the stop symbols are fed in instead (bottom row first) and land with a bounce.
+ * `rows` visible cells plus one spare below. Cells leaving the bottom are recycled to the top with a
+ * filler symbol; on stop, the stop symbols are fed in instead (bottom row first).
  */
 export class Reel extends Container {
-  /** The landed symbols, top to bottom. Set to the next result as soon as `stop()` is called. */
-  stopSymbols: string[];
+  /** Top to bottom; set to the next result as soon as `stop()` is called. */
+  private stopSymbols: string[];
   /** Top to bottom. When landed: rows 0..rows-1, then the hidden spare cell. */
   private cells: Cell[];
   private speed = { value: 0 };
-  /** Full speed this spin (px per second): faster with turbo. */
+  /** Px per second, turbo included. */
   private fullSpeed = 0;
-  /** Stop symbols still waiting to enter from the top. */
   private queue: string[] = [];
   /** Cells recycled since `start()`: the spare goes first, so the old landed symbols are gone after `rows + 1`. */
   private recycled = 0;
   private landed?: () => void;
-  /** Set by STOP for this spin: race in and land with a short, snappy bounce. */
   private hurried = false;
-  /** Set by STOP during a turbo spin: land on the stop symbols straight away. */
+  /** STOP during a turbo spin: land on the stop symbols straight away. */
   private instant = false;
-  /** The springy start (an instant stop cuts it short). */
   private starting?: gsap.core.Timeline;
 
   constructor(
@@ -53,7 +49,6 @@ export class Reel extends Container {
     });
   }
 
-  /** The cells currently showing the stop symbols. */
   get visibleCells() {
     return this.cells.slice(0, this.rows);
   }
@@ -62,10 +57,6 @@ export class Reel extends Container {
     return row * this.cellSize + this.cellSize / 2;
   }
 
-  /**
-   * Springy start, after `delay` seconds, up to `turbo` × full speed: the reel pulls up a little (the spare cell below peeks
-   * in), then launches down into the spin. The spare is recycled to the top first as it scrolls out.
-   */
   start(delay = 0, turbo = 1) {
     this.recycled = 0;
     this.fullSpeed = SPEED * this.cellSize * turbo;
@@ -79,7 +70,6 @@ export class Reel extends Container {
       .to(this.speed, { value: this.fullSpeed, duration: 0.25, ease: 'power2.in' });
   }
 
-  /** Bonus anticipation: rev up to well above full speed, then ease down to a slow crawl until it lands. */
   anticipate() {
     gsap.killTweensOf(this.speed);
     gsap.timeline()
@@ -87,10 +77,7 @@ export class Reel extends Container {
       .to(this.speed, { value: this.fullSpeed * 0.35, duration: 0.6, ease: 'power2.inOut' });
   }
 
-  /**
-   * STOP: jump to well above full speed (cancelling any wind-up or anticipation easing) and land
-   * snappily; or, when `instant` (turbo), land on the stop symbols right away.
-   */
+  /** STOP: race in at `HURRY` × speed, or when `instant` (turbo) land right away. */
   hurry(instant = false) {
     this.hurried = true;
     this.instant = instant;
@@ -99,7 +86,7 @@ export class Reel extends Container {
     this.speed.value = this.fullSpeed * HURRY;
   }
 
-  /** Feeds `stopSymbols` in and resolves once they've landed. */
+  /** Resolves once `stopSymbols` have landed. */
   stop(stopSymbols: string[]) {
     this.stopSymbols = stopSymbols;
     this.queue = [...stopSymbols].reverse();
@@ -108,7 +95,6 @@ export class Reel extends Container {
     return landed;
   }
 
-  /** Puts the stop symbols in place at once (cutting any spin or landing short) and lands. */
   private snap() {
     this.starting?.kill();
     gsap.ticker.remove(this.scroll);
@@ -122,7 +108,6 @@ export class Reel extends Container {
     this.finish();
   }
 
-  /** Resolves `stop()` (once). */
   private finish() {
     const landed = this.landed;
     this.landed = undefined;
@@ -132,7 +117,6 @@ export class Reel extends Container {
   private scroll = (_time: number, deltaMs: number) => {
     for (const cell of this.cells) cell.y += (this.speed.value * deltaMs) / 1000;
 
-    // Recycle every cell that has fully left the bottom.
     while (this.cells[this.cells.length - 1].y >= this.rowY(this.rows)) {
       const cell = this.cells.pop()!;
       cell.y = this.cells[0].y - this.cellSize;
@@ -147,10 +131,6 @@ export class Reel extends Container {
     }
   };
 
-  /**
-   * Keeps rolling at the current speed until the stop symbols are in place, then overshoots by a
-   * fraction of a symbol (the spare cell, moved above row 0, peeks in) and springs back.
-   */
   private land() {
     gsap.ticker.remove(this.scroll);
     gsap.killTweensOf(this.speed);
@@ -170,7 +150,6 @@ export class Reel extends Container {
       })
       .to(this.cells, { y: `+=${bounce}`, duration: overshoot, ease: 'power2.out' })
       .to(this.cells, { y: `-=${bounce}`, duration: settle, ease: 'power2.inOut' })
-      // Back to the resting layout: rows 0..rows-1, then the spare below the reel.
       .call(() => {
         spare.y = this.rowY(this.rows);
       });

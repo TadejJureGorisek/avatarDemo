@@ -8,7 +8,6 @@ interface Props {
   onToggle: () => void;
 }
 
-/** Small button on SPIN's left, the twin of autoplay on its right: turns TURBO (faster spins) on and off. */
 export function TurboButton({ on, disabled, onToggle }: Props) {
   return (
     <button
@@ -28,6 +27,5 @@ const styles = {
     width: 52, height: 52, borderRadius: '50%', display: 'grid', placeItems: 'center', padding: 0,
     border: `3px solid ${colors.gold}`, background: colors.panel, color: colors.gold,
   },
-  // Lit up while it's on.
   on: { background: colors.gold, color: colors.dark, boxShadow: `0 0 16px ${colors.gold}` },
 } satisfies Record<string, CSSProperties>;

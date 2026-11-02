@@ -3,7 +3,7 @@ import type { SymbolDef } from '../../engine/config';
 
 export const symbolUrl = (id: string) => `assets/symbols/${id}.png`;
 
-/** One symbol on a reel. Anchored at its centre so it can pop in place. Reused as the reel spins. */
+/** Anchored at its centre so it can pop in place. */
 export class Cell extends Sprite {
   def!: SymbolDef;
 
@@ -19,7 +19,7 @@ export class Cell extends Sprite {
     this.fit();
   }
 
-  /** Fits the cell; BONUS is 200x208, so by the longer side. */
+  /** Fits by the longer side (BONUS is 200x208). */
   fit() {
     this.scale.set((this.size * 0.96) / Math.max(this.texture.width, this.texture.height));
   }

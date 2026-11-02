@@ -2,24 +2,21 @@ import gsap from 'gsap';
 import { Container, Rectangle, Text } from 'pixi.js';
 import { goldPanel } from './Frame';
 
-export interface BigWinTier {
+interface BigWinTier {
   title: string;
   /** Minimum win, in multiples of the bet. */
   x: number;
 }
 
-const BIG_WIN_WIDTH = 900;
+const WIDTH = 900;
 const HEIGHT = 420;
-/** The panel's gold band around its inside. */
+/** Gold band thickness. */
 const FRAME = 40;
-/** The panel's whole size, frame included (to fit it somewhere). */
-export const BIG_WIN_SIZE = { width: BIG_WIN_WIDTH + 2 * FRAME, height: HEIGHT + 2 * FRAME };
+/** Whole size, frame included. */
+export const BIG_WIN_SIZE = { width: WIDTH + 2 * FRAME, height: HEIGHT + 2 * FRAME };
 const HOLD_S = 1.5;
 
-/**
- * Big win count-up over the board. The amount counts up fast in the middle and slow at both ends,
- * the title steps up (NICE → BIG → MEGA → EPIC) as each threshold is passed, and a click skips to the end.
- */
+/** Count-up whose title steps up through the tiers as each threshold is passed; a click skips to the end. */
 export class BigWin extends Container {
   private title = new Text({
     text: '',
@@ -40,17 +37,17 @@ export class BigWin extends Container {
     this.amount.anchor.set(0.5);
     this.amount.y = 70;
     this.addChild(
-      goldPanel(BIG_WIN_WIDTH, HEIGHT, FRAME),
+      goldPanel(WIDTH, HEIGHT, FRAME),
       this.title,
       this.amount,
     );
     this.visible = false;
     this.eventMode = 'static';
     this.cursor = 'pointer';
-    this.hitArea = new Rectangle(-BIG_WIN_WIDTH / 2, -HEIGHT / 2, BIG_WIN_WIDTH, HEIGHT);
+    this.hitArea = new Rectangle(-WIDTH / 2, -HEIGHT / 2, WIDTH, HEIGHT);
     this.on('pointertap', (e) => {
       e.stopPropagation();
-      this.tween?.progress(1); // skip the count-up
+      this.tween?.progress(1);
     });
   }
 
@@ -61,12 +58,12 @@ export class BigWin extends Container {
     super.destroy(options);
   }
 
-  /** The highest tier this win reaches, or undefined when it's not a big win. */
+  /** Undefined when it's not a big win. */
   tierFor(win: number, bet: number) {
     return [...this.tiers].reverse().find((t) => win >= t.x * bet);
   }
 
-  /** Counts `win` up, stepping through the tiers it passes; resolves after it has faded out. */
+  /** Resolves after it has faded out. */
   async play(win: number, bet: number) {
     const top = this.tiers.indexOf(this.tierFor(win, bet)!);
     let shown = -1;

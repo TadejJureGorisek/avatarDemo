@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react';
 
-// Shared HUD styles, at the HUD's design size; the whole HUD is zoomed with the scene to fit the window.
 export const colors = { gold: '#ffc94a', dark: '#3a1500', panel: 'rgb(26 11 61 / 0.9)', border: 'rgb(255 201 74 / 0.5)' };
 
 // Fixed width: values shrink to fit (FitText) instead of the box growing with the number.

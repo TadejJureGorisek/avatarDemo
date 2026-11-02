@@ -1,7 +1,7 @@
 import gsap from 'gsap';
 import { Assets, Container, FillGradient, Graphics, Sprite } from 'pixi.js';
 
-/** The art for each part of the game, with where the character stands on it (of its height). */
+/** `floor`: where the character stands, as a fraction of the art's height. */
 const ART = {
   base: { url: 'assets/backgrounds/base.webp', floor: 0.71 },
   freeSpins: { url: 'assets/backgrounds/free-spins.webp', floor: 0.755 },
@@ -9,12 +9,7 @@ const ART = {
 };
 export const BACKGROUND_URLS = Object.values(ART).map((a) => a.url);
 
-/**
- * Full-window background behind the scene. A purple gradient shows while loading; then the art
- * (base game, free spins, splash) covers the window, cropped to fit, and placed so its floor stays
- * under the character's feet whatever the window's shape. It cross-fades: the free spins art on top
- * of the rest, so a partial blend of it gives the splash a hint of gold.
- */
+/** Gradient while loading, then the art covers the window with its floor kept under the character's feet. */
 export class Background extends Container {
   private gradient = new Graphics();
   private fill = new FillGradient({
@@ -29,7 +24,7 @@ export class Background extends Container {
     this.addChild(this.gradient);
   }
 
-  /** Adds the art once it has loaded (`BACKGROUND_URLS`); the splash art shows first. */
+  /** Call once `BACKGROUND_URLS` have loaded. Free spins art is on top so it can blend over the rest. */
   addArt() {
     const sprite = (key: keyof typeof ART) => new Sprite(Assets.get(ART[key].url));
     this.art = { base: sprite('base'), splash: sprite('splash'), freeSpins: sprite('freeSpins') };
@@ -38,15 +33,14 @@ export class Background extends Container {
     this.resize(...this.last);
   }
 
-  /** Covers a `width` × `height` window with the art's floor at `floorY` (px from the top). */
+  /** `floorY`: px from the top where the art's floor goes. */
   resize(width: number, height: number, floorY: number) {
     this.last = [width, height, floorY];
     this.gradient.clear().rect(0, 0, width, height).fill(this.fill);
     for (const [key, sprite] of Object.entries(this.art ?? {})) {
       const { width: w, height: h } = sprite.texture;
       const { floor } = ART[key as keyof typeof ART];
-      // As big as it takes to span the width, and to reach both the top (above the floor) and the
-      // bottom (below it) of the window.
+      // Big enough to span the width and reach both the top and bottom of the window from the floor.
       const scale = Math.max(width / w, floorY / (floor * h), (height - floorY) / ((1 - floor) * h));
       sprite.scale.set(scale);
       sprite.position.set((width - w * scale) / 2, floorY - floor * h * scale);
@@ -57,12 +51,11 @@ export class Background extends Container {
     this.setGold(on ? 1 : 0, 0.8);
   }
 
-  /** Blends in `amount` (0–1) of the free spins art; a slow partial blend gives the splash a hint of it. */
+  /** Blends in `amount` (0–1) of the free spins art; a partial blend gives the splash a hint of gold. */
   setGold(amount: number, duration = 1.5) {
     if (this.art) gsap.to(this.art.freeSpins, { alpha: amount, duration, ease: 'sine.inOut', overwrite: true });
   }
 
-  /** Fades the splash art out to the base game's (or back in). */
   setSplash(on: boolean, duration = 0.8) {
     if (this.art) gsap.to(this.art.splash, { alpha: on ? 1 : 0, duration, ease: 'sine.inOut' });
   }

@@ -14,7 +14,6 @@ const PANEL = { width: 600, height: 620 };
 type Tab = (typeof TABS)[number];
 
 interface Props {
-  /** Locked during a round (a spin, free spins or autoplay). */
   disabled: boolean;
   open: boolean;
   /** Panel width in px (the board's on-screen width); 0 until the scene has laid out. */
@@ -34,10 +33,7 @@ interface Props {
   onStopAutoplay: () => void;
 }
 
-/**
- * Burger button (sits in the bottom bar) and the full-screen menu panel with its four tabs. The
- * overlay is portalled to <body> so the bar's zoom doesn't apply to it; the panel gets its own.
- */
+// The overlay is portalled to <body> so the bar's zoom doesn't apply to it; the panel gets its own.
 export function Menu(p: Props) {
   const [tab, setTab] = useState<Tab>('HOW TO PLAY');
   const content = useRef<HTMLDivElement>(null);
@@ -100,8 +96,7 @@ const styles = {
     position: 'fixed', inset: 0, zIndex: 10, display: 'grid', placeItems: 'center', padding: 16,
     background: 'rgb(0 0 0 / 0.6)',
   },
-  // Fixed size for every tab (as wide as the board, centred on screen), so switching tabs doesn't
-  // resize the panel; long tabs scroll inside.
+  // Same size for every tab, so switching tabs doesn't resize the panel; long tabs scroll inside.
   panel: {
     display: 'flex', flexDirection: 'column', borderRadius: 18,
     background: '#1a0b3d', border: `3px solid ${colors.gold}`, overflow: 'hidden',
@@ -116,7 +111,7 @@ const styles = {
     marginLeft: 'auto', width: 36, borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 18,
     background: 'transparent', color: '#fff',
   },
-  // Themed scrollbar (thin gold thumb on the dark panel) via the standard properties, so no CSS file.
+  // Themed scrollbar via the standard properties, so no CSS file is needed.
   content: {
     flex: 1, minHeight: 0, padding: '12px 20px 20px', overflow: 'auto',
     scrollbarWidth: 'thin', scrollbarColor: `${colors.gold} ${colors.panel}`,

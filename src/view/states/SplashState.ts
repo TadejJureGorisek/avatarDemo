@@ -1,11 +1,6 @@
 import gsap from 'gsap';
 import type { GameState } from './StateMachine';
 
-/**
- * The intro right after loading: the splash slides, with SPIN as CONTINUE. Pressing it zooms the
- * splash away while the game comes in (the character from the left, the board rising up, the
- * logo dropping in, the HUD fading in), then on to Bet.
- */
 export const SplashState: GameState = {
   async enter({ splash, background, logo, character, board, wins, message, updateHud, waitForSpin }) {
     const game = [logo, character, board, wins, message];
@@ -14,8 +9,7 @@ export const SplashState: GameState = {
     splash.onFreeSpins = (showing) => background.setGold(showing ? 0.35 : 0);
     splash.open();
     await waitForSpin();
-    // The HUD turns into the game's straight away (SPIN icon, the other controls fading in), with the
-    // game, not after it. A press before Bet is waiting does nothing.
+    // Switch the HUD now, with the game coming in; a SPIN press before Bet is waiting does nothing.
     updateHud({ state: 'bet' });
     background.setFreeSpins(false);
     background.setSplash(false);

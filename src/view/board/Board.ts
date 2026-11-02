@@ -5,28 +5,22 @@ import type { Grid } from '../../engine/SlotEngine';
 import { goldFrame } from '../Frame';
 import { Reel } from './Reel';
 
-/** How much room the gold frame around the reels takes at each side (at the largest symbol size). */
+/** Gold frame thickness around the reels, at the largest symbol size. */
 export const FRAME_PAD = 70;
 /** How much of the background shows through behind the symbols (0 = none). */
 const SEE_THROUGH = 0.4;
 /** Seconds between one reel starting and the next. */
 const REEL_START_STAGGER = 0.06;
 
-/** The symbols area: a frame, a mask and `reels` Reel columns of `rows` cells each. */
 export class Board extends Container {
   readonly reels: Reel[];
   readonly boardWidth: number;
   readonly boardHeight: number;
-  /** One glow per reel, lit while that reel is in bonus anticipation. */
   private glows: Graphics[];
-  /** STOP was pressed this spin: every reel races in, and no more anticipation. */
+  /** STOP was pressed this spin: reels race in and anticipation is skipped. */
   private hurried = false;
-  /** This spin is a turbo one: STOP lands every reel at once. */
+  /** Turbo spin: STOP lands every reel at once. */
   private turbo = false;
-  /** Width including the frame around the reels. */
-  get frameWidth() {
-    return this.boardWidth + FRAME_PAD * 2;
-  }
 
   constructor(
     reels: number,
@@ -43,8 +37,7 @@ export class Board extends Container {
     const reelLayer = new Container();
     const mask = new Graphics().rect(0, 0, this.boardWidth, this.boardHeight).fill(0xffffff);
     reelLayer.mask = mask;
-    // Behind the symbols: dark purple, partly see-through. On top: the frame, its inner rim just
-    // overlapping the reels' edges.
+    // The frame goes on top so its inner rim overlaps the reels' edges.
     const back = new Graphics().roundRect(-8, -8, this.boardWidth + 16, this.boardHeight + 16, 24)
       .fill({ color: 0x1a0b3d, alpha: 1 - SEE_THROUGH });
     this.addChild(back, reelLayer, mask, goldFrame(this.boardWidth, this.boardHeight, FRAME_PAD));
@@ -55,7 +48,6 @@ export class Board extends Container {
       return reel;
     });
 
-    // Anticipation glow: a gold frame and soft tint over the whole reel, drawn above the symbols.
     this.glows = this.reels.map((reel) => {
       const glow = new Graphics()
         .roundRect(reel.x + 4, 4, cellSize - 8, this.boardHeight - 8, 18)
@@ -78,27 +70,16 @@ export class Board extends Container {
 
   onCellTap?: (reel: number, row: number) => void;
 
-  /** The landed stop symbols, reel by reel. */
-  get stopSymbols(): Grid {
-    return this.reels.map((r) => r.stopSymbols);
-  }
-
   cell(reel: number, row: number) {
     return this.reels[reel].visibleCells[row];
   }
 
-  get cells() {
-    return this.reels.flatMap((r) => r.visibleCells);
-  }
-
-  /** Starts the reels one after another, each with its springy wind-up, `turbo` × as fast. */
   start(turbo = 1) {
     this.hurried = false;
     this.turbo = turbo > 1;
     this.reels.forEach((reel, i) => reel.start((i * REEL_START_STAGGER) / turbo, turbo));
   }
 
-  /** Bonus anticipation on a reel: it speeds up then slows down, and its glow blinks until it lands. */
   anticipate(reel: number) {
     if (this.hurried) return;
     this.reels[reel].anticipate();
@@ -113,11 +94,7 @@ export class Board extends Container {
     glow.visible = false;
   }
 
-  /**
-   * Lands `grid` reel by reel; reel i starts stopping `delays[i]` seconds from now.
-   * Once `skip` resolves (player pressed STOP), every reel stops straight away, racing in fast (or
-   * landing at once in turbo), and any anticipation is dropped.
-   */
+  /** Reel i starts stopping after `delays[i]` s; once `skip` (STOP) resolves, all reels stop straight away. */
   stop(grid: Grid, delays: number[], onReelLanded: (reel: number) => void, skip: Promise<void>) {
     void skip.then(() => {
       this.hurried = true;

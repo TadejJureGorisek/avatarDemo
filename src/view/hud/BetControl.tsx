@@ -5,7 +5,6 @@ import { colors, disabledLook, label, meter, value } from './theme';
 interface Props {
   bet: number;
   disabled: boolean;
-  /** Lowest / highest bet reached, so − / + have nowhere to go. */
   atMin: boolean;
   atMax: boolean;
   onChange: (direction: 1 | -1) => void;

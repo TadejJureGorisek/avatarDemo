@@ -2,24 +2,21 @@ import gsap from 'gsap';
 import { Container, Text } from 'pixi.js';
 import { framedPanel } from './Frame';
 
-const POPUP_WIDTH = 760;
+const WIDTH = 760;
 const HEIGHT = 260;
 
-/**
- * Small centred pop-up for free spins announcements: `show()` holds it for a moment and resolves once
- * it has faded out; `open()` keeps it on screen until `close()`.
- */
+/** `show()` resolves once it has faded out; `open()` keeps it on screen until `close()`. */
 export class Popup extends Container {
   private text = new Text({
     text: '',
     style: { fontFamily: 'system-ui, sans-serif', fontSize: 52, fontWeight: '900', fill: 0xffe27a, align: 'center',
-      stroke: { color: 0x3a1500, width: 8 }, wordWrap: true, wordWrapWidth: POPUP_WIDTH - 80 },
+      stroke: { color: 0x3a1500, width: 8 }, wordWrap: true, wordWrapWidth: WIDTH - 80 },
   });
 
   constructor() {
     super();
     this.addChild(
-      framedPanel(POPUP_WIDTH, HEIGHT, 44, 0x1a0b3d),
+      framedPanel(WIDTH, HEIGHT, 44, 0x1a0b3d),
       this.text,
     );
     this.text.anchor.set(0.5);
@@ -32,7 +29,7 @@ export class Popup extends Container {
     await this.close();
   }
 
-  /** Pops in and stays until `close()`. Resolves once it's fully in. */
+  /** Resolves once it's fully in. */
   async open(message: string) {
     this.text.text = message;
     this.visible = true;

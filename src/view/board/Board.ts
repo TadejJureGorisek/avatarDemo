@@ -70,7 +70,7 @@ export class Board extends Container {
   start(turbo = 1) {
     this.hurried = false;
     this.turbo = turbo > 1;
-    this.reels.forEach((reel, i) => reel.start((i * REEL_START_STAGGER) / turbo, turbo));
+    this.reels.forEach((reel, i) => reel.start(this.turbo ? 0 : i * REEL_START_STAGGER, turbo));
   }
 
   anticipate(reel: number) {

@@ -28,7 +28,8 @@ export const SpinState: GameState = {
     const chain = scatterChain(engine, result);
     const anticipated = (reel: number) => chain >= 2 && reel >= 2 && reel <= chain && reel < result.grid.length;
     let extra = 0;
-    const delays = result.grid.map((_, reel) => (reel * reelStopStagger + (extra += anticipated(reel) ? anticipationExtra : 0)) / turbo);
+    const stagger = turbo > 1 ? 0 : reelStopStagger;
+    const delays = result.grid.map((_, reel) => (reel * stagger + (extra += anticipated(reel) ? anticipationExtra : 0)) / turbo);
     await board.stop(result.grid, delays, (reel) => {
       if (!anticipated(reel + 1)) return;
       if (reel === 1) character.startAnticipation();

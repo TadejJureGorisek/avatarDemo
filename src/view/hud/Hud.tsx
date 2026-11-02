@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import type { GameConfig } from '../../engine/config';
 import type { StateName } from '../states/StateMachine';
+import { AutoplayButton, AUTOPLAY_COUNTS } from './AutoplayButton';
 import { Balance } from './Balance';
 import { BetControl } from './BetControl';
 import { CheatMenu, type Cheat } from './CheatMenu';
@@ -44,13 +45,23 @@ interface Props {
 /** The whole UI on top of the canvas. */
 export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, onStartAutoplay, onStopAutoplay, onHeight, menuWidth }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
+  // Mini autoplay pop-up next to SPIN: while it's open, SPIN shows the picked spins and starts autoplay.
+  const [autoOpen, setAutoOpen] = useState(false);
+  const [autoChoice, setAutoChoice] = useState(AUTOPLAY_COUNTS[0]);
   const inFreeSpins = s.freeSpin || s.freeSpinsLeft > 0;
   const autoplay = s.autoplayLeft > 0;
   const locked = !s.ready || s.state !== 'bet' || inFreeSpins || autoplay;
   // SPIN in the bet state, STOP while spinning, the free spins left during free spins (they play
-  // themselves), the autoplay spins left during autoplay (pressing it stops autoplay).
-  const spinLabel = inFreeSpins ? String(s.freeSpinsLeft) : autoplay ? `AUTO ${s.autoplayLeft}` : s.state === 'spin' ? 'STOP' : 'SPIN';
-  const spinDisabled = !s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay);
+  // themselves), the autoplay spins left during autoplay (pressing it stops autoplay), and the
+  // picked spins while the mini autoplay pop-up is open (pressing it starts autoplay).
+  const spinLabel = autoOpen ? String(autoChoice) : inFreeSpins ? String(s.freeSpinsLeft)
+    : autoplay ? `AUTO ${s.autoplayLeft}` : s.state === 'spin' ? 'STOP' : 'SPIN';
+  const spinDisabled = !s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay) || (autoOpen && locked);
+  const pressSpin = () => {
+    if (!autoOpen) return onSpin();
+    setAutoOpen(false);
+    onStartAutoplay(autoChoice);
+  };
   const bar = useRef<HTMLDivElement>(null);
 
   // The bar grows when its contents wrap on narrow screens, so measure it instead of assuming a height.
@@ -85,7 +96,18 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
             onStopAutoplay={onStopAutoplay}
           />
         </div>
-        <SpinButton label={spinLabel} disabled={spinDisabled} onPress={onSpin} />
+        <div style={styles.centre}>
+          <SpinButton label={spinLabel} disabled={spinDisabled} onPress={pressSpin} />
+          <div style={styles.auto}>
+            <AutoplayButton
+              open={autoOpen}
+              choice={autoChoice}
+              disabled={locked}
+              onToggle={() => setAutoOpen(!autoOpen)}
+              onChoose={setAutoChoice}
+            />
+          </div>
+        </div>
         <div style={styles.stack}>
           <Balance value={s.balance} />
           <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
@@ -107,6 +129,9 @@ const styles = {
     position: 'absolute', left: 0, right: 0, bottom: 0, padding: 'clamp(8px, 1.5vw, 14px) clamp(10px, 2vw, 24px)',
     display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'end', gap: 'clamp(8px, 1.5vw, 16px)',
   },
+  // SPIN stays centred; the small autoplay button hangs off its right side.
+  centre: { position: 'relative' },
+  auto: { position: 'absolute', left: 'calc(100% + 12px)', top: '50%', transform: 'translateY(-50%)' },
   // Balance, Bet and CHEATS on top of each other, same width, in the bottom-right corner.
   stack: { justifySelf: 'end', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 6 },
 } satisfies Record<string, CSSProperties>;

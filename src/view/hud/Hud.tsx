@@ -81,7 +81,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
       <Menu
         open={menuOpen}
         disabled={locked}
-        width={layout.boardWidth}
+        width={layout.boardWidth * (layout.portrait ? 1.5 : 1)}
         scale={scale}
         onOpenChange={setMenuOpen}
         config={config}

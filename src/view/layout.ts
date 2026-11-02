@@ -24,7 +24,7 @@ export const SCENES = {
     message: { x: 450, y: 826 },
     hud: { top: 1220, metersY: 1043 },
     floor: 786,
-    splash: { top: 60, bottom: 1232, dotsY: 1272, logoHeight: 260 },
+    splash: { top: 40, bottom: 1200, dotsY: 1235, logoHeight: 260 },
   },
 };
 

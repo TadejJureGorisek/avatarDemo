@@ -14,6 +14,7 @@ import { SpinState } from './states/SpinState';
 import { SplashState } from './states/SplashState';
 import { StateMachine } from './states/StateMachine';
 import { WinState } from './states/WinState';
+import { logo, LOGO_URL } from './Logo';
 import { Message } from './Message';
 import { Popup } from './Popup';
 import { Splash } from './Splash';
@@ -32,6 +33,11 @@ const HUD_GAP = 40;
 const HUD_ROW = 125;
 /** The HUD is laid out for scene scale 0.8 (a 1280×720 window) and zoomed with the scene from there. */
 const HUD_ZOOM_PER_SCENE = 1.25;
+/** Most extra room (design px) the message gets below the board in a tall window; the HUD row gets twice it. */
+const MAX_SPREAD = 40;
+/** The logo above the character, and the gap between them (design px). */
+const LOGO_HEIGHT = 170;
+const LOGO_GAP = 10;
 const fill: CSSProperties = { position: 'absolute', inset: 0 };
 
 export function MainView({ engine }: { engine: SlotEngine }) {
@@ -158,12 +164,12 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   app.canvas.style.display = 'block'; // inline canvases add a few px of line-box overflow
   host.appendChild(app.canvas);
 
-  // The character comes first: its size sets the layout, so the HUD row (with "Loading…" where SPIN
-  // goes) is in place while the rest loads.
+  // The character (and logo) come first: their size sets the layout, so the HUD row (with "Loading…"
+  // where SPIN goes) is in place while the rest loads.
   Assets.add(CHARACTER_ASSETS);
-  await Assets.load(CHARACTER_ASSETS.map((a) => a.alias));
+  await Assets.load([...CHARACTER_ASSETS.map((a) => a.alias), LOGO_URL]);
 
-  // Character + gap + board, centred as one group; character vertically centred on the board.
+  // Logo over character, next to the board, centred as one group.
   const character = new Character();
   const bounds = character.getLocalBounds();
   // Symbol size: as big as fits next to the character and above the message and HUD row, for any reels × rows.
@@ -173,12 +179,19 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   const cell = Math.floor(Math.min(MAX_CELL, maxWidth / engine.reels, maxHeight / engine.rows));
   const boardWidth = engine.reels * cell;
   const boardHeight = engine.rows * cell;
-  const left = (DESIGN.width - (bounds.width + GAP + boardWidth)) / 2;
+  // The character shrinks if it has to, so it fits under the logo within the board frame's height.
+  const fitScale = Math.min(1, (boardHeight + 2 * FRAME_PAD - LOGO_HEIGHT - LOGO_GAP) / bounds.height);
+  character.scale.set(fitScale);
+  const characterWidth = bounds.width * fitScale;
+  const left = (DESIGN.width - (characterWidth + GAP + boardWidth)) / 2;
   // Board, message and HUD row stacked, centred vertically as one block.
   const stack = 2 * FRAME_PAD + boardHeight + below;
-  const boardX = left + bounds.width + GAP;
+  const boardX = left + characterWidth + GAP;
   const boardY = (DESIGN.height - stack) / 2 + FRAME_PAD;
-  character.position.set(left - bounds.x, boardY + boardHeight / 2 - (bounds.y + bounds.height / 2));
+  // Logo level with the top of the board frame, the character standing on the level of its bottom.
+  const title = logo(LOGO_HEIGHT, characterWidth + GAP);
+  title.position.set(left + characterWidth / 2, boardY - FRAME_PAD + LOGO_HEIGHT / 2);
+  character.position.set(left - bounds.x * fitScale, boardY + boardHeight + FRAME_PAD - (bounds.y + bounds.height) * fitScale);
   const messageY = boardY + boardHeight + FRAME_PAD + MESSAGE_GAP;
   const hudTop = messageY + HUD_GAP;
 
@@ -186,14 +199,21 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   // The 1600x900 design-space scene; it's scaled to fit the window (the HUD row is part of it).
   const scene = new Container();
   app.stage.addChild(background, scene);
+  // In a window taller than the design, the message moves down by `spread` and the HUD row by twice
+  // that, so they get some air instead of all the spare room going above and below the scene.
+  let spread = 0;
+  let onSpread = () => {};
   // Runs on window resize; tells the HUD where its row is so it sits right under the message.
   const layout = () => {
     const { width, height } = app.screen;
     background.resize(width, height);
     const scale = Math.min(width / DESIGN.width, height / DESIGN.height);
+    spread = Math.min(MAX_SPREAD, Math.max(0, height / scale - DESIGN.height) / 8);
     scene.scale.set(scale);
-    scene.position.set((width - DESIGN.width * scale) / 2, (height - DESIGN.height * scale) / 2);
-    onHudLayout({ top: scene.y + hudTop * scale, zoom: scale * HUD_ZOOM_PER_SCENE, boardWidth: (boardWidth + 2 * FRAME_PAD) * scale });
+    // The scene grows by 2 × spread at the bottom; it stays centred as a whole.
+    scene.position.set((width - DESIGN.width * scale) / 2, (height - (DESIGN.height + 2 * spread) * scale) / 2);
+    onSpread();
+    onHudLayout({ top: scene.y + (hudTop + 2 * spread) * scale, zoom: scale * HUD_ZOOM_PER_SCENE, boardWidth: (boardWidth + 2 * FRAME_PAD) * scale });
   };
   app.renderer.on('resize', layout);
   layout();
@@ -215,11 +235,16 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
 
   // The intro fills the space above the HUD row, with its dots where the message goes.
   const splash = new Splash(engine.config, DESIGN.width, MARGIN, message.y - MESSAGE_GAP / 2, message.y);
-  scene.addChild(character, board, wins, message, symbolInfo, bigWin, popup, splash);
+  onSpread = () => {
+    message.y = messageY + spread;
+    splash.setDotsY(messageY + spread);
+  };
+  onSpread();
+  scene.addChild(title, character, board, wins, message, symbolInfo, bigWin, popup, splash);
   // A click anywhere off the board closes the symbol pop-up.
   app.stage.eventMode = 'static';
   app.stage.hitArea = app.screen;
   app.stage.on('pointertap', () => symbolInfo.hide());
 
-  return { background, board, wins, character, message, popup, bigWin, symbolInfo, splash };
+  return { background, board, wins, character, logo: title, message, popup, bigWin, symbolInfo, splash };
 }

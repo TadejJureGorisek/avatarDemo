@@ -4,12 +4,15 @@ import type { GameConfig } from '../engine/config';
 import { BigWin } from './BigWin';
 import { symbolUrl } from './board/Cell';
 import { Character } from './Character';
+import { logo } from './Logo';
 
 /** How far a swipe has to go (design px) to change the slide. */
 const SWIPE = 60;
 /** How far a slide moves as it fades in or out. */
 const SLIDE_SHIFT = 300;
 const FREE_SPINS_SLIDE = 2;
+/** The logo across the top, above the slides (design px). */
+const LOGO_HEIGHT = 170;
 
 interface Slide extends Container {
   /** Starts the slide's showcase animation, if it has one. */
@@ -17,9 +20,10 @@ interface Slide extends Container {
 }
 
 /**
- * Game intro shown once after loading: three slides (the character, big wins, free spins), each with a
- * title above and a short description below its picture. Swipe, the side arrows, the dots or the arrow
- * keys change slides (looping around at the ends); `onFreeSpins` says when the free spins slide comes and goes (for a hint of gold).
+ * Game intro shown once after loading: the logo on top, then three slides (the character, big wins,
+ * free spins), each with a title above and a short description below its picture. Swipe, the side
+ * arrows, the dots or the arrow keys change slides (looping around at the ends); `onFreeSpins` says
+ * when the free spins slide comes and goes (for a hint of gold).
  * `top`, `bottom` and `width` are the area it fills; the dots go at `dotsY`, in line with the message.
  */
 export class Splash extends Container {
@@ -30,10 +34,13 @@ export class Splash extends Container {
 
   constructor(config: GameConfig, width: number, top: number, bottom: number, dotsY: number) {
     super();
-    const titleY = top + 50;
+    // The logo stays put while the slides change below it.
+    const title = logo(LOGO_HEIGHT, width - 400);
+    title.position.set(width / 2, top + LOGO_HEIGHT / 2);
+    const titleY = top + LOGO_HEIGHT + 40;
     const textY = bottom - 50;
     // The picture fits between the title and the description.
-    const box = { y: (titleY + textY) / 2, height: textY - titleY - 160 };
+    const box = { y: (titleY + textY) / 2, height: textY - titleY - 140 };
     const { awarded, minScatters } = config.freeSpins;
     this.slides = [
       slide(width / 2, titleY, textY, 'MEET THE BOSS', 'Chains, shades and a pocket full of gold.\n243 ways to win on every spin!',
@@ -55,7 +62,7 @@ export class Splash extends Container {
     });
     const prev = arrow(-1, 80, box.y, () => this.step(-1));
     const next = arrow(1, width - 80, box.y, () => this.step(1));
-    this.addChild(...this.slides, ...this.dots, prev, next);
+    this.addChild(title, ...this.slides, ...this.dots, prev, next);
 
     // Swipe anywhere on the splash: left for the next slide, right for the previous one.
     this.eventMode = 'static';
@@ -74,6 +81,11 @@ export class Splash extends Container {
     this.on('pointerup', end);
     this.on('pointerupoutside', end);
     this.updateDots();
+  }
+
+  /** Moves the dots, to stay in line with the message. */
+  setDotsY(y: number) {
+    this.dots.forEach((d) => (d.y = y));
   }
 
   /** Shows the first slide and listens for the arrow keys until `close()`. */
@@ -146,7 +158,7 @@ function slide(x: number, titleY: number, textY: number, title: string, descript
   const mid = (titleY + textY) / 2;
   const heading = new Text({
     text: title,
-    style: { fontFamily: 'system-ui, sans-serif', fontSize: 72, fontWeight: '900', fill: 0xffe27a,
+    style: { fontFamily: 'system-ui, sans-serif', fontSize: 60, fontWeight: '900', fill: 0xffe27a,
       stroke: { color: 0x3a1500, width: 10 }, dropShadow: { blur: 8, distance: 4, alpha: 0.5 } },
   });
   heading.anchor.set(0.5);

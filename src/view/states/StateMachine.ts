@@ -1,3 +1,4 @@
+import type { Sprite } from 'pixi.js';
 import type { SlotEngine, SpinResult } from '../../engine/SlotEngine';
 import type { Background } from '../Background';
 import type { BigWin } from '../BigWin';
@@ -21,6 +22,7 @@ export interface GameContext {
   board: Board;
   wins: Wins;
   character: Character;
+  logo: Sprite;
   message: Message;
   popup: Popup;
   bigWin: BigWin;

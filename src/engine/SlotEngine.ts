@@ -125,8 +125,9 @@ export class SlotEngine {
       const pool = this.config.symbols.filter((s) => s.kind === 'regular' && s.id !== symbol).map((s) => s.id);
       const grid = Array.from({ length: this.reels }, (_, reel) =>
         Array.from({ length: this.rows }, (_, row) => pool[(reel * this.rows + row) % pool.length]));
-      for (let reel = 0; reel < length; reel++) grid[reel][middle] = symbol;
-      for (let row = 0; row < ways - 1; row++) grid[0][row === middle ? row + 1 : row] = symbol;
+      // Clamped to the board, so the cheats still work on boards with fewer reels or rows.
+      for (let reel = 0; reel < Math.min(length, this.reels); reel++) grid[reel][middle] = symbol;
+      for (let row = 0; row < Math.min(ways, this.rows) - 1; row++) grid[0][row === middle ? row + 1 : row] = symbol;
       this.forcedGrid = grid;
       return;
     }

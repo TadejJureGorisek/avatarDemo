@@ -29,13 +29,14 @@ export class SymbolInfo extends Container {
     this.visible = false;
   }
 
-  /** `x`, `y` is the centre of the clicked cell; `right` puts the pop-up on its right, else on its left. */
-  show(def: SymbolDef, bet: number, x: number, y: number, right: boolean) {
+  /** `x`, `y` is the centre of the clicked cell (`cellSize` wide); `right` puts the pop-up on its right, else on its left. */
+  show(def: SymbolDef, bet: number, x: number, y: number, cellSize: number, right: boolean) {
     this.def = def;
     this.icon.texture = Assets.get(symbolUrl(def.id));
     this.icon.scale.set(130 / Math.max(this.icon.texture.width, this.icon.texture.height));
     this.setBet(bet);
-    this.position.set(right ? x + 110 : x - 110 - WIDTH, y - HEIGHT / 2);
+    const offset = cellSize / 2 + 10;
+    this.position.set(right ? x + offset : x - offset - WIDTH, y - HEIGHT / 2);
     this.visible = true;
     gsap.fromTo(this, { alpha: 0 }, { alpha: 1, duration: 0.15 });
   }

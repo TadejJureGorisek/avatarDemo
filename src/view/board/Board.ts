@@ -4,7 +4,7 @@ import type { SymbolDef } from '../../engine/config';
 import type { Grid } from '../../engine/SlotEngine';
 import { Reel } from './Reel';
 
-const FRAME_PAD = 18;
+export const FRAME_PAD = 18;
 /** Seconds between one reel starting and the next. */
 const REEL_START_STAGGER = 0.06;
 

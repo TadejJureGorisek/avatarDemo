@@ -3,8 +3,8 @@ import { Container } from 'pixi.js';
 import type { SymbolDef } from '../../engine/config';
 import { Cell } from './Cell';
 
-/** Full spinning speed in px per second. */
-const SPEED = 2600;
+/** Full spinning speed in symbols per second, so it looks the same whatever the symbol size. */
+const SPEED = 13;
 /** Springy start: how far (in symbols) the reel pulls up before it launches. */
 const WINDUP = 0.15;
 /** Landing: how far (in symbols) the reel overshoots before it springs back. */
@@ -63,15 +63,15 @@ export class Reel extends Container {
       .call(() => {
         gsap.ticker.add(this.scroll);
       })
-      .to(this.speed, { value: SPEED, duration: 0.25, ease: 'power2.in' });
+      .to(this.speed, { value: SPEED * this.cellSize, duration: 0.25, ease: 'power2.in' });
   }
 
   /** Bonus anticipation: rev up to well above full speed, then ease down to a slow crawl until it lands. */
   anticipate() {
     gsap.killTweensOf(this.speed);
     gsap.timeline()
-      .to(this.speed, { value: SPEED * 1.7, duration: 0.3, ease: 'power1.out' })
-      .to(this.speed, { value: SPEED * 0.35, duration: 0.6, ease: 'power2.inOut' });
+      .to(this.speed, { value: SPEED * this.cellSize * 1.7, duration: 0.3, ease: 'power1.out' })
+      .to(this.speed, { value: SPEED * this.cellSize * 0.35, duration: 0.6, ease: 'power2.inOut' });
   }
 
   /** Feeds `stopSymbols` in and resolves once they've landed. */
@@ -106,7 +106,7 @@ export class Reel extends Container {
   private land() {
     gsap.ticker.remove(this.scroll);
     gsap.killTweensOf(this.speed);
-    const speed = Math.max(this.speed.value, SPEED * 0.3);
+    const speed = Math.max(this.speed.value, SPEED * this.cellSize * 0.3);
     this.speed.value = 0;
     const distance = this.rowY(0) - this.cells[0].y;
     const bounce = this.cellSize * BOUNCE;

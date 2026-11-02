@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import type { SlotEngine } from '../engine/SlotEngine';
 import { Background } from './Background';
 import { BigWin } from './BigWin';
-import { Board } from './board/Board';
+import { Board, FRAME_PAD } from './board/Board';
 import { symbolUrl } from './board/Cell';
 import { Character, CHARACTER_ASSETS } from './Character';
 import type { Cheat } from './hud/CheatMenu';
@@ -18,8 +18,13 @@ import { Popup } from './Popup';
 import { SymbolInfo } from './SymbolInfo';
 import { Wins } from './Wins';
 
-const CELL = 200;
+/** Largest symbol size; boards with more reels or rows get smaller symbols so they still fit. */
+const MAX_CELL = 200;
 const DESIGN = { width: 1600, height: 900 };
+/** Space kept free around the scene, between character and board, and for the message under the board. */
+const MARGIN = 20;
+const GAP = 40;
+const MESSAGE_SPACE = 140;
 const fill: CSSProperties = { position: 'absolute', inset: 0 };
 
 export function MainView({ engine }: { engine: SlotEngine }) {
@@ -68,8 +73,9 @@ export function MainView({ engine }: { engine: SlotEngine }) {
       board.onCellTap = (reel, row) => {
         if (machine.current?.current === 'spin') return;
         const cell = board.cell(reel, row);
-        symbolInfo.show(cell.def, engine.config.bets[betIndex.current], board.x + (reel + 0.5) * CELL,
-          board.y + (row + 0.5) * CELL, reel < engine.reels / 2);
+        const size = board.cellSize;
+        symbolInfo.show(cell.def, engine.config.bets[betIndex.current], board.x + (reel + 0.5) * size,
+          board.y + (row + 0.5) * size, size, reel < engine.reels / 2);
       };
       update({ ready: true });
       void machine.current.run();
@@ -142,10 +148,13 @@ async function createScene(
   await Assets.load([...engine.config.symbols.map((s) => symbolUrl(s.id)), ...CHARACTER_ASSETS.map((a) => a.alias)]);
 
   // Character + gap + board, centred as one group; character vertically centred on the board.
-  const GAP = 40;
-  const board = new Board(engine.reels, engine.rows, CELL, engine.getSymbol, engine.fillerSymbol, engine.generateGrid());
   const character = new Character();
   const bounds = character.getLocalBounds();
+  // Symbol size: as big as fits next to the character and above the message, for any reels × rows.
+  const maxWidth = DESIGN.width - 2 * MARGIN - bounds.width - GAP - 2 * FRAME_PAD;
+  const maxHeight = DESIGN.height - 2 * MARGIN - MESSAGE_SPACE - 2 * FRAME_PAD;
+  const cell = Math.floor(Math.min(MAX_CELL, maxWidth / engine.reels, maxHeight / engine.rows));
+  const board = new Board(engine.reels, engine.rows, cell, engine.getSymbol, engine.fillerSymbol, engine.generateGrid());
   const left = (DESIGN.width - (bounds.width + GAP + board.boardWidth)) / 2;
   board.position.set(left + bounds.width + GAP, (DESIGN.height - board.boardHeight) / 2 - 40);
   character.position.set(left - bounds.x, board.y + board.boardHeight / 2 - (bounds.y + bounds.height / 2));

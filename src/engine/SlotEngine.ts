@@ -1,6 +1,5 @@
 import type { GameConfig, SymbolDef } from './config';
 
-/** grid[reel][row] = symbol id. */
 export type Grid = string[][];
 
 export interface Win {
@@ -31,7 +30,6 @@ function pickWeighted(symbols: SymbolDef[], random: () => number): SymbolDef {
 const countSymbol = (grid: Grid, id: string, upToReel = grid.length - 1) =>
   grid.slice(0, upToReel + 1).flat().filter((s) => s === id).length;
 
-/** Left-to-right ways: a symbol (or wild) on consecutive reels from reel 1; ways = product of matches per reel. */
 function evaluate(grid: Grid, symbols: SymbolDef[], bet: number): Win[] {
   const wilds = new Set(symbols.filter((s) => s.kind === 'wild').map((s) => s.id));
   const wins: Win[] = [];
@@ -84,7 +82,6 @@ export class SlotEngine {
 
   getSymbol = (id: string) => this.symbols.get(id)!;
 
-  /** Random regular symbol for the blur of a spinning reel; never a scatter, so it can't fake a bonus. */
   fillerSymbol = () => pickWeighted(this.config.symbols.filter((s) => s.kind === 'regular'), this.random).id;
 
   canSpin(bet: number) {
@@ -113,16 +110,13 @@ export class SlotEngine {
     return { grid, wins, totalWin, isFreeSpin, freeSpinsAwarded };
   }
 
-  /** Demo cheat: the next spin lands an exact big win tier (`config.winCheats`) or enough BONUS for free spins. */
   forceNext(cheat: keyof GameConfig['winCheats'] | 'freeSpins') {
     const middle = Math.floor(this.rows / 2);
     if (cheat !== 'freeSpins') {
       const { symbol, length, ways } = this.config.winCheats[cheat];
-      // Fill each reel from a rotating pool so no other symbol lines up on neighbouring reels.
       const pool = this.config.symbols.filter((s) => s.kind === 'regular' && s.id !== symbol).map((s) => s.id);
       const grid = Array.from({ length: this.reels }, (_, reel) =>
         Array.from({ length: this.rows }, (_, row) => pool[(reel * this.rows + row) % pool.length]));
-      // Clamped to the board, so the cheats still work on boards with fewer reels or rows.
       for (let reel = 0; reel < Math.min(length, this.reels); reel++) grid[reel][middle] = symbol;
       for (let row = 0; row < Math.min(ways, this.rows) - 1; row++) grid[0][row === middle ? row + 1 : row] = symbol;
       this.forcedGrid = grid;
@@ -131,12 +125,10 @@ export class SlotEngine {
 
     const grid = this.generateGrid();
     if (this.scatter) {
-      // Spread the scatters out (one per reel when minScatters equals the reel count) so the anticipation plays.
       const { id } = this.scatter;
       const { minScatters } = this.config.freeSpins;
       for (let i = 0; i < minScatters; i++) {
         const column = grid[Math.round((i * (this.reels - 1)) / Math.max(1, minScatters - 1))];
-        // Keep the one-scatter-per-reel rule: swap out any scatter the random board already had there.
         column.forEach((symbol, row) => symbol === id && (column[row] = this.fillerSymbol()));
         column[middle] = id;
       }

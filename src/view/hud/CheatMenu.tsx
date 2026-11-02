@@ -16,7 +16,6 @@ interface Props {
   onCheat: (cheat: Cheat) => void;
 }
 
-// Never locked, so a cheat can also be lined up for the next spin of free spins or autoplay.
 export function CheatMenu({ onCheat }: Props) {
   const [open, setOpen] = useState(false);
   const pick = (cheat: Cheat) => {
@@ -38,7 +37,6 @@ export function CheatMenu({ onCheat }: Props) {
   );
 }
 
-// Opens upwards, since the toggle sits in the bottom bar.
 const menu: CSSProperties = {
   position: 'absolute', bottom: 'calc(100% + 6px)', right: 0, display: 'flex', flexDirection: 'column', gap: 6,
   whiteSpace: 'nowrap',

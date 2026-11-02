@@ -5,7 +5,6 @@ import type { GameState } from './StateMachine';
 export const SpinState: GameState = {
   async enter(ctx) {
     const { engine, board, wins, character, message, updateHud } = ctx;
-    // Turbo speeds the reels up and shortens every wait by the same factor.
     const { turboSpeed, minSpinTime, reelStopStagger, anticipationExtra } = engine.config.timing;
     const turbo = ctx.turbo() ? turboSpeed : 1;
 
@@ -17,20 +16,15 @@ export const SpinState: GameState = {
     void stopPressed.then(() => (stopped = true));
     const result = (ctx.result = engine.spin(ctx.bet()));
     updateHud({
-      // Free spin wins are held back until the round ends (BetState); a base win is added in WinState.
       balance: engine.balance - (result.isFreeSpin ? engine.freeSpinsTotal : result.totalWin),
       freeSpinsLeft: engine.freeSpinsLeft - result.freeSpinsAwarded,
       freeSpin: result.isFreeSpin,
     });
-    // The engine already counted this spin's win, so show the total from before it.
     if (result.isFreeSpin) message.showFreeSpinsTotal(engine.freeSpinsTotal - result.totalWin);
     else message.text = 'Good luck!';
 
-    // STOP cuts the minimum spin time short, and board.stop then lands every reel straight away.
     await Promise.race([new Promise((resolve) => gsap.delayedCall(minSpinTime / turbo, resolve)), stopPressed]);
 
-    // Anticipation: once reels 1 and 2 both land a scatter, each next reel slows down, spins longer
-    // and glows, for as long as every reel so far has landed one.
     const chain = scatterChain(engine, result);
     const anticipated = (reel: number) => chain >= 2 && reel >= 2 && reel <= chain && reel < result.grid.length;
     let extra = 0;
@@ -42,7 +36,7 @@ export const SpinState: GameState = {
     }, stopPressed);
     if (chain >= 2) {
       const reaction = character.play(result.freeSpinsAwarded ? 'bonus_anticipation_win' : 'bonus_anticipation_lose');
-      if (!stopped) await reaction; // after STOP, don't hold the spin up for the reaction
+      if (!stopped) await reaction;
     }
     ctx.recordSpin({
       time: new Date(), bet: ctx.bet(), win: result.totalWin,
@@ -52,13 +46,11 @@ export const SpinState: GameState = {
     if (result.totalWin || result.freeSpinsAwarded) return 'win';
     updateHud({ freeSpinsLeft: engine.freeSpinsLeft });
     if (result.isFreeSpin) message.showFreeSpinsTotal(engine.freeSpinsTotal, !engine.freeSpinsLeft);
-    // Autoplay presses SPIN by itself, so only ask the player once it has finished.
     else message.text = ctx.autoplayRunning() ? 'Good luck!' : 'Press SPIN to play';
     return 'bet';
   },
 };
 
-/** Consecutive reels from the left that landed a scatter. */
 function scatterChain(engine: SlotEngine, { grid }: SpinResult) {
   const id = engine.scatter?.id;
   const chain = grid.findIndex((column) => !column.includes(id!));

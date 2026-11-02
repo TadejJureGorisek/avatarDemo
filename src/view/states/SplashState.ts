@@ -5,15 +5,12 @@ export const SplashState: GameState = {
   async enter({ splash, background, logo, character, board, wins, message, updateHud, waitForSpin }) {
     const game = [logo, character, board, wins, message];
     game.forEach((o) => (o.visible = false));
-    // Just a hint of the free spins gold, eased slowly so flicking past the slide doesn't flash.
     splash.onFreeSpins = (showing) => background.setGold(showing ? 0.35 : 0);
     splash.open();
     await waitForSpin();
-    // Switch the HUD now, with the game coming in; a SPIN press before Bet is waiting does nothing.
     updateHud({ state: 'bet' });
     background.setFreeSpins(false);
     background.setSplash(false);
-    // The game starts coming in halfway through the splash zooming away.
     void splash.close();
     game.forEach((o) => (o.visible = true));
     const ease = 'power3.out';

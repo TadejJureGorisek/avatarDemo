@@ -1,10 +1,8 @@
 import { Assets, Container, Graphics, NineSliceSprite } from 'pixi.js';
 
 export const FRAME_URL = 'assets/board/frame.png';
-/** In the frame picture (px): where its see-through opening starts on each side, and the non-stretching corner size. */
 const ART = { insetX: 91, insetY: 104, corner: 150 };
 
-/** Frame around a `width` × `height` area at (0, 0), `thickness` thick at the top and bottom. */
 export function goldFrame(width: number, height: number, thickness: number) {
   const { insetX, insetY, corner } = ART;
   const scale = thickness / insetY;
@@ -18,7 +16,6 @@ export function goldFrame(width: number, height: number, thickness: number) {
   return frame;
 }
 
-/** Centred on (0, 0). */
 export function framedPanel(width: number, height: number, thickness: number, color: number, alpha = 0.95) {
   const panel = new Container();
   const frame = goldFrame(width, height, thickness);
@@ -28,10 +25,8 @@ export function framedPanel(width: number, height: number, thickness: number, co
 }
 
 export const PANEL_URL = 'assets/board/panel.png';
-/** In the panel picture (px): gold band width and non-stretching corner size. */
 const PANEL_ART = { band: 50, corner: 90 };
 
-/** `width` × `height` inside the band, centred on (0, 0). */
 export function goldPanel(width: number, height: number, band: number) {
   const scale = band / PANEL_ART.band;
   const { corner } = PANEL_ART;

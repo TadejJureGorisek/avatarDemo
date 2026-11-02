@@ -1,4 +1,3 @@
-// Icons take the button's text colour via currentColor.
 
 export function SpinIcon() {
   return (

@@ -1,9 +1,7 @@
 export interface SymbolDef {
   id: string;
   kind: 'regular' | 'scatter' | 'wild';
-  /** Relative chance of landing in a cell. */
   weight: number;
-  /** Pay multipliers of the bet by match count. Regular symbols pay per way. */
   pays: Record<number, number>;
 }
 
@@ -33,41 +31,29 @@ export const config = {
     sym('J', 13, 1.8, 8, 35),
     sym('10', 14, 1.2, 6, 25),
     sym('9', 14, 1.2, 6, 25),
-    // Scatter: pays anywhere, as a multiple of the bet.
     { id: 'BONUS', kind: 'scatter', weight: 17, pays: { 3: 0.5, 4: 2, 5: 10 } },
   ] as SymbolDef[],
-  /** At most one scatter on a reel, so `minScatters: 5` means one BONUS on every reel. */
   maxScattersPerReel: 1,
   freeSpins: { minScatters: 5, awarded: 8 },
   bets: [0.2, 0.5, 1, 2, 5, 10],
   defaultBetIndex: 2,
   startingBalance: 1000,
-  /** Big win tiers, ascending: a win of at least `x` × bet gets the count-up with this title. */
   bigWins: [
     { title: 'NICE WIN', x: 20 },
     { title: 'BIG WIN', x: 35 },
     { title: 'MEGA WIN', x: 50 },
     { title: 'EPIC WIN', x: 100 },
   ],
-  /**
-   * Demo cheats landing one exact win: `symbol` on the first `length` reels, on `ways` rows of reel 1.
-   * At bet 1: nice 12×2 = 24, big 20×2 = 40, mega 80, epic 400.
-   */
   winCheats: {
     nice: { symbol: 'H3', length: 3, ways: 2 },
     big: { symbol: 'H1', length: 3, ways: 2 },
     mega: { symbol: 'H2', length: 4, ways: 1 },
     epic: { symbol: 'H1', length: 5, ways: 1 },
   },
-  /** Reel timing in seconds. */
   timing: {
-    /** Every spin lasts at least this long before the first reel stops. */
     minSpinTime: 1,
-    /** Gap between one reel stopping and the next. */
     reelStopStagger: 0.2,
-    /** Extra spinning per remaining reel while the bonus anticipation plays. */
     anticipationExtra: 0.9,
-    /** TURBO speed-up factor for the reels and every wait above. */
     turboSpeed: 2,
   },
 };

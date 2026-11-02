@@ -23,7 +23,6 @@ import { SymbolInfo } from './SymbolInfo';
 import { Wins } from './Wins';
 import { layoutFor, MAX_CELL, sceneFor } from './layout';
 
-/** The HUD is laid out for scene scale 0.8 (a 1280×720 window) and zoomed with the scene from there. */
 const HUD_ZOOM_PER_SCENE = 1.25;
 const fill: CSSProperties = { position: 'absolute', inset: 0 };
 
@@ -73,7 +72,6 @@ export function MainView({ engine }: { engine: SlotEngine }) {
       );
       const { board, symbolInfo } = scene;
       symbolInfoRef.current = symbolInfo;
-      // Tapping the symbol whose pop-up is open closes it; any other symbol opens its own.
       let shown = '';
       board.onCellTap = (reel, row) => {
         if (machine.current?.current === 'spin') return;
@@ -100,19 +98,15 @@ export function MainView({ engine }: { engine: SlotEngine }) {
     symbolInfoRef.current?.setBet(bets[betIndex.current]);
   }, [bets]);
 
-  // One button: SPIN in the bet state, STOP while the reels spin, and stops a running autoplay.
   const pressSpin = useCallback(() => {
     if (autoplayLeft.current > 0) setAutoplay(0);
     else if (machine.current?.current === 'spin') stopRequest.current?.();
     else spinRequest.current?.();
   }, []);
-  // A cheat starts the spin when the game is waiting for the player; otherwise (mid-spin, free
-  // spins, autoplay) it lines up the board for whichever spin comes next.
   const requestCheat = useCallback((cheat: Cheat) => {
     if (spinRequest.current) spinRequest.current(cheat);
     else engine.forceNext(cheat);
   }, [engine]);
-  // The first autoplay spin starts now (BetState is waiting for SPIN); the rest come from BetState.
   const startAutoplay = useCallback((spins: number) => {
     setAutoplay(spins - 1);
     spinRequest.current?.();
@@ -138,12 +132,9 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   );
 }
 
-/** All positions and sizes in screen px. */
 export interface HudLayout {
   top: number;
-  /** Portrait: where the balance and bet row is centred. */
   metersY: number;
-  /** The scene's left edge and width: the HUD is centred on it. */
   left: number;
   width: number;
   zoom: number;
@@ -156,10 +147,9 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
     resizeTo: host, backgroundAlpha: 0, antialias: true, autoDensity: true,
     resolution: Math.min(devicePixelRatio, 2)
   });
-  app.canvas.style.display = 'block'; // inline canvases add a few px of line-box overflow
+  app.canvas.style.display = 'block';
   host.appendChild(app.canvas);
 
-  // Character and logo load first: their size sets the layout, so the HUD can show while the rest loads.
   Assets.add(CHARACTER_ASSETS);
   await Assets.load([...CHARACTER_ASSETS.map((a) => a.alias), LOGO_URL]);
   const character = new Character();
@@ -168,7 +158,6 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   const scene = new Container();
   app.stage.addChild(background, scene);
   const input = { reels: engine.reels, rows: engine.rows, character: character.getLocalBounds(), pad: FRAME_PAD / MAX_CELL };
-  // Needs the symbols loaded; until then only the character, logo and HUD are placed.
   let rest: ReturnType<typeof makeRest> | undefined;
   let placed: ReturnType<typeof layoutFor>;
   let key = '';
@@ -181,7 +170,6 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
       key = `${orientation}:${size.height}`;
       placed = layoutFor(orientation, size, input);
       place(placed);
-      // The splash is only rebuilt when the orientation flips; otherwise it just moves with SPIN.
       if (rest && splashFor !== orientation) {
         splashFor = orientation;
         rest.splash.layout(placed.splash);
@@ -205,7 +193,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
     title.position.set(p.logo.x, p.logo.y);
     if (!rest) return;
     const { board, wins, message, popup, bigWin, symbolInfo } = rest;
-    board.scale.set(p.cell / MAX_CELL); // built at the largest symbol size
+    board.scale.set(p.cell / MAX_CELL);
     board.position.set(p.board.x, p.board.y);
     wins.scale.copyFrom(board.scale);
     wins.position.copyFrom(board.position);
@@ -222,9 +210,8 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   background.addArt();
   rest = makeRest(engine);
   scene.addChild(title, character, ...Object.values(rest));
-  key = ''; // lay out again now that everything is in
+  key = '';
   layout();
-  // A click anywhere off the board closes the symbol pop-up.
   app.stage.eventMode = 'static';
   app.stage.hitArea = app.screen;
   app.stage.on('pointertap', () => rest!.symbolInfo.hide());
@@ -232,7 +219,6 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   return { background, character, logo: title, ...rest };
 }
 
-/** Everything that needs the symbols loaded, in drawing order. */
 function makeRest(engine: SlotEngine) {
   const board = new Board(engine.reels, engine.rows, MAX_CELL, engine.getSymbol, engine.fillerSymbol, engine.generateGrid());
   const message = new Message();

@@ -10,7 +10,6 @@ interface Props {
   atMaxBet: boolean;
   onBetChange: (direction: 1 | -1) => void;
   autoplayLeft: number;
-  /** Autoplay can only start from the bet state. */
   canStart: boolean;
   onStart: (spins: number) => void;
   onStop: () => void;

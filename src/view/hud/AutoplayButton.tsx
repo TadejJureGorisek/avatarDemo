@@ -6,7 +6,6 @@ export const AUTOPLAY_COUNTS = [10, 25, 50, 100];
 
 interface Props {
   open: boolean;
-  /** Spins picked in the pop-up; SPIN shows it and starts autoplay with it. */
   choice: number;
   disabled: boolean;
   onToggle: () => void;
@@ -44,7 +43,6 @@ const styles = {
     display: 'grid', placeItems: 'center', padding: 0,
     border: `3px solid ${colors.gold}`, background: colors.panel, color: colors.gold,
   },
-  // Opens upwards, since the button sits in the bottom bar.
   popup: {
     position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)',
     display: 'flex', flexDirection: 'column', gap: 6, padding: 8, borderRadius: 12,

@@ -1,9 +1,7 @@
 import { useEffect, type RefObject } from 'react';
 
-/** Movement (px) before a press turns into a drag, so plain clicks on buttons still work. */
 const THRESHOLD = 5;
 
-/** Click-and-drag scrolling for the mouse; touch already scrolls natively. */
 export function useDragScroll(ref: RefObject<HTMLElement>) {
   useEffect(() => {
     const el = ref.current;
@@ -32,7 +30,6 @@ export function useDragScroll(ref: RefObject<HTMLElement>) {
       el.style.cursor = '';
       start = undefined;
     };
-    // A drag shouldn't also count as a click on whatever it started on.
     const click = (e: MouseEvent) => {
       if (dragging) {
         e.stopPropagation();

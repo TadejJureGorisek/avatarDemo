@@ -15,19 +15,15 @@ import { colors } from './theme';
 
 export interface HudState {
   ready: boolean;
-  /** Controls are only live in the bet state. */
   state: StateName;
   balance: number;
   bet: number;
   atMinBet: boolean;
   atMaxBet: boolean;
   freeSpinsLeft: number;
-  /** A free spin is playing (including the last one, when freeSpinsLeft is already 0). */
   freeSpin: boolean;
   autoplayLeft: number;
-  /** Free spins were just won and wait for the player to press SPIN to start them. */
   freeSpinsReady: boolean;
-  /** Free spins just ended and the result waits for the player to press SPIN to continue. */
   continueReady: boolean;
   turbo: boolean;
 }
@@ -36,25 +32,20 @@ interface Props {
   state: HudState;
   config: GameConfig;
   history: HistoryEntry[];
-  /** Also stops autoplay while it runs. */
   onSpin: () => void;
   onBetChange: (direction: 1 | -1) => void;
   onCheat: (cheat: Cheat) => void;
   onStartAutoplay: (spins: number) => void;
   onStopAutoplay: () => void;
   onToggleTurbo: () => void;
-  /** From the scene: where the HUD goes, its zoom, and the board's width. */
   layout: HudLayout;
 }
 
 export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, onStartAutoplay, onStopAutoplay, onToggleTurbo, layout }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
-  // The HUD is laid out at a fixed design size and zoomed with the scene, like the board.
   const scale = layout.zoom;
-  // While the autoplay pop-up is open, SPIN shows the picked spins and starts autoplay.
   const [autoOpen, setAutoOpen] = useState(false);
   const [autoChoice, setAutoChoice] = useState(AUTOPLAY_COUNTS[0]);
-  // Once STOP is pressed the button stays off until the reels have landed and it's SPIN again.
   const [stopPressed, setStopPressed] = useState(false);
   useEffect(() => {
     if (s.state !== 'spin') setStopPressed(false);
@@ -62,13 +53,9 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   const inFreeSpins = s.freeSpin || s.freeSpinsLeft > 0;
   const autoplay = s.autoplayLeft > 0;
   const locked = !s.ready || s.state !== 'bet' || inFreeSpins || autoplay;
-  // While loading and on the splash only SPIN's spot shows ("Loading…", then CONTINUE); the rest
-  // fades in with the game.
   const splash = s.state === 'splash';
   const intro = splash || !s.ready;
   const others: CSSProperties = { opacity: intro ? 0 : 1, pointerEvents: intro ? 'none' : undefined, transition: 'opacity 0.5s' };
-  // Numbers instead of an icon: free spins left (they play themselves), autoplay spins left
-  // (pressing stops autoplay), or the picked spins while the autoplay pop-up is open.
   const [spinLabel, spinAria] = splash ? [<ArrowIcon />, 'Continue']
     : autoOpen ? [autoChoice, `Start autoplay, ${autoChoice} spins`]
     : s.freeSpinsReady ? [<SpinIcon />, `Start ${s.freeSpinsLeft} free spins`]
@@ -76,8 +63,6 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     : inFreeSpins ? [s.freeSpinsLeft, `${s.freeSpinsLeft} free spins left`]
     : autoplay ? [s.autoplayLeft, `Stop autoplay, ${s.autoplayLeft} spins left`]
     : s.state === 'spin' ? [<StopIcon />, 'Stop'] : [<SpinIcon />, 'Spin'];
-  // SPIN is live while free spins wait to be started or their result waits to be closed, even
-  // though the rest stays locked.
   const spinDisabled = !s.freeSpinsReady && !s.continueReady && (!s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay)
     || (autoOpen && locked) || (stopPressed && !autoplay));
   const pressSpin = () => {
@@ -89,7 +74,6 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     onStartAutoplay(autoChoice);
   };
 
-  // Zoom per control: SPIN stands out most, then autoplay; portrait has room for bigger controls.
   const size = SIZES[layout.portrait ? 'portrait' : 'landscape'];
   const control = { zoom: size.control };
   const menu = (
@@ -122,7 +106,6 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
           ? <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
           : <div style={styles.loading}>Loading…</div>}
       </div>
-      {/* Turbo can be switched any time, even mid-spin (it applies from the next spin). */}
       <div style={{ ...styles.turbo, ...others }}>
         <div style={{ zoom: size.autoplay }}>
           <TurboButton on={s.turbo} disabled={!s.ready || splash} onToggle={onToggleTurbo} />
@@ -147,15 +130,11 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     </div>
   );
   const cheats = <div style={control}><CheatMenu onCheat={onCheat} /></div>;
-  // Its position and width are divided by the zoom, because zoom scales those too. Hidden until
-  // the scene has placed it (layout.boardWidth is 0 until then).
   const place: CSSProperties = {
     position: 'absolute', zoom: scale, top: layout.top / scale, left: layout.left / scale, width: layout.width / scale,
     visibility: layout.boardWidth ? 'visible' : 'hidden',
   };
 
-  // Landscape: one row under the message (menu, cheats, balance | SPIN | bet). Portrait: cheats over
-  // menu | SPIN at the bottom, with balance and bet halfway between that and the message.
   return layout.portrait ? (
     <>
       <div style={{ ...place, ...styles.pair, ...others, top: layout.metersY / scale, transform: 'translateY(-50%)' }}>{balance}{bet}</div>
@@ -183,18 +162,13 @@ const SIZES = {
 };
 
 const styles = {
-  // Takes SPIN's place (and size) while the game loads, so nothing moves when SPIN appears.
   loading: { width: 110, height: 110, display: 'grid', placeItems: 'center', fontSize: 22, fontWeight: 800, color: colors.gold },
-  // One line: SPIN in the exact middle (equal side columns), each side tucked in towards it.
   row: { display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 28 },
-  // Padding leaves room for turbo / autoplay hanging off SPIN, equal on both sides.
   left: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 28, paddingRight: 80 },
-  // Landscape: menu and cheats keep to the row's left edge, so the left side never pushes SPIN off centre.
   edge: { justifyContent: 'flex-start', gap: 30, paddingLeft: 40 },
   stack: { display: 'flex', flexDirection: 'column', gap: 24 },
   pair: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28 },
   centre: { position: 'relative' },
-  // Hang off SPIN's sides, so SPIN itself stays centred.
   auto: { position: 'absolute', left: 'calc(100% + 16px)', top: '50%', transform: 'translateY(-50%)' },
   turbo: { position: 'absolute', right: 'calc(100% + 16px)', top: '50%', transform: 'translateY(-50%)' },
   right: { display: 'flex', alignItems: 'center', gap: 28, paddingLeft: 80 },

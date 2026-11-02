@@ -4,19 +4,15 @@ import { goldPanel } from './Frame';
 
 interface BigWinTier {
   title: string;
-  /** Minimum win, in multiples of the bet. */
   x: number;
 }
 
 const WIDTH = 900;
 const HEIGHT = 420;
-/** Gold band thickness. */
 const FRAME = 40;
-/** Whole size, frame included. */
 export const BIG_WIN_SIZE = { width: WIDTH + 2 * FRAME, height: HEIGHT + 2 * FRAME };
 const HOLD_S = 1.5;
 
-/** Count-up whose title steps up through the tiers as each threshold is passed; a click skips to the end. */
 export class BigWin extends Container {
   private title = new Text({
     text: '',
@@ -51,19 +47,16 @@ export class BigWin extends Container {
     });
   }
 
-  /** Stops a count-up that's still running (the splash's showcase rebuilds on rotation). */
   override destroy(options?: Parameters<Container['destroy']>[0]) {
     this.tween?.kill();
     gsap.killTweensOf([this, this.scale, this.title.scale, this.amount.scale]);
     super.destroy(options);
   }
 
-  /** Undefined when it's not a big win. */
   tierFor(win: number, bet: number) {
     return [...this.tiers].reverse().find((t) => win >= t.x * bet);
   }
 
-  /** Resolves after it has faded out. */
   async play(win: number, bet: number) {
     const top = this.tiers.indexOf(this.tierFor(win, bet)!);
     let shown = -1;
@@ -83,7 +76,6 @@ export class BigWin extends Container {
     gsap.fromTo(this, { alpha: 0 }, { alpha: 1, duration: 0.25 });
     gsap.fromTo(this.scale, { x: 0.7, y: 0.7 }, { x: 1, y: 1, duration: 0.4, ease: 'back.out(1.7)' });
     update();
-    // Longer count-ups for bigger tiers; power2.inOut speeds up, then slows down at the end.
     this.tween = gsap.to(counter, { value: win, duration: 2 + top * 1.2, ease: 'power2.inOut', onUpdate: update });
     await this.tween;
     this.tween = undefined;

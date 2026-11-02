@@ -8,7 +8,6 @@ interface Props {
   onPress: () => void;
 }
 
-/** Also pressed with Space. */
 export function SpinButton({ label, ariaLabel, disabled, onPress }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

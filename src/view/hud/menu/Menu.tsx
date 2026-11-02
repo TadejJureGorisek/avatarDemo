@@ -9,16 +9,13 @@ import { HowToPlay } from './HowToPlay';
 import { useDragScroll } from './useDragScroll';
 
 const TABS = ['HOW TO PLAY', 'ABOUT THE GAME', 'AUTOPLAY', 'HISTORY'] as const;
-/** The panel's design size, before zoom. */
 const PANEL = { width: 600, height: 620 };
 type Tab = (typeof TABS)[number];
 
 interface Props {
   disabled: boolean;
   open: boolean;
-  /** Panel width in px (the board's on-screen width); 0 until the scene has laid out. */
   width: number;
-  /** HUD zoom (from the scene); sizes the panel until the board's width is known. */
   scale: number;
   onOpenChange: (open: boolean) => void;
   config: GameConfig;
@@ -33,13 +30,10 @@ interface Props {
   onStopAutoplay: () => void;
 }
 
-// The overlay is portalled to <body> so the bar's zoom doesn't apply to it; the panel gets its own.
 export function Menu(p: Props) {
   const [tab, setTab] = useState<Tab>('HOW TO PLAY');
   const content = useRef<HTMLDivElement>(null);
   useDragScroll(content);
-  // The panel is always laid out at PANEL size (so its text wraps the same way at any window size)
-  // and zoomed to the board's on-screen width, or smaller if the window is too short or narrow.
   const zoom = Math.min((p.width || PANEL.width * p.scale) / PANEL.width,
     (window.innerWidth - 32) / PANEL.width, (window.innerHeight - 32) / PANEL.height);
   const panelSize = { zoom, width: PANEL.width, height: PANEL.height };
@@ -96,7 +90,6 @@ const styles = {
     position: 'fixed', inset: 0, zIndex: 10, display: 'grid', placeItems: 'center', padding: 16,
     background: 'rgb(0 0 0 / 0.6)',
   },
-  // Same size for every tab, so switching tabs doesn't resize the panel; long tabs scroll inside.
   panel: {
     display: 'flex', flexDirection: 'column', borderRadius: 18,
     background: '#1a0b3d', border: `3px solid ${colors.gold}`, overflow: 'hidden',
@@ -111,7 +104,6 @@ const styles = {
     marginLeft: 'auto', width: 36, borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 18,
     background: 'transparent', color: '#fff',
   },
-  // Themed scrollbar via the standard properties, so no CSS file is needed.
   content: {
     flex: 1, minHeight: 0, padding: '12px 20px 20px', overflow: 'auto',
     scrollbarWidth: 'thin', scrollbarColor: `${colors.gold} ${colors.panel}`,

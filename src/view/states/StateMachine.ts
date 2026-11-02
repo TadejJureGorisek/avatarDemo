@@ -29,25 +29,20 @@ export interface GameContext {
   splash: Splash;
   bet: () => number;
   updateHud: (patch: Partial<HudState>) => void;
-  /** Also resolves (with the cheat) when one is picked from the cheat menu. */
   waitForSpin: () => Promise<Cheat | undefined>;
   waitForStop: () => Promise<void>;
-  /** Uses up one autoplay spin; false when autoplay is off or finished. */
   takeAutoSpin: () => boolean;
   turbo: () => boolean;
   autoplayRunning: () => boolean;
   stopAutoplay: () => void;
   recordSpin: (entry: HistoryEntry) => void;
-  /** Result of the last spin, set by SpinState for WinState. */
   result?: SpinResult;
 }
 
 export interface GameState {
-  /** Resolves with the next state. */
   enter(ctx: GameContext): Promise<StateName>;
 }
 
-/** Splash once, then loops Bet → Spin → Win (only when something was won) → Bet. */
 export class StateMachine {
   current: StateName = 'splash';
 

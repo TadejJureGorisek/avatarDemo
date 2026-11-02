@@ -5,7 +5,6 @@ import { framedPanel } from './Frame';
 const WIDTH = 760;
 const HEIGHT = 260;
 
-/** `show()` resolves once it has faded out; `open()` keeps it on screen until `close()`. */
 export class Popup extends Container {
   private text = new Text({
     text: '',
@@ -29,7 +28,6 @@ export class Popup extends Container {
     await this.close();
   }
 
-  /** Resolves once it's fully in. */
   async open(message: string) {
     this.text.text = message;
     this.visible = true;

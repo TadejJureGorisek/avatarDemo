@@ -92,7 +92,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   };
 
   const menu = (
-    <div style={layout.portrait ? styles.control : styles.menu}>
+    <div style={styles.menu}>
       <Menu
         open={menuOpen}
         disabled={locked}
@@ -146,18 +146,8 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     visibility: layout.boardWidth ? 'visible' : 'hidden',
   };
 
-  // Landscape: one row right under the message: menu, balance | SPIN (centred) + autoplay | bet,
-  // cheats. Portrait is narrower, so two rows: balance and bet, then menu | SPIN + autoplay | cheats.
-  return layout.portrait ? (
-    <div style={{ ...place, ...styles.stack }}>
-      <div style={{ ...styles.pair, ...others }}>{balance}{bet}</div>
-      <div style={styles.row}>
-        <div style={{ ...styles.left, ...others }}>{menu}</div>
-        {spin}
-        <div style={{ ...styles.right, ...others }}>{cheats}</div>
-      </div>
-    </div>
-  ) : (
+  // One row right under the message: menu, balance | SPIN (centred) + autoplay | bet, cheats.
+  return (
     <div style={{ ...place, ...styles.row }}>
       <div style={{ ...styles.left, ...others }}>{menu}{balance}</div>
       {spin}
@@ -171,9 +161,6 @@ const styles = {
   loading: { width: 110, height: 110, display: 'grid', placeItems: 'center', fontSize: 22, fontWeight: 800, color: colors.gold },
   // One line: SPIN in the exact middle (equal side columns), each side tucked in towards it.
   row: { display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 28 },
-  // Portrait: the balance and bet row above the SPIN row.
-  stack: { display: 'flex', flexDirection: 'column', gap: 16 },
-  pair: { display: 'flex', justifyContent: 'center', gap: 40 },
   left: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 28 },
   // Size of each control relative to its own design size: SPIN stands out most, then autoplay.
   control: { zoom: 1.1 },

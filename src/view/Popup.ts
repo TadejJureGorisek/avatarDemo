@@ -1,7 +1,7 @@
 import gsap from 'gsap';
 import { Container, Graphics, Text } from 'pixi.js';
 
-export const POPUP_WIDTH = 760;
+const POPUP_WIDTH = 760;
 const HEIGHT = 260;
 
 /**
@@ -9,8 +9,6 @@ const HEIGHT = 260;
  * it has faded out; `open()` keeps it on screen until `close()`.
  */
 export class Popup extends Container {
-  /** Its size on screen (it pops in up to this scale). */
-  fit = 1;
   private text = new Text({
     text: '',
     style: { fontFamily: 'system-ui, sans-serif', fontSize: 52, fontWeight: '900', fill: 0xffe27a, align: 'center',
@@ -40,7 +38,7 @@ export class Popup extends Container {
     this.visible = true;
     await gsap.timeline()
       .fromTo(this, { alpha: 0 }, { alpha: 1, duration: 0.2 })
-      .fromTo(this.scale, { x: 0.6 * this.fit, y: 0.6 * this.fit }, { x: this.fit, y: this.fit, duration: 0.4, ease: 'back.out(2)' }, 0);
+      .fromTo(this.scale, { x: 0.6, y: 0.6 }, { x: 1, y: 1, duration: 0.4, ease: 'back.out(2)' }, 0);
   }
 
   async close() {

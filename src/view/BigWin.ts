@@ -7,7 +7,7 @@ export interface BigWinTier {
   x: number;
 }
 
-export const BIG_WIN_WIDTH = 900;
+const BIG_WIN_WIDTH = 900;
 const HEIGHT = 420;
 const HOLD_S = 1.5;
 
@@ -16,8 +16,6 @@ const HOLD_S = 1.5;
  * the title steps up (NICE → BIG → MEGA → EPIC) as each threshold is passed, and a click skips to the end.
  */
 export class BigWin extends Container {
-  /** Its size on screen (it pops in up to this scale). */
-  fit = 1;
   private title = new Text({
     text: '',
     style: { fontFamily: 'system-ui, sans-serif', fontSize: 96, fontWeight: '900', fill: 0xffe27a,
@@ -82,7 +80,7 @@ export class BigWin extends Container {
 
     this.visible = true;
     gsap.fromTo(this, { alpha: 0 }, { alpha: 1, duration: 0.25 });
-    gsap.fromTo(this.scale, { x: 0.7 * this.fit, y: 0.7 * this.fit }, { x: this.fit, y: this.fit, duration: 0.4, ease: 'back.out(1.7)' });
+    gsap.fromTo(this.scale, { x: 0.7, y: 0.7 }, { x: 1, y: 1, duration: 0.4, ease: 'back.out(1.7)' });
     update();
     // Longer count-ups for bigger tiers; power2.inOut speeds up, then slows down at the end.
     this.tween = gsap.to(counter, { value: win, duration: 2 + top * 1.2, ease: 'power2.inOut', onUpdate: update });

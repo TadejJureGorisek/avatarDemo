@@ -62,7 +62,6 @@ const styles = {
   bar: {
     position: 'absolute', left: 0, right: 0, bottom: 0, height: HUD_HEIGHT, padding: '0 clamp(10px, 2vw, 24px)',
     display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 'clamp(8px, 1.5vw, 16px)',
-    background: 'linear-gradient(transparent, rgb(0 0 0 / 0.65) 30%)',
   },
   // Wraps into a column on narrow screens.
   group: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'clamp(4px, 1.2vw, 14px)' },

@@ -47,6 +47,7 @@ src/
     board/Cell.ts      one symbol sprite
     Wins.ts            win pop on winning symbols + win amount over the board
     Character.ts       Spine character
+    Background.ts      full-screen gradient
     hud/Hud.tsx        the whole UI: Balance, BetControl, SpinButton, CheatMenu, messages
 ```
 

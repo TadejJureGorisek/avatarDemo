@@ -1,6 +1,7 @@
-import { Application, Assets, Container, FillGradient, Graphics } from 'pixi.js';
+import { Application, Assets, Container } from 'pixi.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SlotEngine } from '../engine/SlotEngine';
+import { Background } from './Background';
 import { Board } from './board/Board';
 import { symbolUrl } from './board/Cell';
 import { Character, CHARACTER_ASSETS } from './Character';
@@ -79,25 +80,21 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   const character = new Character();
   character.position.set(270, 560);
 
-  const background = new Graphics();
-  const root = new Container();
-  root.addChild(character, board, wins);
-  app.stage.addChild(background, root);
+  const background = new Background();
+  // The 1600x900 design-space scene; it's scaled to fit the screen above the HUD.
+  const scene = new Container();
+  scene.addChild(character, board, wins);
+  app.stage.addChild(background, scene);
 
-  // Letterbox the 1600x900 scene above the HUD.
-  const layout = () => {
-    const { width, height } = app.screen;
-    const fill = new FillGradient({
-      type: 'linear', start: { x: 0, y: 0 }, end: { x: 0, y: 1 }, textureSpace: 'local',
-      colorStops: [{ offset: 0, color: 0x3b0f8c }, { offset: 1, color: 0x12052e }]
-    });
-    background.clear().rect(0, 0, width, height).fill(fill);
-    const scale = Math.min(width / DESIGN.width, (height - HUD_HEIGHT) / DESIGN.height);
-    root.scale.set(scale);
-    root.position.set((width - DESIGN.width * scale) / 2, (height - HUD_HEIGHT - DESIGN.height * scale) / 2);
+  const layout = (width: number, height: number) => {
+    background.resize(width, height);
+    const available = height - HUD_HEIGHT;
+    const scale = Math.min(width / DESIGN.width, available / DESIGN.height);
+    scene.scale.set(scale);
+    scene.position.set((width - DESIGN.width * scale) / 2, (available - DESIGN.height * scale) / 2);
   };
   app.renderer.on('resize', layout);
-  layout();
+  layout(app.screen.width, app.screen.height);
 
   return { board, wins, character };
 }

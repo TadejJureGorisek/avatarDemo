@@ -1,5 +1,6 @@
 import gsap from 'gsap';
-import { Container, Graphics, Text } from 'pixi.js';
+import { Container, Text } from 'pixi.js';
+import { framedPanel } from './Frame';
 
 const POPUP_WIDTH = 760;
 const HEIGHT = 260;
@@ -18,8 +19,7 @@ export class Popup extends Container {
   constructor() {
     super();
     this.addChild(
-      new Graphics().roundRect(-POPUP_WIDTH / 2, -HEIGHT / 2, POPUP_WIDTH, HEIGHT, 32)
-        .fill({ color: 0x1a0b3d, alpha: 0.95 }).stroke({ color: 0xffc94a, width: 6 }),
+      framedPanel(POPUP_WIDTH, HEIGHT, 44, 0x1a0b3d),
       this.text,
     );
     this.text.anchor.set(0.5);

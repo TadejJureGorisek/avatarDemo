@@ -2,9 +2,13 @@ import gsap from 'gsap';
 import { Container, Graphics, Rectangle } from 'pixi.js';
 import type { SymbolDef } from '../../engine/config';
 import type { Grid } from '../../engine/SlotEngine';
+import { goldFrame } from '../Frame';
 import { Reel } from './Reel';
 
-export const FRAME_PAD = 18;
+/** How much room the gold frame around the reels takes at each side (at the largest symbol size). */
+export const FRAME_PAD = 70;
+/** How much of the background shows through behind the symbols (0 = none). */
+const SEE_THROUGH = 0.4;
 /** Seconds between one reel starting and the next. */
 const REEL_START_STAGGER = 0.06;
 
@@ -39,12 +43,11 @@ export class Board extends Container {
     const reelLayer = new Container();
     const mask = new Graphics().rect(0, 0, this.boardWidth, this.boardHeight).fill(0xffffff);
     reelLayer.mask = mask;
-    this.addChild(
-      new Graphics().roundRect(-FRAME_PAD, -FRAME_PAD, this.frameWidth, this.boardHeight + FRAME_PAD * 2, 28)
-        .fill({ color: 0x1a0b3d, alpha: 0.85 }).stroke({ color: 0xffc94a, width: 6 }),
-      reelLayer,
-      mask,
-    );
+    // Behind the symbols: dark purple, partly see-through. On top: the frame, its inner rim just
+    // overlapping the reels' edges.
+    const back = new Graphics().roundRect(-8, -8, this.boardWidth + 16, this.boardHeight + 16, 24)
+      .fill({ color: 0x1a0b3d, alpha: 1 - SEE_THROUGH });
+    this.addChild(back, reelLayer, mask, goldFrame(this.boardWidth, this.boardHeight, FRAME_PAD));
 
     this.reels = Array.from({ length: reels }, (_, i) => {
       const reel = reelLayer.addChild(new Reel(rows, cellSize, getSymbol, fillerSymbol, grid[i]));

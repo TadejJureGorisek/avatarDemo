@@ -1,5 +1,6 @@
 import gsap from 'gsap';
-import { Container, Graphics, Rectangle, Text } from 'pixi.js';
+import { Container, Rectangle, Text } from 'pixi.js';
+import { framedPanel } from './Frame';
 
 export interface BigWinTier {
   title: string;
@@ -35,8 +36,7 @@ export class BigWin extends Container {
     this.amount.anchor.set(0.5);
     this.amount.y = 70;
     this.addChild(
-      new Graphics().roundRect(-BIG_WIN_WIDTH / 2, -HEIGHT / 2, BIG_WIN_WIDTH, HEIGHT, 40)
-        .fill({ color: 0x12052e, alpha: 0.9 }).stroke({ color: 0xffc94a, width: 8 }),
+      framedPanel(BIG_WIN_WIDTH, HEIGHT, 56, 0x12052e, 0.92),
       this.title,
       this.amount,
     );

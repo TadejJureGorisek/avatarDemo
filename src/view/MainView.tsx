@@ -4,6 +4,7 @@ import type { SlotEngine } from '../engine/SlotEngine';
 import { Background, BACKGROUND_URLS } from './Background';
 import { BigWin } from './BigWin';
 import { Board, FRAME_PAD } from './board/Board';
+import { FRAME_URL } from './Frame';
 import { symbolUrl } from './board/Cell';
 import { Character, CHARACTER_ASSETS } from './Character';
 import type { Cheat } from './hud/CheatMenu';
@@ -212,11 +213,13 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   app.stage.addChild(background, scene);
   // In portrait, the symbol size that fits the character and board side by side across the scene,
   // and the height the whole portrait layout needs (a shorter window scales it down to fit).
+  // The frame scales with the board, so its room is `PAD` per px of symbol size.
   const aspect = bounds.width / bounds.height;
+  const PAD = FRAME_PAD / MAX_CELL;
   const PORTRAIT_CELL = Math.floor(Math.min(MAX_CELL,
-    (DESIGN.height - 2 * PORTRAIT_SIDE - PORTRAIT_GAP - 2 * FRAME_PAD - aspect * 2 * FRAME_PAD) / (engine.reels + aspect * engine.rows)));
+    (DESIGN.height - 2 * PORTRAIT_SIDE - PORTRAIT_GAP) / (engine.reels + 2 * PAD + aspect * (engine.rows + 2 * PAD))));
   const portraitHeight = 2 * MARGIN + PORTRAIT_LOGO_LIFT + PORTRAIT_LOGO_HEIGHT + LOGO_GAP
-    + engine.rows * PORTRAIT_CELL + 2 * FRAME_PAD + 2 * MESSAGE_GAP + HUD_PORTRAIT;
+    + (engine.rows + 2 * PAD) * PORTRAIT_CELL + 2 * MESSAGE_GAP + HUD_PORTRAIT;
   // The rest needs the symbols; until they're in, only the character, logo and HUD are placed.
   let rest: ReturnType<typeof makeRest> | undefined;
 
@@ -229,29 +232,33 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   const arrange = (o: Orientation, D: { width: number; height: number }) => {
     let cell: number, boardY: number, boardX: number, fit: number, feet: number, hudTop: number, logoX: number, logoY: number, logoWidth: number;
     let metersY = 0;
+    /** The frame's room at each side of the reels, at this symbol size. */
+    let pad: number;
     let splashArea: { top: number; bottom: number; dotsY: number };
     if (o === 'landscape') {
       // Symbol size: as big as fits next to the character and above the message and HUD row.
       const below = MESSAGE_GAP + HUD_GAP + HUD_ROW;
-      const maxWidth = D.width - 2 * MARGIN - bounds.width - GAP - 2 * FRAME_PAD;
-      const maxHeight = D.height - 2 * MARGIN - below - 2 * FRAME_PAD;
-      cell = Math.floor(Math.min(MAX_CELL, maxWidth / engine.reels, maxHeight / engine.rows));
-      boardY = (D.height - (2 * FRAME_PAD + engine.rows * cell + below)) / 2 + FRAME_PAD;
+      const maxWidth = D.width - 2 * MARGIN - bounds.width - GAP;
+      const maxHeight = D.height - 2 * MARGIN - below;
+      cell = Math.floor(Math.min(MAX_CELL, maxWidth / (engine.reels + 2 * PAD), maxHeight / (engine.rows + 2 * PAD)));
+      pad = PAD * cell;
+      boardY = (D.height - (2 * pad + engine.rows * cell + below)) / 2 + pad;
       feet = FLOOR * D.height;
       // The character shrinks if it has to, to fit under the logo and above the floor.
-      fit = Math.min(1, (feet - (boardY - FRAME_PAD) - LOGO_HEIGHT - LOGO_GAP) / bounds.height);
+      fit = Math.min(1, (feet - (boardY - pad) - LOGO_HEIGHT - LOGO_GAP) / bounds.height);
       const characterWidth = bounds.width * fit;
-      const left = (D.width - (characterWidth + GAP + engine.reels * cell)) / 2;
-      boardX = left + characterWidth + GAP;
-      [logoX, logoY, logoWidth] = [left + characterWidth / 2, boardY - FRAME_PAD + LOGO_HEIGHT / 2, characterWidth + GAP];
+      const left = (D.width - (characterWidth + GAP + engine.reels * cell + 2 * pad)) / 2;
+      boardX = left + characterWidth + GAP + pad;
+      [logoX, logoY, logoWidth] = [left + characterWidth / 2, boardY - pad + LOGO_HEIGHT / 2, characterWidth + GAP];
       character.x = left - bounds.x * fit;
-      const messageY = boardY + engine.rows * cell + FRAME_PAD + MESSAGE_GAP;
+      const messageY = boardY + engine.rows * cell + pad + MESSAGE_GAP;
       hudTop = messageY + HUD_GAP;
       splashArea = { top: MARGIN, bottom: messageY - MESSAGE_GAP / 2, dotsY: messageY };
     } else {
       // Character on the board's left, as tall as the board's frame: together as wide as the scene.
       cell = PORTRAIT_CELL;
-      const frameHeight = engine.rows * cell + 2 * FRAME_PAD;
+      pad = PAD * cell;
+      const frameHeight = engine.rows * cell + 2 * pad;
       fit = frameHeight / bounds.height;
       const characterWidth = bounds.width * fit;
       // The HUD at the bottom; logo, board row and message centred in the room above it.
@@ -259,16 +266,16 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
       hudTop = D.height - MARGIN - PORTRAIT_SPIN_BLOCK;
       const group = PORTRAIT_LOGO_HEIGHT + LOGO_GAP + frameHeight + 2 * MESSAGE_GAP;
       const top = MARGIN + (groupBottom - MARGIN - group) / 2;
-      boardY = top + PORTRAIT_LOGO_HEIGHT + LOGO_GAP + FRAME_PAD;
-      const left = (D.width - (characterWidth + PORTRAIT_GAP + engine.reels * cell + 2 * FRAME_PAD)) / 2;
-      boardX = left + characterWidth + PORTRAIT_GAP + FRAME_PAD;
+      boardY = top + PORTRAIT_LOGO_HEIGHT + LOGO_GAP + pad;
+      const left = (D.width - (characterWidth + PORTRAIT_GAP + engine.reels * cell + 2 * pad)) / 2;
+      boardX = left + characterWidth + PORTRAIT_GAP + pad;
       // The logo centred on the screen, a little above the rest of the group.
       const logoTop = Math.max(MARGIN, top - PORTRAIT_LOGO_LIFT);
       [logoX, logoY, logoWidth] = [D.width / 2, logoTop + PORTRAIT_LOGO_HEIGHT / 2, D.width - 2 * MARGIN];
       character.x = left - bounds.x * fit;
-      feet = boardY + engine.rows * cell + FRAME_PAD;
+      feet = boardY + engine.rows * cell + pad;
       // Balance and bet halfway between the message's bottom and the cheats + SPIN block.
-      metersY = (boardY + engine.rows * cell + FRAME_PAD + 2 * MESSAGE_GAP + hudTop) / 2;
+      metersY = (boardY + engine.rows * cell + pad + 2 * MESSAGE_GAP + hudTop) / 2;
       // On the splash only SPIN (CONTINUE) shows, so the splash has everything above the SPIN row.
       const spinTop = hudTop + PORTRAIT_SPIN_TOP;
       splashArea = { top: MARGIN, bottom: spinTop - 2 * MESSAGE_GAP, dotsY: spinTop - MESSAGE_GAP };
@@ -285,14 +292,14 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
       wins.scale.copyFrom(board.scale);
       wins.position.copyFrom(board.position);
       // Screen centre (the scene is centred horizontally), in line with the SPIN button.
-      message.position.set(D.width / 2, boardY + engine.rows * cell + FRAME_PAD + MESSAGE_GAP);
+      message.position.set(D.width / 2, boardY + engine.rows * cell + pad + MESSAGE_GAP);
       // Pop-ups in the middle of the screen.
       popup.position.set(D.width / 2, D.height / 2);
       bigWin.position.copyFrom(popup.position);
       symbolInfo.hide();
     }
     const splash = { width: D.width, ...splashArea, logoHeight: o === 'landscape' ? LOGO_HEIGHT : PORTRAIT_SPLASH_LOGO_HEIGHT };
-    return { hudTop, metersY, boardWidth: engine.reels * cell + 2 * FRAME_PAD * (cell / MAX_CELL), feet, splash };
+    return { hudTop, metersY, boardWidth: engine.reels * cell + 2 * pad, feet, splash };
   };
 
   let placed: ReturnType<typeof arrange> | undefined;
@@ -341,7 +348,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   app.renderer.on('resize', layout);
   layout();
 
-  await Assets.load([...engine.config.symbols.map((s) => symbolUrl(s.id)), ...BACKGROUND_URLS]);
+  await Assets.load([...engine.config.symbols.map((s) => symbolUrl(s.id)), ...BACKGROUND_URLS, FRAME_URL]);
   background.addArt();
   rest = makeRest(engine);
   scene.addChild(title, character, ...Object.values(rest));

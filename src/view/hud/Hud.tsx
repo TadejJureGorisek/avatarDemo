@@ -96,7 +96,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   const size = SIZES[layout.portrait ? 'portrait' : 'landscape'];
   const control = { zoom: size.control };
   const menu = (
-    <div style={layout.portrait ? control : { ...control, marginRight: 55 }}>
+    <div style={layout.portrait ? control : { ...control, marginRight: 20 }}>
       <Menu
         open={menuOpen}
         disabled={locked}
@@ -150,7 +150,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     visibility: layout.boardWidth ? 'visible' : 'hidden',
   };
 
-  // Landscape: one row right under the message: menu, balance, bet, SPIN + autoplay, cheats. Portrait: at the bottom of the screen, balance, bet and cheats, then menu | SPIN + autoplay.
+  // Landscape: one row right under the message: menu, balance, bet | SPIN (centred) + autoplay | cheats. Portrait: at the bottom of the screen, balance, bet and cheats, then menu | SPIN + autoplay.
   return layout.portrait ? (
     <div style={{ ...place, ...styles.stack }}>
       <div style={{ ...styles.pair, ...others }}>{balance}{bet}{cheats}</div>
@@ -161,7 +161,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
       </div>
     </div>
   ) : (
-    <div style={{ ...place, ...styles.line }}>
+    <div style={{ ...place, ...styles.row }}>
       <div style={{ ...styles.left, ...others }}>{menu}{balance}{bet}</div>
       {spin}
       <div style={{ ...styles.right, ...others }}>{cheats}</div>
@@ -186,8 +186,6 @@ const styles = {
   centre: { position: 'relative' },
   // Hangs off SPIN's right side, so SPIN itself stays centred.
   auto: { position: 'absolute', left: 'calc(100% + 16px)', top: '50%', transform: 'translateY(-50%)' },
-  // Landscape: the whole row centred, left to right.
-  line: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28 },
   // Leaves room for the autoplay button that hangs off SPIN.
   right: { display: 'flex', alignItems: 'center', gap: 28, paddingLeft: 80 },
 } satisfies Record<string, CSSProperties>;

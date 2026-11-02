@@ -18,20 +18,22 @@ export function CheatMenu({ disabled, onCheat }: Props) {
 
   const option = { ...button, ...disabledLook(disabled) };
   return (
-    <div style={container}>
+    <div style={{ position: 'relative' }}>
       <button style={button} onClick={() => setOpen(!open)}>CHEATS</button>
       {open && (
-        <>
+        <div style={menu}>
           <button style={option} onClick={() => pick('win')} disabled={disabled}>Big win</button>
           <button style={option} onClick={() => pick('freeSpins')} disabled={disabled}>Free spins</button>
-        </>
+        </div>
       )}
     </div>
   );
 }
 
-const container: CSSProperties = {
-  position: 'absolute', top: 12, right: 12, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6,
+// Opens upwards, since the toggle sits in the bottom bar.
+const menu: CSSProperties = {
+  position: 'absolute', bottom: 'calc(100% + 6px)', left: 0, display: 'flex', flexDirection: 'column', gap: 6,
+  whiteSpace: 'nowrap',
 };
 
 const button: CSSProperties = {

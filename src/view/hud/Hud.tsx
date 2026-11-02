@@ -40,12 +40,12 @@ export function Hud({ state: s, onSpin, onBetChange, onCheat, onHeight }: Props)
   return (
     <>
       {!s.ready && <div style={styles.loading}>Loading…</div>}
-      <CheatMenu disabled={locked} onCheat={onCheat} />
       {s.freeSpinsLeft > 0 && (
         <div style={styles.banner}>FREE SPINS: {s.freeSpinsLeft} left · Total {s.freeSpinsTotal.toFixed(2)}</div>
       )}
       <div style={styles.bar} ref={bar}>
         <div style={styles.group}>
+          <CheatMenu disabled={locked} onCheat={onCheat} />
           <Balance value={s.balance} />
           <BetControl bet={s.bet} disabled={locked} onChange={onBetChange} />
         </div>

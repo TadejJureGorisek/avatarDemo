@@ -24,7 +24,7 @@ start command is needed.
 - **Anticipation**: once two BONUS symbols have landed, the remaining reels slow down while the
   character plays `bonus_anticipation`, then `bonus_anticipation_win` / `_lose`.
 - Character plays `small_win` on any win and loops `idle` otherwise.
-- **CHEATS** menu (top right): *Big win* forces the top symbol across the middle row, *Free spins*
+- **CHEATS** menu (bottom left): *Big win* forces the top symbol across the middle row, *Free spins*
   forces 3 BONUS. Handled in `BetState` via `SlotEngine.forceNext()`.
 - RNG: `crypto.getRandomValues`. Paytable tuned by simulation to RTP ≈ 96%, hit rate ≈ 13%.
 

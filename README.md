@@ -1,7 +1,8 @@
 # AvatarUX Slot – Game Developer Test
 
-A 5×3, 243-ways slot prototype built with **TypeScript + PixiJS 8**, a **React** HUD and the provided
-character animated with the **Spine 4.2 runtime** (`@esotericsoftware/spine-pixi-v8@4.2`).
+**Bling Bling Boss** — a 5×3, 243-ways slot prototype built with **TypeScript + PixiJS 8**, a
+**React** HUD and the provided character animated with the **Spine 4.2 runtime**
+(`@esotericsoftware/spine-pixi-v8@4.2`).
 
 ## Run
 
@@ -16,32 +17,36 @@ start command is needed.
 
 ## Features
 
+- **Loading and splash**: "Loading…" shows where SPIN will be; then a splash with three slides
+  (the character, big wins, free spins) under the logo. Swipe, the side arrows, the dots or the
+  arrow keys change slides (looping). SPIN shows an arrow and is CONTINUE: the splash zooms away
+  while the character, logo, board and HUD come in.
 - 5 reels × 3 rows, **243 ways**, pays left to right from reel 1 (3+ of a kind).
 - Spinning reels: all reels spin for at least `timing.minSpinTime`, then each reel lands its
-  **stop symbols** (the result) one after another with a bounce. Timings live in `config.ts`.
-  Winning symbols pop (scale up and down) until the next spin, with the win amount over them.
-- React HUD in one row under the player message: menu, Balance | SPIN (centred) + quick autoplay |
-  Bet, CHEATS. It's laid out at a fixed design size and zoomed with the scene, so it keeps its
-  proportions at any window size. Click a landed symbol to see what it pays. The main button is
-  SPIN, then STOP while spinning (slams the reels in), and shows the free spins left during free
-  spins. `Space` presses it. Menu, bet and autoplay are locked during a round.
+  **stop symbols** (the result) one after another with a bounce. Winning symbols pop until the
+  next spin, with the win amount over them. Click a landed symbol to see what it pays.
+- One main button: SPIN, then STOP while spinning (lands the reels early), the free spins left
+  during free spins, and the autoplay spins left during autoplay. `Space` presses it.
+- **TURBO** (lightning, left of SPIN): spins run `timing.turboSpeed` × faster, and STOP lands the
+  reels instantly. **Autoplay** (right of SPIN): pick 10/25/50/100 spins.
 - **BONUS** scatter: at most one per reel, pays anywhere (3/4/5). Five (one on every reel) award
   **8 free spins**: the award pop-up waits for SPIN, then the background turns gold and they play
   by themselves (retriggerable). Their win is paid into the balance at the end of the round.
-- **Anticipation**: once reels 1 and 2 both land a BONUS, the next reel slows down and spins longer
-  while the others keep full speed; every further BONUS slows the reel after it. The character
-  plays `bonus_anticipation`, then `bonus_anticipation_win` / `_lose`.
+- **Anticipation**: once reels 1 and 2 both land a BONUS, the next reel slows down and spins longer;
+  every further BONUS slows the reel after it. The character plays `bonus_anticipation`, then
+  `bonus_anticipation_win` / `_lose`.
 - **Big wins**: wins of 20× / 35× / 50× / 100× the bet get a count-up (NICE / BIG / MEGA / EPIC WIN)
-  that speeds up then slows down, with the title stepping up as each threshold is passed. Click
-  to skip. Tiers live in `config.bigWins`.
-- Character plays `small_win` on any win and loops `idle` otherwise.
-- **Menu** (burger): HOW TO PLAY (rules + paytable at the current bet), ABOUT THE GAME,
-  AUTOPLAY (set the bet, pick 10/25/50/100 spins; the main button shows the spins left and stops
-  it), HISTORY (last 50 spins).
-- **CHEATS** (always available): *Nice / Big / Mega / Epic win* land an exact win of that tier
-  (24× / 40× / 80× / 400×, `config.winCheats`), *Free spins* forces a BONUS on every reel. Picked
-  while waiting for SPIN it starts that spin; mid-round it lines up the next one
-  (`SlotEngine.forceNext()`).
+  with the title stepping up as each threshold is passed. Click to skip.
+- **Menu** (burger): HOW TO PLAY (rules + paytable at the current bet), ABOUT THE GAME, AUTOPLAY,
+  HISTORY (last 50 spins).
+- **CHEATS**: *Nice / Big / Mega / Epic win* land an exact win of that tier (`config.winCheats`),
+  *Free spins* forces a BONUS on every reel. Picked while waiting for SPIN it starts that spin;
+  mid-round it lines up the next one (`SlotEngine.forceNext()`).
+- **Any screen**: a landscape layout (1600×900) and a portrait one (900×1600) for windows clearly
+  taller than wide, e.g. phones. The scene scales to fit the window without distorting; the
+  background covers the window with its floor under the character's feet.
+- Art: logo, backgrounds, reel frame and big win panel generated with Higgsfield / Meshy; icons
+  from [Lucide](https://lucide.dev) (ISC).
 - RNG: `crypto.getRandomValues`. Tuned by simulation (6M spins): RTP ≈ 96%, hit rate ≈ 28%,
   free spins about 1 in 320 spins.
 
@@ -50,38 +55,28 @@ start command is needed.
 ```
 src/
   engine/
-    config.ts          board size, symbols, weights, paytable, bets, free spins (data only)
+    config.ts          board size, symbols, weights, paytable, bets, free spins, timing (data only)
     SlotEngine.ts      pure logic: RNG, grid generation, ways evaluation, wallet, free spins
   view/
-    MainView.tsx       the whole game: builds the Pixi scene + HUD, runs the state machine
-    states/
-      StateMachine.ts  loops Bet → Spin → Win (only on a win) → Bet
-      BetState.ts      waits for SPIN (balance check); auto-continues during free spins
-      SpinState.ts     starts reels, gets the result, min spin time, lands stop symbols, anticipation
-      WinState.ts      win pop + amount, pays the win, character reaction
-    board/Board.ts     symbols area, creates one Reel per reel
-    board/Reel.ts      one column: Cell per row + 1 buffer, spins filler, lands `stopSymbols`
-    board/Cell.ts      one symbol sprite
-    Wins.ts            win pop on winning symbols + win amount over the board
-    Character.ts       Spine character
-    Background.ts      full-screen gradient
-    Message.ts         player message below the board, set by the states
-    Popup.ts           free spins pop-ups (awarded / round won / complete)
-    BigWin.ts          big win count-up with tier titles
-    SymbolInfo.ts      pop-up with a clicked symbol's pays
-    hud/Hud.tsx        the whole UI in one row: Menu, Balance, SpinButton, AutoplayButton, BetControl, CheatMenu
-    hud/menu/          burger menu tabs: HowToPlay, About, Autoplay, History
-    hud/theme.ts       shared inline styles (no CSS files)
+    MainView.tsx       builds the Pixi scene + HUD, places everything, runs the state machine
+    layout.ts          where everything goes, one table for landscape and one for portrait
+    states/            Splash → Bet → Spin → Win (only on a win) → Bet; all game flow lives here
+    board/             Board (frame, reels), Reel (spins filler, lands stop symbols), Cell
+    Splash.ts          intro slides
+    Background.ts      base / free spins / splash art, cross-faded
+    Frame.ts           the gold reel frame and pop-up panels (nine-slice)
+    Wins.ts, BigWin.ts, Popup.ts, Message.ts, SymbolInfo.ts, Character.ts, Logo.ts
+    hud/               React HUD: buttons, balance, bet, cheats, icons, burger menu tabs
+public/assets/         symbols, character (Spine), logo, backgrounds, board frame/panel, icons
 ```
 
-Animation uses GSAP. All game flow lives in the states; the HUD only sends a spin request and
-is locked outside the bet state.
+Animation uses GSAP; the HUD uses inline styles only (no CSS files). The HUD only sends requests
+(spin, stop, cheat, autoplay, turbo); the states decide what happens.
 
 **Extending:** the board size comes from the engine (`engine.reels` × `engine.rows`, set in
-`config.ts`) and is passed down Board → Reel → Cell, so nothing in the view hardcodes 5×3. Adding
-a wild is just a symbol with `kind: 'wild'`, since the evaluator already substitutes it. A new
-feature is a new state (for example a `BonusState` entered from `WinState`) plus its maths in
-`SlotEngine`.
+`config.ts`) and is passed down Board → Reel → Cell. For a different board size, adjust the board
+position and symbol size in `layout.ts`. Adding a wild is just a symbol with `kind: 'wild'`, since
+the evaluator already substitutes it. A new feature is a new state plus its maths in `SlotEngine`.
 
 ## Spine character analysis
 

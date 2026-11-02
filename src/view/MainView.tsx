@@ -76,8 +76,13 @@ export function MainView({ engine }: { engine: SlotEngine }) {
       // Clicking a landed symbol shows what it pays; not while the reels spin.
       const { board, symbolInfo } = scene;
       symbolInfoRef.current = symbolInfo;
+      // Clicking the symbol whose pop-up is open closes it; any other symbol opens its own.
+      let shown = '';
       board.onCellTap = (reel, row) => {
         if (machine.current?.current === 'spin') return;
+        const key = `${reel}:${row}`;
+        if (symbolInfo.visible && shown === key) return symbolInfo.hide();
+        shown = key;
         const cell = board.cell(reel, row);
         const size = board.cellSize;
         symbolInfo.show(cell.def, engine.config.bets[betIndex.current], board.x + (reel + 0.5) * size,

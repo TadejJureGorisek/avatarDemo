@@ -15,6 +15,8 @@ export class Board extends Container {
   readonly boardHeight: number;
   /** One glow per reel, lit while that reel is in bonus anticipation. */
   private glows: Graphics[];
+  /** STOP was pressed this spin: every reel races in, and no more anticipation. */
+  private hurried = false;
   /** Width including the frame around the reels. */
   get frameWidth() {
     return this.boardWidth + FRAME_PAD * 2;
@@ -86,11 +88,13 @@ export class Board extends Container {
 
   /** Starts the reels one after another, each with its springy wind-up. */
   start() {
+    this.hurried = false;
     this.reels.forEach((reel, i) => reel.start(i * REEL_START_STAGGER));
   }
 
   /** Bonus anticipation on a reel: it speeds up then slows down, and its glow blinks until it lands. */
   anticipate(reel: number) {
+    if (this.hurried) return;
     this.reels[reel].anticipate();
     const glow = this.glows[reel];
     glow.visible = true;
@@ -105,9 +109,17 @@ export class Board extends Container {
 
   /**
    * Lands `grid` reel by reel; reel i starts stopping `delays[i]` seconds from now.
-   * Once `skip` resolves (player pressed STOP), every reel still waiting stops straight away.
+   * Once `skip` resolves (player pressed STOP), every reel stops straight away, racing in fast,
+   * and any anticipation is dropped.
    */
   stop(grid: Grid, delays: number[], onReelLanded: (reel: number) => void, skip: Promise<void>) {
+    void skip.then(() => {
+      this.hurried = true;
+      this.reels.forEach((reel, i) => {
+        reel.hurry();
+        this.endAnticipation(i);
+      });
+    });
     return Promise.all(
       this.reels.map(async (reel, i) => {
         await Promise.race([new Promise((resolve) => gsap.delayedCall(delays[i], resolve)), skip]);

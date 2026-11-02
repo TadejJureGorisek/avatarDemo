@@ -15,6 +15,8 @@ export const SpinState: GameState = {
     ctx.symbolInfo.hide();
     board.start();
     const stopPressed = ctx.waitForStop();
+    let stopped = false;
+    void stopPressed.then(() => (stopped = true));
     const result = (ctx.result = engine.spin(ctx.bet()));
     updateHud({
       // Free spin wins are held back until the round ends (BetState); a base win is added in WinState.
@@ -41,7 +43,8 @@ export const SpinState: GameState = {
       board.anticipate(reel + 1);
     }, stopPressed);
     if (chain >= 2) {
-      await character.play(result.freeSpinsAwarded ? 'bonus_anticipation_win' : 'bonus_anticipation_lose');
+      const reaction = character.play(result.freeSpinsAwarded ? 'bonus_anticipation_win' : 'bonus_anticipation_lose');
+      if (!stopped) await reaction; // after STOP, don't hold the spin up for the reaction
     }
     ctx.recordSpin({
       time: new Date(), bet: ctx.bet(), win: result.totalWin,

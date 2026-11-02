@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import type { GameConfig } from '../../engine/config';
 import type { StateName } from '../states/StateMachine';
 import { AutoplayButton, AUTOPLAY_COUNTS } from './AutoplayButton';
@@ -52,6 +52,11 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   // Mini autoplay pop-up next to SPIN: while it's open, SPIN shows the picked spins and starts autoplay.
   const [autoOpen, setAutoOpen] = useState(false);
   const [autoChoice, setAutoChoice] = useState(AUTOPLAY_COUNTS[0]);
+  // Once STOP is pressed the button stays off until the reels have landed and it's SPIN again.
+  const [stopPressed, setStopPressed] = useState(false);
+  useEffect(() => {
+    if (s.state !== 'spin') setStopPressed(false);
+  }, [s.state]);
   const inFreeSpins = s.freeSpin || s.freeSpinsLeft > 0;
   const autoplay = s.autoplayLeft > 0;
   const locked = !s.ready || s.state !== 'bet' || inFreeSpins || autoplay;
@@ -62,9 +67,13 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     : inFreeSpins ? [s.freeSpinsLeft, `${s.freeSpinsLeft} free spins left`]
     : autoplay ? [s.autoplayLeft, `Stop autoplay, ${s.autoplayLeft} spins left`]
     : s.state === 'spin' ? [<StopIcon />, 'Stop'] : [<SpinIcon />, 'Spin'];
-  const spinDisabled = !s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay) || (autoOpen && locked);
+  const spinDisabled = !s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay) || (autoOpen && locked)
+    || (stopPressed && !autoplay);
   const pressSpin = () => {
-    if (!autoOpen) return onSpin();
+    if (!autoOpen) {
+      if (s.state === 'spin' && !autoplay) setStopPressed(true);
+      return onSpin();
+    }
     setAutoOpen(false);
     onStartAutoplay(autoChoice);
   };

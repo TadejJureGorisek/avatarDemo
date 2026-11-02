@@ -9,6 +9,8 @@ const SPEED = 13;
 const WINDUP = 0.15;
 /** Landing: how far (in symbols) the reel overshoots before it springs back. */
 const BOUNCE = 0.2;
+/** After STOP: how much faster than full speed the reel races to its stop symbols. */
+const HURRY = 4;
 
 /**
  * One column. Holds `rows` visible cells plus one spare cell below them. While spinning, cells
@@ -26,6 +28,8 @@ export class Reel extends Container {
   /** Cells recycled since `start()`: the spare goes first, so the old landed symbols are gone after `rows + 1`. */
   private recycled = 0;
   private landed?: () => void;
+  /** Set by STOP for this spin: race in and land with a short, snappy bounce. */
+  private hurried = false;
 
   constructor(
     private rows: number,
@@ -58,6 +62,7 @@ export class Reel extends Container {
    */
   start(delay = 0) {
     this.recycled = 0;
+    this.hurried = false;
     gsap.timeline({ delay })
       .to(this.cells, { y: `-=${this.cellSize * WINDUP}`, duration: 0.15, ease: 'power2.out' })
       .call(() => {
@@ -72,6 +77,13 @@ export class Reel extends Container {
     gsap.timeline()
       .to(this.speed, { value: SPEED * this.cellSize * 1.7, duration: 0.3, ease: 'power1.out' })
       .to(this.speed, { value: SPEED * this.cellSize * 0.35, duration: 0.6, ease: 'power2.inOut' });
+  }
+
+  /** STOP: jump to well above full speed (cancelling any wind-up or anticipation easing) and land snappily. */
+  hurry() {
+    this.hurried = true;
+    gsap.killTweensOf(this.speed);
+    this.speed.value = SPEED * this.cellSize * HURRY;
   }
 
   /** Feeds `stopSymbols` in and resolves once they've landed. */
@@ -109,7 +121,8 @@ export class Reel extends Container {
     const speed = Math.max(this.speed.value, SPEED * this.cellSize * 0.3);
     this.speed.value = 0;
     const distance = this.rowY(0) - this.cells[0].y;
-    const bounce = this.cellSize * BOUNCE;
+    const bounce = this.cellSize * BOUNCE * (this.hurried ? 0.4 : 1);
+    const [overshoot, settle] = this.hurried ? [0.06, 0.12] : [0.12, 0.3];
     const spare = this.cells[this.cells.length - 1];
 
     gsap.timeline({ onComplete: () => this.landed?.() })
@@ -119,8 +132,8 @@ export class Reel extends Container {
         spare.setSymbol(this.getSymbol(this.fillerSymbol()));
         spare.y = this.rowY(-1);
       })
-      .to(this.cells, { y: `+=${bounce}`, duration: 0.12, ease: 'power2.out' })
-      .to(this.cells, { y: `-=${bounce}`, duration: 0.3, ease: 'power2.inOut' })
+      .to(this.cells, { y: `+=${bounce}`, duration: overshoot, ease: 'power2.out' })
+      .to(this.cells, { y: `-=${bounce}`, duration: settle, ease: 'power2.inOut' })
       // Back to the resting layout: rows 0..rows-1, then the spare below the reel.
       .call(() => {
         spare.y = this.rowY(this.rows);

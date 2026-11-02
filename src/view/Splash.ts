@@ -53,6 +53,8 @@ export class Splash extends Container {
   private dots: Graphics[] = [];
   private index = 0;
   private isOpen = false;
+  /** The BONUS row's endless bobbing: stopped before the slides are rebuilt or destroyed. */
+  private loops: gsap.core.Tween[] = [];
 
   constructor(private config: GameConfig) {
     super();
@@ -72,6 +74,7 @@ export class Splash extends Container {
 
   /** (Re)builds the splash to fill this area. */
   layout({ width, top, bottom, dotsY, logoHeight }: SplashLayout) {
+    this.stopLoops();
     for (const child of this.removeChildren()) {
       killTweens(child);
       child.destroy({ children: true });
@@ -93,7 +96,7 @@ export class Splash extends Container {
         fit(new Character(), box.height)),
       this.bigWinSlide(width / 2, titleY, textY, box),
       slide(width / 2, titleY, textY, 'FREE SPINS', `Land a BONUS on all ${minScatters} reels for ${awarded} free spins.\nHit them again for even more!`,
-        bonusRow(minScatters, Math.min(box.height * 0.7, box.width / minScatters))),
+        bonusRow(minScatters, Math.min(box.height * 0.7, box.width / minScatters), this.loops)),
     ];
     this.slides.forEach((s, i) => {
       s.y = box.y;
@@ -120,8 +123,14 @@ export class Splash extends Container {
   /** Stops the slides' animations too (the BONUS row bobs forever). */
   override destroy(options?: Parameters<Container['destroy']>[0]) {
     window.removeEventListener('keydown', this.onKey);
+    this.stopLoops();
     killTweens(this);
     super.destroy(options);
+  }
+
+  private stopLoops() {
+    this.loops.forEach((t) => t.kill());
+    this.loops = [];
   }
 
   /** Shows the current slide and listens for the arrow keys until `close()`. */
@@ -233,15 +242,15 @@ function fit(picture: Container, height: number) {
   return picture;
 }
 
-/** A BONUS on every reel, the way free spins are won, bobbing one after another. */
-function bonusRow(count: number, size: number) {
+/** A BONUS on every reel, the way free spins are won, bobbing one after another (the bobs go in `loops`). */
+function bonusRow(count: number, size: number, loops: gsap.core.Tween[]) {
   const row = new Container();
   for (let i = 0; i < count; i++) {
     const bonus = new Sprite(Assets.get(symbolUrl('BONUS')));
     bonus.anchor.set(0.5);
     bonus.scale.set((size * 0.92) / Math.max(bonus.texture.width, bonus.texture.height));
     bonus.x = (i - (count - 1) / 2) * size;
-    gsap.to(bonus, { y: -size * 0.12, duration: 0.5, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: i * 0.12 });
+    loops.push(gsap.to(bonus, { y: -size * 0.12, duration: 0.5, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: i * 0.12 }));
     row.addChild(bonus);
   }
   return row;

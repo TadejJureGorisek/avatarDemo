@@ -28,7 +28,7 @@ const MAX_CELL = 200;
  * `PORTRAIT_AT` × its width gets the portrait scene instead: as wide as this is tall.
  */
 const DESIGN = { width: 1600, height: 900 };
-const PORTRAIT_AT = 1.2;
+const PORTRAIT_AT = 1.5;
 /** Where the character stands in landscape (of the design height); the background's floor is moved to it. */
 const FLOOR = 0.755;
 /** Space kept free around the scene and between character and board. */

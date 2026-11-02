@@ -3,7 +3,7 @@ import { Assets, Container, FillGradient, Graphics, Sprite } from 'pixi.js';
 
 /** The art for each part of the game, with where the character stands on it (of its height). */
 const ART = {
-  base: { url: 'assets/backgrounds/base.webp', floor: 0.69 },
+  base: { url: 'assets/backgrounds/base.webp', floor: 0.71 },
   freeSpins: { url: 'assets/backgrounds/free-spins.webp', floor: 0.755 },
   splash: { url: 'assets/backgrounds/splash.webp', floor: 0.755 },
 };

@@ -2,6 +2,7 @@ import { Application, Assets, Container } from 'pixi.js';
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { SlotEngine } from '../engine/SlotEngine';
 import { Background } from './Background';
+import { BigWin } from './BigWin';
 import { Board } from './board/Board';
 import { symbolUrl } from './board/Cell';
 import { Character, CHARACTER_ASSETS } from './Character';
@@ -149,11 +150,13 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   const popup = new Popup();
   popup.position.set(board.x + board.boardWidth / 2, board.y + board.boardHeight / 2);
   const symbolInfo = new SymbolInfo();
+  const bigWin = new BigWin(engine.config.bigWins);
+  bigWin.position.copyFrom(popup.position);
 
   const background = new Background();
   // The 1600x900 design-space scene; it's scaled to fit the screen above the HUD.
   const scene = new Container();
-  scene.addChild(character, board, wins, message, symbolInfo, popup);
+  scene.addChild(character, board, wins, message, symbolInfo, bigWin, popup);
   app.stage.addChild(background, scene);
   // A click anywhere off the board closes the symbol pop-up.
   app.stage.eventMode = 'static';
@@ -172,5 +175,5 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   app.renderer.on('resize', layout);
   layout();
 
-  return { board, wins, character, message, popup, symbolInfo, layout };
+  return { board, wins, character, message, popup, bigWin, symbolInfo, layout };
 }

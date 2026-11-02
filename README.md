@@ -29,12 +29,16 @@ start command is needed.
 - **Anticipation**: once reels 1 and 2 both land a BONUS, the next reel slows down and spins longer
   while the others keep full speed; every further BONUS slows the reel after it. The character
   plays `bonus_anticipation`, then `bonus_anticipation_win` / `_lose`.
+- **Big wins**: wins of 20× / 35× / 50× / 100× the bet get a count-up (NICE / BIG / MEGA / EPIC WIN)
+  that speeds up then slows down, with the title stepping up as each threshold is passed. Click
+  to skip. Tiers live in `config.bigWins`.
 - Character plays `small_win` on any win and loops `idle` otherwise.
 - **Menu** (burger, bottom left): HOW TO PLAY (rules + paytable at the current bet), ABOUT THE GAME,
   AUTOPLAY (set the bet, pick 10/25/50/100 spins; the main button shows the spins left and stops
   it), HISTORY
   (last 50 spins).
-- **CHEATS** menu (under Balance and Bet): *Big win* forces the top symbol across the middle row,
+- **CHEATS** menu (under Balance and Bet): *Nice / Big / Mega / Epic win* land an exact win of that
+  tier (24× / 40× / 80× / 400×, `config.winCheats`),
   *Free spins* forces a BONUS on every reel. Handled in `BetState` via `SlotEngine.forceNext()`.
 - RNG: `crypto.getRandomValues`. Tuned by simulation (6M spins): RTP ≈ 96%, hit rate ≈ 28%,
   free spins about 1 in 320 spins.
@@ -61,6 +65,7 @@ src/
     Background.ts      full-screen gradient
     Message.ts         player message below the board, set by the states
     Popup.ts           free spins pop-ups (awarded / round won / complete)
+    BigWin.ts          big win count-up with tier titles
     SymbolInfo.ts      pop-up with a clicked symbol's pays
     hud/Hud.tsx        the whole UI: Balance, BetControl, SpinButton, CheatMenu, Menu
     hud/menu/          burger menu tabs: HowToPlay, About, Autoplay, History

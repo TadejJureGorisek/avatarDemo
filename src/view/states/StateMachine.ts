@@ -1,4 +1,5 @@
 import type { SlotEngine, SpinResult } from '../../engine/SlotEngine';
+import type { BigWin } from '../BigWin';
 import type { Board } from '../board/Board';
 import type { Character } from '../Character';
 import type { Cheat } from '../hud/CheatMenu';
@@ -19,6 +20,7 @@ export interface GameContext {
   character: Character;
   message: Message;
   popup: Popup;
+  bigWin: BigWin;
   symbolInfo: SymbolInfo;
   bet: () => number;
   updateHud: (patch: Partial<HudState>) => void;

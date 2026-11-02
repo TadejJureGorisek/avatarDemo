@@ -44,6 +44,23 @@ export const config = {
   bets: [0.2, 0.5, 1, 2, 5, 10],
   defaultBetIndex: 2,
   startingBalance: 1000,
+  /** Big win tiers: a win of at least `x` times the bet gets the count-up with this title. Ascending. */
+  bigWins: [
+    { title: 'NICE WIN', x: 20 },
+    { title: 'BIG WIN', x: 35 },
+    { title: 'MEGA WIN', x: 50 },
+    { title: 'EPIC WIN', x: 100 },
+  ],
+  /**
+   * Demo cheats that land one exact winning line and nothing else: `symbol` on the first `length`
+   * reels, on `ways` rows of reel 1. At bet 1: nice 12×2 = 24, big 20×2 = 40, mega 80, epic 400.
+   */
+  winCheats: {
+    nice: { symbol: 'H3', length: 3, ways: 2 },
+    big: { symbol: 'H1', length: 3, ways: 2 },
+    mega: { symbol: 'H2', length: 4, ways: 1 },
+    epic: { symbol: 'H1', length: 5, ways: 1 },
+  },
   /** Reel timing in seconds. */
   timing: {
     /** Every spin lasts at least this long before the first reel stops. */

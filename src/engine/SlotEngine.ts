@@ -116,14 +116,23 @@ export class SlotEngine {
     return { grid, wins, totalWin, isFreeSpin, freeSpinsAwarded };
   }
 
-  /** Demo cheat: the next spin lands the top symbol across the middle row, or enough BONUS for free spins. */
-  forceNext(cheat: 'win' | 'freeSpins') {
-    const grid = this.generateGrid();
+  /** Demo cheat: the next spin lands an exact big win tier (see `config.winCheats`), or enough BONUS for free spins. */
+  forceNext(cheat: keyof GameConfig['winCheats'] | 'freeSpins') {
     const middle = Math.floor(this.rows / 2);
-    if (cheat === 'win') {
-      const top = this.config.symbols.find((s) => s.kind === 'regular')!;
-      grid.forEach((column) => (column[middle] = top.id));
-    } else if (this.scatter) {
+    if (cheat !== 'freeSpins') {
+      const { symbol, length, ways } = this.config.winCheats[cheat];
+      // Fill each reel from a rotating pool so no other symbol lines up on neighbouring reels.
+      const pool = this.config.symbols.filter((s) => s.kind === 'regular' && s.id !== symbol).map((s) => s.id);
+      const grid = Array.from({ length: this.reels }, (_, reel) =>
+        Array.from({ length: this.rows }, (_, row) => pool[(reel * this.rows + row) % pool.length]));
+      for (let reel = 0; reel < length; reel++) grid[reel][middle] = symbol;
+      for (let row = 0; row < ways - 1; row++) grid[0][row === middle ? row + 1 : row] = symbol;
+      this.forcedGrid = grid;
+      return;
+    }
+
+    const grid = this.generateGrid();
+    if (this.scatter) {
       // Spread the scatters out (one per reel when minScatters equals the reel count) so the anticipation plays.
       const { id } = this.scatter;
       const { minScatters } = this.config.freeSpins;

@@ -4,6 +4,7 @@ import type { Character } from '../Character';
 import type { Cheat } from '../hud/CheatMenu';
 import type { HudState } from '../hud/Hud';
 import type { Message } from '../Message';
+import type { Popup } from '../Popup';
 import type { Wins } from '../Wins';
 
 export type StateName = 'bet' | 'spin' | 'win';
@@ -15,10 +16,13 @@ export interface GameContext {
   wins: Wins;
   character: Character;
   message: Message;
+  popup: Popup;
   bet: () => number;
   updateHud: (patch: Partial<HudState>) => void;
   /** Resolves when the player presses SPIN, or picks a cheat from the cheat menu. */
   waitForSpin: () => Promise<Cheat | undefined>;
+  /** Resolves when the player presses STOP during the spin. */
+  waitForStop: () => Promise<void>;
   /** Result of the last spin, set by SpinState for WinState. */
   result?: SpinResult;
 }

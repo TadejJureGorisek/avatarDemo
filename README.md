@@ -20,12 +20,14 @@ start command is needed.
 - Spinning reels: all reels spin for at least `timing.minSpinTime`, then each reel lands its
   **stop symbols** (the result) one after another with a bounce. Timings live in `config.ts`.
   Winning symbols pop (scale up and down) until the next spin, with the win amount over them.
-- Balance and bet (+/−) in the React HUD, player message below the board. `Space` spins.
+- Balance and bet (+/−) in the React HUD, player message below the board. The main button is
+  SPIN, then STOP while spinning (lands the reels early), and shows the free spins left during
+  free spins. `Space` presses it.
 - **BONUS** scatter pays anywhere (3/4/5) and 3+ award **8 free spins** (auto-played, retriggerable).
 - **Anticipation**: once two BONUS symbols have landed, the remaining reels spin longer while the
   character plays `bonus_anticipation`, then `bonus_anticipation_win` / `_lose`.
 - Character plays `small_win` on any win and loops `idle` otherwise.
-- **CHEATS** menu (bottom left): *Big win* forces the top symbol across the middle row, *Free spins*
+- **CHEATS** menu (below Balance and Bet): *Big win* forces the top symbol across the middle row, *Free spins*
   forces 3 BONUS. Handled in `BetState` via `SlotEngine.forceNext()`.
 - RNG: `crypto.getRandomValues`. Paytable tuned by simulation to RTP ≈ 96%, hit rate ≈ 13%.
 
@@ -50,6 +52,7 @@ src/
     Character.ts       Spine character
     Background.ts      full-screen gradient
     Message.ts         player message below the board, set by the states
+    Popup.ts           free spins pop-ups (awarded / round won / complete)
     hud/Hud.tsx        the whole UI: Balance, BetControl, SpinButton, CheatMenu
     hud/theme.ts       shared inline styles (no CSS files)
 ```

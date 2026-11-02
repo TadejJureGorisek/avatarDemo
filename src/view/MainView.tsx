@@ -12,6 +12,7 @@ import { SpinState } from './states/SpinState';
 import { StateMachine } from './states/StateMachine';
 import { WinState } from './states/WinState';
 import { Message } from './Message';
+import { Popup } from './Popup';
 import { Wins } from './Wins';
 
 const CELL = 200;
@@ -21,11 +22,13 @@ const fill: CSSProperties = { position: 'absolute', inset: 0 };
 export function MainView({ engine }: { engine: SlotEngine }) {
   const host = useRef<HTMLDivElement>(null);
   const spinRequest = useRef<(cheat?: Cheat) => void>();
+  const stopRequest = useRef<() => void>();
+  const machine = useRef<StateMachine>();
   const { bets, defaultBetIndex } = engine.config;
   const betIndex = useRef(defaultBetIndex);
   const [hud, setHud] = useState<HudState>({
     ready: false, state: 'bet', balance: engine.balance, bet: bets[defaultBetIndex],
-    freeSpinsLeft: 0, freeSpinsTotal: 0,
+    freeSpinsLeft: 0, freeSpinsTotal: 0, freeSpin: false,
   });
   const update = (patch: Partial<HudState>) => setHud((s) => ({ ...s, ...patch }));
   const hudHeight = useRef(0);
@@ -35,18 +38,19 @@ export function MainView({ engine }: { engine: SlotEngine }) {
     const app = new Application();
     createScene(app, host.current!, engine, () => hudHeight.current).then(({ layout, ...scene }) => {
       relayout.current = layout;
-      const machine = new StateMachine(
+      machine.current = new StateMachine(
         { bet: BetState, spin: SpinState, win: WinState },
         {
           engine, ...scene,
           bet: () => engine.config.bets[betIndex.current],
           updateHud: update,
           waitForSpin: () => new Promise((resolve) => (spinRequest.current = resolve)),
+          waitForStop: () => new Promise((resolve) => (stopRequest.current = resolve)),
         },
         (state) => update({ state }),
       );
       update({ ready: true });
-      void machine.run();
+      void machine.current.run();
     });
     return () => {
       relayout.current = undefined;
@@ -59,7 +63,11 @@ export function MainView({ engine }: { engine: SlotEngine }) {
     update({ bet: bets[betIndex.current] });
   }, [bets]);
 
-  const requestSpin = useCallback(() => spinRequest.current?.(), []);
+  // One button: SPIN in the bet state, STOP while the reels spin.
+  const pressSpin = useCallback(() => {
+    if (machine.current?.current === 'spin') stopRequest.current?.();
+    else spinRequest.current?.();
+  }, []);
   const requestCheat = useCallback((cheat: Cheat) => spinRequest.current?.(cheat), []);
   const onHudHeight = useCallback((height: number) => {
     hudHeight.current = height;
@@ -69,7 +77,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   return (
     <div style={fill}>
       <div style={fill} ref={host} />
-      <Hud state={hud} onSpin={requestSpin} onBetChange={changeBet} onCheat={requestCheat} onHeight={onHudHeight} />
+      <Hud state={hud} onSpin={pressSpin} onBetChange={changeBet} onCheat={requestCheat} onHeight={onHudHeight} />
     </div>
   );
 }
@@ -100,11 +108,13 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   // Screen centre (the scene is centred horizontally), in line with the SPIN button.
   message.position.set(DESIGN.width / 2, board.y + board.boardHeight + 70);
   message.text = 'Press SPIN to play';
+  const popup = new Popup();
+  popup.position.set(board.x + board.boardWidth / 2, board.y + board.boardHeight / 2);
 
   const background = new Background();
   // The 1600x900 design-space scene; it's scaled to fit the screen above the HUD.
   const scene = new Container();
-  scene.addChild(character, board, wins, message);
+  scene.addChild(character, board, wins, message, popup);
   app.stage.addChild(background, scene);
 
   // Runs on window resize and whenever the HUD reports a new height.
@@ -119,5 +129,5 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   app.renderer.on('resize', layout);
   layout();
 
-  return { board, wins, character, message, layout };
+  return { board, wins, character, message, popup, layout };
 }

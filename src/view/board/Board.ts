@@ -56,11 +56,14 @@ export class Board extends Container {
     this.reels.forEach((reel) => reel.start());
   }
 
-  /** Lands `grid` reel by reel; reel i starts stopping `delays[i]` seconds from now. */
-  stop(grid: Grid, delays: number[], onReelLanded: (reel: number) => void) {
+  /**
+   * Lands `grid` reel by reel; reel i starts stopping `delays[i]` seconds from now.
+   * Once `skip` resolves (player pressed STOP), every reel still waiting stops straight away.
+   */
+  stop(grid: Grid, delays: number[], onReelLanded: (reel: number) => void, skip: Promise<void>) {
     return Promise.all(
       this.reels.map(async (reel, i) => {
-        await new Promise((resolve) => gsap.delayedCall(delays[i], resolve));
+        await Promise.race([new Promise((resolve) => gsap.delayedCall(delays[i], resolve)), skip]);
         await reel.stop(grid[i]);
         onReelLanded(i);
       }),

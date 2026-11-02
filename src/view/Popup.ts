@@ -1,0 +1,35 @@
+import gsap from 'gsap';
+import { Container, Graphics, Text } from 'pixi.js';
+
+const WIDTH = 760;
+const HEIGHT = 260;
+
+/** Small centred pop-up for free spins announcements. `show()` resolves once it has faded out. */
+export class Popup extends Container {
+  private text = new Text({
+    text: '',
+    style: { fontFamily: 'system-ui, sans-serif', fontSize: 52, fontWeight: '900', fill: 0xffe27a, align: 'center',
+      stroke: { color: 0x3a1500, width: 8 }, wordWrap: true, wordWrapWidth: WIDTH - 80 },
+  });
+
+  constructor() {
+    super();
+    this.addChild(
+      new Graphics().roundRect(-WIDTH / 2, -HEIGHT / 2, WIDTH, HEIGHT, 32)
+        .fill({ color: 0x1a0b3d, alpha: 0.95 }).stroke({ color: 0xffc94a, width: 6 }),
+      this.text,
+    );
+    this.text.anchor.set(0.5);
+    this.visible = false;
+  }
+
+  async show(message: string, holdSeconds = 2) {
+    this.text.text = message;
+    this.visible = true;
+    await gsap.timeline()
+      .fromTo(this, { alpha: 0 }, { alpha: 1, duration: 0.2 })
+      .fromTo(this.scale, { x: 0.6, y: 0.6 }, { x: 1, y: 1, duration: 0.4, ease: 'back.out(2)' }, 0)
+      .to(this, { alpha: 0, duration: 0.3 }, `+=${holdSeconds}`);
+    this.visible = false;
+  }
+}

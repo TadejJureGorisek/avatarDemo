@@ -1,5 +1,6 @@
 import gsap from 'gsap';
 import { countSymbol, type SlotEngine, type SpinResult } from '../../engine/SlotEngine';
+import { freeSpinsMessage } from './freeSpinsMessage';
 import type { GameState } from './StateMachine';
 
 /**
@@ -13,20 +14,24 @@ export const SpinState: GameState = {
 
     wins.clear();
     board.start();
+    const stopPressed = ctx.waitForStop();
     const result = (ctx.result = engine.spin(ctx.bet()));
     updateHud({
       balance: engine.balance - result.totalWin, // the win is added in WinState
       freeSpinsLeft: engine.freeSpinsLeft - result.freeSpinsAwarded,
+      freeSpin: result.isFreeSpin,
     });
-    message.text = result.isFreeSpin ? 'Free spin!' : 'Good luck!';
+    // The engine already counted this spin's win, so show the total from before it.
+    message.text = result.isFreeSpin ? freeSpinsMessage(engine.freeSpinsTotal - result.totalWin) : 'Good luck!';
 
-    await new Promise((resolve) => gsap.delayedCall(minSpinTime, resolve));
+    // STOP cuts the minimum spin time short, and below makes every reel stop straight away.
+    await Promise.race([new Promise((resolve) => gsap.delayedCall(minSpinTime, resolve)), stopPressed]);
 
     // Once one more scatter would trigger free spins, the remaining reels spin longer while the character anticipates.
     const anticipationReel = findAnticipationReel(engine, result);
     const delays = result.grid.map((_, reel) =>
       reel * reelStopStagger + (anticipationReel >= 0 && reel > anticipationReel ? (reel - anticipationReel) * anticipationExtra : 0));
-    await board.stop(result.grid, delays, (reel) => reel === anticipationReel && character.startAnticipation());
+    await board.stop(result.grid, delays, (reel) => reel === anticipationReel && character.startAnticipation(), stopPressed);
     if (anticipationReel >= 0) {
       await character.play(result.freeSpinsAwarded ? 'bonus_anticipation_win' : 'bonus_anticipation_lose');
     }
@@ -36,7 +41,7 @@ export const SpinState: GameState = {
     message.text = !result.isFreeSpin
       ? 'Press SPIN to play'
       : engine.freeSpinsLeft
-        ? `${engine.freeSpinsLeft} free spins left` // free spins play themselves, so no "Press SPIN"
+        ? freeSpinsMessage(engine.freeSpinsTotal) // free spins play themselves, so no "Press SPIN"
         : `Free spins total: ${engine.freeSpinsTotal.toFixed(2)}`;
     return 'bet';
   },

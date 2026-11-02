@@ -14,6 +14,8 @@ export interface HudState {
   bet: number;
   freeSpinsLeft: number;
   freeSpinsTotal: number;
+  /** True while a free spin is playing (including the last one, when freeSpinsLeft is already 0). */
+  freeSpin: boolean;
 }
 
 interface Props {
@@ -27,7 +29,11 @@ interface Props {
 
 /** The whole UI on top of the canvas. */
 export function Hud({ state: s, onSpin, onBetChange, onCheat, onHeight }: Props) {
-  const locked = !s.ready || s.state !== 'bet' || s.freeSpinsLeft > 0;
+  const inFreeSpins = s.freeSpin || s.freeSpinsLeft > 0;
+  const locked = !s.ready || s.state !== 'bet' || inFreeSpins;
+  // SPIN in the bet state, STOP while spinning, the free spins left during free spins (they play themselves).
+  const spinLabel = inFreeSpins ? String(s.freeSpinsLeft) : s.state === 'spin' ? 'STOP' : 'SPIN';
+  const spinDisabled = !s.ready || inFreeSpins || s.state === 'win';
   const bar = useRef<HTMLDivElement>(null);
 
   // The bar grows when its contents wrap on narrow screens, so measure it instead of assuming a height.
@@ -40,16 +46,18 @@ export function Hud({ state: s, onSpin, onBetChange, onCheat, onHeight }: Props)
   return (
     <>
       {!s.ready && <div style={styles.loading}>Loading…</div>}
-      {s.freeSpinsLeft > 0 && (
+      {inFreeSpins && (
         <div style={styles.banner}>FREE SPINS: {s.freeSpinsLeft} left · Total {s.freeSpinsTotal.toFixed(2)}</div>
       )}
       <div style={styles.bar} ref={bar}>
-        <div style={styles.group}>
+        <div style={styles.left}>
+          <div style={styles.group}>
+            <Balance value={s.balance} />
+            <BetControl bet={s.bet} disabled={locked} onChange={onBetChange} />
+          </div>
           <CheatMenu disabled={locked} onCheat={onCheat} />
-          <Balance value={s.balance} />
-          <BetControl bet={s.bet} disabled={locked} onChange={onBetChange} />
         </div>
-        <SpinButton disabled={locked} spinning={s.state === 'spin'} onSpin={onSpin} />
+        <SpinButton label={spinLabel} disabled={spinDisabled} onPress={onSpin} />
         {/* Empty right column keeps SPIN centred. */}
         <div />
       </div>
@@ -68,6 +76,8 @@ const styles = {
     position: 'absolute', left: 0, right: 0, bottom: 0, padding: 'clamp(8px, 1.5vw, 14px) clamp(10px, 2vw, 24px)',
     display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 'clamp(8px, 1.5vw, 16px)',
   },
+  // Balance + Bet, with CHEATS underneath.
+  left: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 },
   // Wraps into a column on narrow screens.
   group: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'clamp(4px, 1.2vw, 14px)' },
 } satisfies Record<string, CSSProperties>;

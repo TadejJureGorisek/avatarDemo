@@ -2,26 +2,27 @@ import { useEffect, type CSSProperties } from 'react';
 import { colors, disabledLook } from './theme';
 
 interface Props {
+  /** SPIN, STOP, or the free spins left. */
+  label: string;
   disabled: boolean;
-  spinning: boolean;
-  onSpin: () => void;
+  onPress: () => void;
 }
 
-/** Spins on click or Space. */
-export function SpinButton({ disabled, spinning, onSpin }: Props) {
+/** The main button; also pressed with Space. */
+export function SpinButton({ label, disabled, onPress }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== 'Space') return;
       e.preventDefault();
-      if (!disabled) onSpin();
+      if (!disabled) onPress();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [disabled, onSpin]);
+  }, [disabled, onPress]);
 
   return (
-    <button style={{ ...style, ...disabledLook(disabled) }} onClick={onSpin} disabled={disabled}>
-      {spinning ? '…' : 'SPIN'}
+    <button style={{ ...style, ...disabledLook(disabled) }} onClick={onPress} disabled={disabled}>
+      {label}
     </button>
   );
 }

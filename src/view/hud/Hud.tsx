@@ -116,13 +116,16 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
           onStopAutoplay={onStopAutoplay}
           />
           </div>
-          <Balance value={s.balance} />
+          <div style={styles.control}><Balance value={s.balance} /></div>
         </div>
         <div style={styles.centre}>
-          {s.ready
-            ? <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
-            : <div style={styles.loading}>Loading…</div>}
+          <div style={styles.spin}>
+            {s.ready
+              ? <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
+              : <div style={styles.loading}>Loading…</div>}
+          </div>
           <div style={{ ...styles.auto, ...others }}>
+            <div style={styles.autoSize}>
             <AutoplayButton
               open={autoOpen}
               choice={autoChoice}
@@ -130,11 +133,14 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
               onToggle={() => setAutoOpen(!autoOpen)}
               onChoose={setAutoChoice}
             />
+            </div>
           </div>
         </div>
         <div style={{ ...styles.right, ...others }}>
-          <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
-          <CheatMenu onCheat={onCheat} />
+          <div style={styles.control}>
+            <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
+          </div>
+          <div style={styles.control}><CheatMenu onCheat={onCheat} /></div>
         </div>
       </div>
     </>
@@ -147,11 +153,15 @@ const styles = {
   // One line: SPIN in the exact middle (equal side columns), each side tucked in towards it.
   row: { position: 'absolute', left: 0, right: 0, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 28 },
   left: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 28 },
+  // Size of each control relative to its own design size: SPIN stands out most, then autoplay.
+  control: { zoom: 1.1 },
+  spin: { zoom: 1.2 },
+  autoSize: { zoom: 1.15 },
   // The menu button sits further out than the rest.
-  menu: { marginRight: 60 },
+  menu: { zoom: 1.1, marginRight: 55 },
   centre: { position: 'relative' },
   // Hangs off SPIN's right side, so SPIN itself stays centred.
   auto: { position: 'absolute', left: 'calc(100% + 16px)', top: '50%', transform: 'translateY(-50%)' },
   // Leaves room for the autoplay button between SPIN and the bet.
-  right: { display: 'flex', alignItems: 'center', gap: 28, paddingLeft: 68 },
+  right: { display: 'flex', alignItems: 'center', gap: 28, paddingLeft: 80 },
 } satisfies Record<string, CSSProperties>;

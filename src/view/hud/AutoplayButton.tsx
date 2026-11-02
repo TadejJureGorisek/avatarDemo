@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { AutoplayIcon } from './icons';
 import { colors, disabledLook } from './theme';
 
 export const AUTOPLAY_COUNTS = [10, 25, 50, 100];
@@ -31,7 +32,7 @@ export function AutoplayButton({ open, choice, disabled, onToggle, onChoose }: P
         onClick={onToggle}
         aria-label={open ? 'Close autoplay' : 'Autoplay'}
       >
-        {open ? '✕' : 'AUTO'}
+        {open ? '✕' : <AutoplayIcon />}
       </button>
     </div>
   );
@@ -40,7 +41,8 @@ export function AutoplayButton({ open, choice, disabled, onToggle, onChoose }: P
 const styles = {
   wrap: { position: 'relative' },
   toggle: {
-    width: 52, height: 52, borderRadius: '50%', fontSize: 13, fontWeight: 900,
+    width: 52, height: 52, borderRadius: '50%', fontSize: 18, fontWeight: 900,
+    display: 'grid', placeItems: 'center', padding: 0,
     border: `3px solid ${colors.gold}`, background: colors.panel, color: colors.gold,
   },
   // Opens upwards, since the button sits in the bottom bar.

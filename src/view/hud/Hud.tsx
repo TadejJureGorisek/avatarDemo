@@ -3,6 +3,7 @@ import type { GameConfig } from '../../engine/config';
 import type { StateName } from '../states/StateMachine';
 import { AutoplayButton, AUTOPLAY_COUNTS } from './AutoplayButton';
 import { Balance } from './Balance';
+import { SpinIcon, StopIcon } from './icons';
 import { BetControl } from './BetControl';
 import { CheatMenu, type Cheat } from './CheatMenu';
 import type { HistoryEntry } from './menu/History';
@@ -51,11 +52,13 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   const inFreeSpins = s.freeSpin || s.freeSpinsLeft > 0;
   const autoplay = s.autoplayLeft > 0;
   const locked = !s.ready || s.state !== 'bet' || inFreeSpins || autoplay;
-  // SPIN in the bet state, STOP while spinning, the free spins left during free spins (they play
-  // themselves), the autoplay spins left during autoplay (pressing it stops autoplay), and the
-  // picked spins while the mini autoplay pop-up is open (pressing it starts autoplay).
-  const spinLabel = autoOpen ? String(autoChoice) : inFreeSpins ? String(s.freeSpinsLeft)
-    : autoplay ? `AUTO ${s.autoplayLeft}` : s.state === 'spin' ? 'STOP' : 'SPIN';
+  // Spin icon in the bet state, stop icon while spinning, and numbers otherwise: the free spins left
+  // during free spins (they play themselves), the autoplay spins left during autoplay (pressing it
+  // stops autoplay), and the picked spins while the mini autoplay pop-up is open (pressing it starts autoplay).
+  const [spinLabel, spinAria] = autoOpen ? [autoChoice, `Start autoplay, ${autoChoice} spins`]
+    : inFreeSpins ? [s.freeSpinsLeft, `${s.freeSpinsLeft} free spins left`]
+    : autoplay ? [s.autoplayLeft, `Stop autoplay, ${s.autoplayLeft} spins left`]
+    : s.state === 'spin' ? [<StopIcon />, 'Stop'] : [<SpinIcon />, 'Spin'];
   const spinDisabled = !s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay) || (autoOpen && locked);
   const pressSpin = () => {
     if (!autoOpen) return onSpin();
@@ -97,7 +100,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
           />
         </div>
         <div style={styles.centre}>
-          <SpinButton label={spinLabel} disabled={spinDisabled} onPress={pressSpin} />
+          <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
           <div style={styles.auto}>
             <AutoplayButton
               open={autoOpen}

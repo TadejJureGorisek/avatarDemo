@@ -28,6 +28,11 @@ export class Background extends Container {
   }
 
   setFreeSpins(on: boolean) {
-    gsap.to(this.gold, { alpha: on ? 1 : 0, duration: 0.8, ease: 'sine.inOut' });
+    this.setGold(on ? 1 : 0, 0.8);
+  }
+
+  /** Blends in `amount` (0–1) of the gold; a slow partial blend gives the splash a hint of it. */
+  setGold(amount: number, duration = 1.5) {
+    gsap.to(this.gold, { alpha: amount, duration, ease: 'sine.inOut', overwrite: true });
   }
 }

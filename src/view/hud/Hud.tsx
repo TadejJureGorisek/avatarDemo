@@ -4,7 +4,7 @@ import type { HudLayout } from '../MainView';
 import type { StateName } from '../states/StateMachine';
 import { AutoplayButton, AUTOPLAY_COUNTS } from './AutoplayButton';
 import { Balance } from './Balance';
-import { SpinIcon, StopIcon } from './icons';
+import { ArrowIcon, SpinIcon, StopIcon } from './icons';
 import { BetControl } from './BetControl';
 import { CheatMenu, type Cheat } from './CheatMenu';
 import type { HistoryEntry } from './menu/History';
@@ -60,10 +60,15 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   const inFreeSpins = s.freeSpin || s.freeSpinsLeft > 0;
   const autoplay = s.autoplayLeft > 0;
   const locked = !s.ready || s.state !== 'bet' || inFreeSpins || autoplay;
-  // Spin icon in the bet state, stop icon while spinning, and numbers otherwise: the free spins left
-  // during free spins (they play themselves), the autoplay spins left during autoplay (pressing it
-  // stops autoplay), and the picked spins while the mini autoplay pop-up is open (pressing it starts autoplay).
-  const [spinLabel, spinAria] = autoOpen ? [autoChoice, `Start autoplay, ${autoChoice} spins`]
+  // On the splash only SPIN (as CONTINUE) shows; the rest fades in with the game.
+  const splash = s.state === 'splash';
+  const others: CSSProperties = { opacity: splash ? 0 : 1, pointerEvents: splash ? 'none' : undefined, transition: 'opacity 0.5s' };
+  // An arrow (CONTINUE) on the splash, spin icon in the bet state, stop icon while spinning, and
+  // numbers otherwise: the free spins left during free spins (they play themselves), the autoplay
+  // spins left during autoplay (pressing it stops autoplay), and the picked spins while the mini
+  // autoplay pop-up is open (pressing it starts autoplay).
+  const [spinLabel, spinAria] = splash ? [<ArrowIcon />, 'Continue']
+    : autoOpen ? [autoChoice, `Start autoplay, ${autoChoice} spins`]
     : s.freeSpinsReady ? [s.freeSpinsLeft, `Start ${s.freeSpinsLeft} free spins`]
     : s.continueReady ? [<SpinIcon />, 'Continue']
     : inFreeSpins ? [s.freeSpinsLeft, `${s.freeSpinsLeft} free spins left`]
@@ -89,7 +94,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
           `top` is divided by the zoom because zoom also scales the element's own offsets.
           Hidden until the scene is in, so it shows up together with the board and character. */}
       <div style={{ ...styles.row, zoom: scale, top: layout.top / scale, visibility: s.ready ? 'visible' : 'hidden' }}>
-        <div style={styles.left}>
+        <div style={{ ...styles.left, ...others }}>
           <div style={styles.menu}>
           <Menu
           open={menuOpen}
@@ -113,7 +118,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
         </div>
         <div style={styles.centre}>
           <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
-          <div style={styles.auto}>
+          <div style={{ ...styles.auto, ...others }}>
             <AutoplayButton
               open={autoOpen}
               choice={autoChoice}
@@ -123,7 +128,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
             />
           </div>
         </div>
-        <div style={styles.right}>
+        <div style={{ ...styles.right, ...others }}>
           <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
           <CheatMenu onCheat={onCheat} />
         </div>

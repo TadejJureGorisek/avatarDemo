@@ -8,10 +8,11 @@ import type { HudState } from '../hud/Hud';
 import type { HistoryEntry } from '../hud/menu/History';
 import type { Message } from '../Message';
 import type { Popup } from '../Popup';
+import type { Splash } from '../Splash';
 import type { SymbolInfo } from '../SymbolInfo';
 import type { Wins } from '../Wins';
 
-export type StateName = 'bet' | 'spin' | 'win';
+export type StateName = 'splash' | 'bet' | 'spin' | 'win';
 
 /** Everything a state needs, shared across states. */
 export interface GameContext {
@@ -24,6 +25,7 @@ export interface GameContext {
   popup: Popup;
   bigWin: BigWin;
   symbolInfo: SymbolInfo;
+  splash: Splash;
   bet: () => number;
   updateHud: (patch: Partial<HudState>) => void;
   /** Resolves when the player presses SPIN, or picks a cheat from the cheat menu. */
@@ -46,9 +48,9 @@ export interface GameState {
   enter(ctx: GameContext): Promise<StateName>;
 }
 
-/** Loops Bet → Spin → Win (only when something was won) → Bet. */
+/** Splash once, then loops Bet → Spin → Win (only when something was won) → Bet. */
 export class StateMachine {
-  current: StateName = 'bet';
+  current: StateName = 'splash';
 
   constructor(
     private states: Record<StateName, GameState>,

@@ -11,10 +11,12 @@ import { Hud, type HudState } from './hud/Hud';
 import type { HistoryEntry } from './hud/menu/History';
 import { BetState } from './states/BetState';
 import { SpinState } from './states/SpinState';
+import { SplashState } from './states/SplashState';
 import { StateMachine } from './states/StateMachine';
 import { WinState } from './states/WinState';
 import { Message } from './Message';
 import { Popup } from './Popup';
+import { Splash } from './Splash';
 import { SymbolInfo } from './SymbolInfo';
 import { Wins } from './Wins';
 
@@ -41,7 +43,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const betIndex = useRef(defaultBetIndex);
   const betState = (i: number) => ({ bet: bets[i], atMinBet: i === 0, atMaxBet: i === bets.length - 1 });
   const [hud, setHud] = useState<HudState>({
-    ready: false, state: 'bet', balance: engine.balance, ...betState(defaultBetIndex),
+    ready: false, state: 'splash', balance: engine.balance, ...betState(defaultBetIndex),
     freeSpinsLeft: 0, freeSpin: false, autoplayLeft: 0, freeSpinsReady: false, continueReady: false,
   });
   const update = (patch: Partial<HudState>) => setHud((s) => ({ ...s, ...patch }));
@@ -56,7 +58,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
     const app = new Application();
     createScene(app, host.current!, engine, setHudLayout).then((scene) => {
       machine.current = new StateMachine(
-        { bet: BetState, spin: SpinState, win: WinState },
+        { splash: SplashState, bet: BetState, spin: SpinState, win: WinState },
         {
           engine, ...scene,
           bet: () => engine.config.bets[betIndex.current],
@@ -190,7 +192,9 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   const background = new Background();
   // The 1600x900 design-space scene; it's scaled to fit the window (the HUD row is part of it).
   const scene = new Container();
-  scene.addChild(character, board, wins, message, symbolInfo, bigWin, popup);
+  // The intro fills the space above the HUD row, with its dots where the message goes.
+  const splash = new Splash(engine.config, DESIGN.width, MARGIN, message.y - MESSAGE_GAP / 2, message.y);
+  scene.addChild(character, board, wins, message, symbolInfo, bigWin, popup, splash);
   app.stage.addChild(background, scene);
   // A click anywhere off the board closes the symbol pop-up.
   app.stage.eventMode = 'static';
@@ -209,5 +213,5 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   app.renderer.on('resize', layout);
   layout();
 
-  return { background, board, wins, character, message, popup, bigWin, symbolInfo };
+  return { background, board, wins, character, message, popup, bigWin, symbolInfo, splash };
 }

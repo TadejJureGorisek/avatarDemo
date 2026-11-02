@@ -96,7 +96,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   const size = SIZES[layout.portrait ? 'portrait' : 'landscape'];
   const control = { zoom: size.control };
   const menu = (
-    <div style={layout.portrait ? control : { ...control, marginRight: 55 }}>
+    <div style={layout.portrait ? control : { ...control, marginRight: 25 }}>
       <Menu
         open={menuOpen}
         disabled={locked}
@@ -142,7 +142,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
       <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
     </div>
   );
-  const cheats = <div style={layout.portrait ? control : { ...control, marginRight: 50 }}><CheatMenu onCheat={onCheat} /></div>;
+  const cheats = <div style={layout.portrait ? control : { ...control, marginRight: 80 }}><CheatMenu onCheat={onCheat} /></div>;
   // Its position and width are divided by the zoom, because zoom scales those too. Hidden until
   // the scene has placed it (layout.boardWidth is 0 until then).
   const place: CSSProperties = {

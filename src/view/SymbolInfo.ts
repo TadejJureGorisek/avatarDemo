@@ -9,6 +9,7 @@ const HEIGHT = 170;
 /** Small pop-up next to a clicked symbol: its picture and what it pays at the current bet. */
 export class SymbolInfo extends Container {
   private icon = new Sprite();
+  private def?: SymbolDef;
   private text = new Text({
     text: '',
     style: { fontFamily: 'system-ui, sans-serif', fontSize: 26, fontWeight: '700', fill: 0xffffff, lineHeight: 34 },
@@ -30,15 +31,22 @@ export class SymbolInfo extends Container {
 
   /** `x`, `y` is the centre of the clicked cell; `right` puts the pop-up on its right, else on its left. */
   show(def: SymbolDef, bet: number, x: number, y: number, right: boolean) {
+    this.def = def;
     this.icon.texture = Assets.get(symbolUrl(def.id));
     this.icon.scale.set(130 / Math.max(this.icon.texture.width, this.icon.texture.height));
-    const pays = Object.entries(def.pays)
-      .sort(([a], [b]) => Number(b) - Number(a))
-      .map(([count, pay]) => `${count}×  ${(pay * bet).toFixed(2)}`);
-    this.text.text = def.kind === 'scatter' ? ['Pays anywhere', ...pays].join('\n') : pays.join('\n');
+    this.setBet(bet);
     this.position.set(right ? x + 110 : x - 110 - WIDTH, y - HEIGHT / 2);
     this.visible = true;
     gsap.fromTo(this, { alpha: 0 }, { alpha: 1, duration: 0.15 });
+  }
+
+  /** Re-prices the shown symbol, so the pays follow bet changes while the pop-up is open. */
+  setBet(bet: number) {
+    if (!this.def) return;
+    const pays = Object.entries(this.def.pays)
+      .sort(([a], [b]) => Number(b) - Number(a))
+      .map(([count, pay]) => `${count}×  ${(pay * bet).toFixed(2)}`);
+    this.text.text = this.def.kind === 'scatter' ? ['Pays anywhere', ...pays].join('\n') : pays.join('\n');
   }
 
   hide() {

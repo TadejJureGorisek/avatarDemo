@@ -1,6 +1,5 @@
 import gsap from 'gsap';
 import type { SlotEngine, SpinResult } from '../../engine/SlotEngine';
-import { freeSpinsMessage } from './freeSpinsMessage';
 import type { GameState } from './StateMachine';
 
 /**
@@ -23,7 +22,8 @@ export const SpinState: GameState = {
       freeSpin: result.isFreeSpin,
     });
     // The engine already counted this spin's win, so show the total from before it.
-    message.text = result.isFreeSpin ? freeSpinsMessage(engine.freeSpinsTotal - result.totalWin) : 'Good luck!';
+    if (result.isFreeSpin) message.showFreeSpinsTotal(engine.freeSpinsTotal - result.totalWin);
+    else message.text = 'Good luck!';
 
     // STOP cuts the minimum spin time short, and below makes every reel stop straight away.
     await Promise.race([new Promise((resolve) => gsap.delayedCall(minSpinTime, resolve)), stopPressed]);
@@ -49,11 +49,8 @@ export const SpinState: GameState = {
 
     if (result.totalWin || result.freeSpinsAwarded) return 'win';
     updateHud({ freeSpinsLeft: engine.freeSpinsLeft });
-    message.text = !result.isFreeSpin
-      ? 'Press SPIN to play'
-      : engine.freeSpinsLeft
-        ? freeSpinsMessage(engine.freeSpinsTotal) // free spins play themselves, so no "Press SPIN"
-        : `Free spins total: ${engine.freeSpinsTotal.toFixed(2)}`;
+    if (result.isFreeSpin) message.showFreeSpinsTotal(engine.freeSpinsTotal, !engine.freeSpinsLeft);
+    else message.text = 'Press SPIN to play';
     return 'bet';
   },
 };

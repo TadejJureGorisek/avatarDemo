@@ -39,6 +39,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const setAutoplay = (spins: number) => update({ autoplayLeft: (autoplayLeft.current = spins) });
   const hudHeight = useRef(0);
   const relayout = useRef<() => void>();
+  const symbolInfoRef = useRef<SymbolInfo>();
 
   useEffect(() => {
     const app = new Application();
@@ -60,6 +61,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
       );
       // Clicking a landed symbol shows what it pays; not while the reels spin.
       const { board, symbolInfo } = scene;
+      symbolInfoRef.current = symbolInfo;
       board.onCellTap = (reel, row) => {
         if (machine.current?.current === 'spin') return;
         const cell = board.cell(reel, row);
@@ -71,6 +73,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
     });
     return () => {
       relayout.current = undefined;
+      symbolInfoRef.current = undefined;
       app.destroy(true, { children: true });
     };
   }, [engine]);
@@ -78,6 +81,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const changeBet = useCallback((direction: 1 | -1) => {
     betIndex.current = Math.max(0, Math.min(bets.length - 1, betIndex.current + direction));
     update(betState(betIndex.current));
+    symbolInfoRef.current?.setBet(bets[betIndex.current]);
   }, [bets]);
 
   // One button: SPIN in the bet state, STOP while the reels spin, and stops a running autoplay.

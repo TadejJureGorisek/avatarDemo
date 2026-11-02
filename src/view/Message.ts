@@ -10,4 +10,14 @@ export class Message extends Text {
     });
     this.anchor.set(0.5);
   }
+
+  /**
+   * Free spins play themselves, so never "Press SPIN": the round's running total ("Good luck!"
+   * while it's 0), or the final total once `roundOver`.
+   */
+  showFreeSpinsTotal(total: number, roundOver = false) {
+    this.text = roundOver
+      ? `Free spins total: ${total.toFixed(2)}`
+      : total > 0 ? `Free spins win: ${total.toFixed(2)}` : 'Good luck!';
+  }
 }

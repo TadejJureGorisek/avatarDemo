@@ -3,6 +3,7 @@ import type { Board } from '../board/Board';
 import type { Character } from '../Character';
 import type { Cheat } from '../hud/CheatMenu';
 import type { HudState } from '../hud/Hud';
+import type { Message } from '../Message';
 import type { Wins } from '../Wins';
 
 export type StateName = 'bet' | 'spin' | 'win';
@@ -13,6 +14,7 @@ export interface GameContext {
   board: Board;
   wins: Wins;
   character: Character;
+  message: Message;
   bet: () => number;
   updateHud: (patch: Partial<HudState>) => void;
   /** Resolves when the player presses SPIN, or picks a cheat from the cheat menu. */

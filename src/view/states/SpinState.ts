@@ -7,13 +7,13 @@ const ANTICIPATION_EXTRA_S = 0.9;
 /** Takes the stake, gets the result from the engine and drops the reels, with bonus anticipation. */
 export const SpinState: GameState = {
   async enter(ctx) {
-    const { engine, board, wins, character, updateHud } = ctx;
+    const { engine, board, wins, character, message, updateHud } = ctx;
     const result = (ctx.result = engine.spin(ctx.bet()));
     updateHud({
       balance: engine.balance - result.totalWin, // the win is added in WinState
       freeSpinsLeft: engine.freeSpinsLeft - result.freeSpinsAwarded,
-      message: result.isFreeSpin ? 'Free spin!' : 'Good luck!',
     });
+    message.text = result.isFreeSpin ? 'Free spin!' : 'Good luck!';
 
     // Once one more scatter would trigger free spins, slow the remaining reels and play anticipation.
     const anticipationReel = findAnticipationReel(engine, result);
@@ -27,12 +27,10 @@ export const SpinState: GameState = {
     }
 
     if (result.totalWin || result.freeSpinsAwarded) return 'win';
-    updateHud({
-      freeSpinsLeft: engine.freeSpinsLeft,
-      message: result.isFreeSpin && !engine.freeSpinsLeft
-        ? `Free spins total: ${engine.freeSpinsTotal.toFixed(2)}`
-        : 'Press SPIN to play',
-    });
+    updateHud({ freeSpinsLeft: engine.freeSpinsLeft });
+    message.text = result.isFreeSpin && !engine.freeSpinsLeft
+      ? `Free spins total: ${engine.freeSpinsTotal.toFixed(2)}`
+      : 'Press SPIN to play';
     return 'bet';
   },
 };

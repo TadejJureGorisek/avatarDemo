@@ -19,7 +19,7 @@ start command is needed.
 - 5 reels × 3 rows, **243 ways**, pays left to right from reel 1 (3+ of a kind).
 - Drop-style spin: reels drop out and in one after another. Winning symbols pop (scale up and
   down) until the next spin, with the win amount shown over the symbols.
-- Balance, bet (+/−) and a status message in the React HUD. `Space` spins.
+- Balance and bet (+/−) in the React HUD, player message below the board. `Space` spins.
 - **BONUS** scatter pays anywhere (3/4/5) and 3+ award **8 free spins** (auto-played, retriggerable).
 - **Anticipation**: once two BONUS symbols have landed, the remaining reels slow down while the
   character plays `bonus_anticipation`, then `bonus_anticipation_win` / `_lose`.
@@ -48,7 +48,8 @@ src/
     Wins.ts            win pop on winning symbols + win amount over the board
     Character.ts       Spine character
     Background.ts      full-screen gradient
-    hud/Hud.tsx        the whole UI: Balance, BetControl, SpinButton, CheatMenu, messages
+    Message.ts         player message below the board, set by the states
+    hud/Hud.tsx        the whole UI: Balance, BetControl, SpinButton, CheatMenu
     hud/theme.ts       shared inline styles (no CSS files)
 ```
 

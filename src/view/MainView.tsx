@@ -28,8 +28,8 @@ const MAX_CELL = 200;
  * size), laid out in these design units and scaled to fit, with black bars around it.
  */
 const DESIGN = { landscape: { width: 1600, height: 900 }, portrait: { width: 900, height: 1600 } };
-/** Where the floor is in each background (of its height): the character stands on it. */
-const FLOOR = { landscape: 0.755, portrait: 0.505 };
+/** Where the floor is in the landscape background (of its height): the character stands on it there. */
+const LANDSCAPE_FLOOR = 0.755;
 /** Space kept free around the scene and between character and board. */
 const MARGIN = 20;
 const GAP = 40;
@@ -196,9 +196,8 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   const arrange = (o: Orientation) => {
     const D = DESIGN[o];
     const below = MESSAGE_GAP + HUD_GAP + HUD_ROW;
-    const floor = FLOOR[o] * D.height;
     const logoHeight = LOGO_HEIGHT[o];
-    let cell: number, boardX: number, boardY: number, fit: number;
+    let cell: number, boardX: number, boardY: number, fit: number, feet: number;
     let logoBox: { x: number; y: number; width: number };
     if (o === 'landscape') {
       // Logo over character, next to the board, centred as one group; the character stands on the floor.
@@ -207,24 +206,35 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
       cell = Math.floor(Math.min(MAX_CELL, maxWidth / engine.reels, maxHeight / engine.rows));
       boardY = (D.height - (2 * FRAME_PAD + engine.rows * cell + below)) / 2 + FRAME_PAD;
       // The character shrinks if it has to, to fit under the logo and above the floor.
-      fit = Math.min(1, (floor - (boardY - FRAME_PAD) - logoHeight - LOGO_GAP) / bounds.height);
+      fit = Math.min(1, (LANDSCAPE_FLOOR * D.height - (boardY - FRAME_PAD) - logoHeight - LOGO_GAP) / bounds.height);
       const characterWidth = bounds.width * fit;
       const left = (D.width - (characterWidth + GAP + engine.reels * cell)) / 2;
       boardX = left + characterWidth + GAP;
       logoBox = { x: left + characterWidth / 2, y: boardY - FRAME_PAD + logoHeight / 2, width: characterWidth + GAP };
       character.x = left - bounds.x * fit;
+      feet = LANDSCAPE_FLOOR * D.height;
     } else {
-      // Logo, then the character standing on the floor, then the board right under it.
-      cell = Math.floor(Math.min(MAX_CELL, (D.width - 2 * MARGIN - 2 * FRAME_PAD) / engine.reels));
-      const top = 2 * MARGIN;
-      fit = Math.min(1, (floor - top - logoHeight - LOGO_GAP) / bounds.height);
-      boardX = (D.width - engine.reels * cell) / 2;
-      boardY = floor + LOGO_GAP + FRAME_PAD;
+      // Logo across the top; under it, as in landscape, the character on the board's left, as tall
+      // as the board's frame and standing on the floor, with both as wide as the stage allows.
+      // Logo, that row, the message and the HUD row are centred as one group.
+      const aspect = bounds.width / bounds.height;
+      // Character width + gap + frame = the stage's width, with the character as tall as the frame.
+      cell = Math.floor(Math.min(MAX_CELL,
+        (D.width - 2 * MARGIN - GAP - 2 * FRAME_PAD - aspect * 2 * FRAME_PAD) / (engine.reels + aspect * engine.rows)));
+      const frameHeight = engine.rows * cell + 2 * FRAME_PAD;
+      fit = frameHeight / bounds.height;
+      const characterWidth = bounds.width * fit;
+      const group = logoHeight + LOGO_GAP + frameHeight + below;
+      const top = (D.height - group) / 2;
+      boardY = top + logoHeight + LOGO_GAP + FRAME_PAD;
+      const left = (D.width - (characterWidth + GAP + engine.reels * cell + 2 * FRAME_PAD)) / 2;
+      boardX = left + characterWidth + GAP + FRAME_PAD;
       logoBox = { x: D.width / 2, y: top + logoHeight / 2, width: D.width - 2 * MARGIN };
-      character.x = D.width / 2 - (bounds.x + bounds.width / 2) * fit;
+      character.x = left - bounds.x * fit;
+      feet = boardY + engine.rows * cell + FRAME_PAD;
     }
     character.scale.set(fit);
-    character.y = floor - (bounds.y + bounds.height) * fit;
+    character.y = feet - (bounds.y + bounds.height) * fit;
     title.scale.set(Math.min(logoHeight / title.texture.height, logoBox.width / title.texture.width));
     title.position.set(logoBox.x, logoBox.y);
     const boardScale = cell / MAX_CELL;

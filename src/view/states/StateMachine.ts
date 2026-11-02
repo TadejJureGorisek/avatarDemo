@@ -3,6 +3,7 @@ import type { Board } from '../board/Board';
 import type { Character } from '../Character';
 import type { Cheat } from '../hud/CheatMenu';
 import type { HudState } from '../hud/Hud';
+import type { HistoryEntry } from '../hud/menu/History';
 import type { Message } from '../Message';
 import type { Popup } from '../Popup';
 import type { Wins } from '../Wins';
@@ -23,6 +24,11 @@ export interface GameContext {
   waitForSpin: () => Promise<Cheat | undefined>;
   /** Resolves when the player presses STOP during the spin. */
   waitForStop: () => Promise<void>;
+  /** Uses up one autoplay spin; false when autoplay is off or finished. */
+  takeAutoSpin: () => boolean;
+  stopAutoplay: () => void;
+  /** Adds a finished spin to the HISTORY tab. */
+  recordSpin: (entry: HistoryEntry) => void;
   /** Result of the last spin, set by SpinState for WinState. */
   result?: SpinResult;
 }

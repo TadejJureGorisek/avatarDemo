@@ -29,6 +29,9 @@ start command is needed.
   while the others keep full speed; every further BONUS slows the reel after it. The character
   plays `bonus_anticipation`, then `bonus_anticipation_win` / `_lose`.
 - Character plays `small_win` on any win and loops `idle` otherwise.
+- **Menu** (burger, top right): HOW TO PLAY (rules + paytable at the current bet), ABOUT THE GAME,
+  AUTOPLAY (10/25/50/100 spins; the main button shows the spins left and stops it), HISTORY
+  (last 50 spins).
 - **CHEATS** menu (below Balance and Bet): *Big win* forces the top symbol across the middle row,
   *Free spins* forces a BONUS on every reel. Handled in `BetState` via `SlotEngine.forceNext()`.
 - RNG: `crypto.getRandomValues`. Tuned by simulation (6M spins): RTP ≈ 96%, hit rate ≈ 28%,
@@ -56,7 +59,8 @@ src/
     Background.ts      full-screen gradient
     Message.ts         player message below the board, set by the states
     Popup.ts           free spins pop-ups (awarded / round won / complete)
-    hud/Hud.tsx        the whole UI: Balance, BetControl, SpinButton, CheatMenu
+    hud/Hud.tsx        the whole UI: Balance, BetControl, SpinButton, CheatMenu, Menu
+    hud/menu/          burger menu tabs: HowToPlay, About, Autoplay, History
     hud/theme.ts       shared inline styles (no CSS files)
 ```
 

@@ -7,6 +7,7 @@ import { symbolUrl } from './board/Cell';
 import { Character, CHARACTER_ASSETS } from './Character';
 import type { Cheat } from './hud/CheatMenu';
 import { Hud, type HudState } from './hud/Hud';
+import type { HistoryEntry } from './hud/menu/History';
 import { BetState } from './states/BetState';
 import { SpinState } from './states/SpinState';
 import { StateMachine } from './states/StateMachine';
@@ -29,9 +30,12 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const betState = (i: number) => ({ bet: bets[i], atMinBet: i === 0, atMaxBet: i === bets.length - 1 });
   const [hud, setHud] = useState<HudState>({
     ready: false, state: 'bet', balance: engine.balance, ...betState(defaultBetIndex),
-    freeSpinsLeft: 0, freeSpinsTotal: 0, freeSpin: false,
+    freeSpinsLeft: 0, freeSpinsTotal: 0, freeSpin: false, autoplayLeft: 0,
   });
   const update = (patch: Partial<HudState>) => setHud((s) => ({ ...s, ...patch }));
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const autoplayLeft = useRef(0);
+  const setAutoplay = (spins: number) => update({ autoplayLeft: (autoplayLeft.current = spins) });
   const hudHeight = useRef(0);
   const relayout = useRef<() => void>();
 
@@ -47,6 +51,9 @@ export function MainView({ engine }: { engine: SlotEngine }) {
           updateHud: update,
           waitForSpin: () => new Promise((resolve) => (spinRequest.current = resolve)),
           waitForStop: () => new Promise((resolve) => (stopRequest.current = resolve)),
+          takeAutoSpin: () => autoplayLeft.current > 0 && (setAutoplay(autoplayLeft.current - 1), true),
+          stopAutoplay: () => setAutoplay(0),
+          recordSpin: (entry) => setHistory((h) => [entry, ...h].slice(0, 50)),
         },
         (state) => update({ state }),
       );
@@ -64,12 +71,19 @@ export function MainView({ engine }: { engine: SlotEngine }) {
     update(betState(betIndex.current));
   }, [bets]);
 
-  // One button: SPIN in the bet state, STOP while the reels spin.
+  // One button: SPIN in the bet state, STOP while the reels spin, and stops a running autoplay.
   const pressSpin = useCallback(() => {
-    if (machine.current?.current === 'spin') stopRequest.current?.();
+    if (autoplayLeft.current > 0) setAutoplay(0);
+    else if (machine.current?.current === 'spin') stopRequest.current?.();
     else spinRequest.current?.();
   }, []);
   const requestCheat = useCallback((cheat: Cheat) => spinRequest.current?.(cheat), []);
+  // The first autoplay spin starts now (BetState is waiting for SPIN); the rest come from BetState.
+  const startAutoplay = useCallback((spins: number) => {
+    setAutoplay(spins - 1);
+    spinRequest.current?.();
+  }, []);
+  const stopAutoplay = useCallback(() => setAutoplay(0), []);
   const onHudHeight = useCallback((height: number) => {
     hudHeight.current = height;
     relayout.current?.();
@@ -78,7 +92,17 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   return (
     <div style={fill}>
       <div style={fill} ref={host} />
-      <Hud state={hud} onSpin={pressSpin} onBetChange={changeBet} onCheat={requestCheat} onHeight={onHudHeight} />
+      <Hud
+        state={hud}
+        config={engine.config}
+        history={history}
+        onSpin={pressSpin}
+        onBetChange={changeBet}
+        onCheat={requestCheat}
+        onStartAutoplay={startAutoplay}
+        onStopAutoplay={stopAutoplay}
+        onHeight={onHudHeight}
+      />
     </div>
   );
 }

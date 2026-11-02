@@ -2,12 +2,18 @@ import gsap from 'gsap';
 import type { GameState } from './StateMachine';
 
 const FREE_SPIN_PAUSE_S = 1.1;
+const AUTOPLAY_PAUSE_S = 0.8;
 
-/** Idle: the player can change the bet and press SPIN. During free spins it moves on by itself. */
+const pause = (seconds: number) => new Promise((resolve) => gsap.delayedCall(seconds, resolve));
+
+/**
+ * Idle: the player can change the bet and press SPIN. Free spins and autoplay move on by
+ * themselves (free spins first; autoplay carries on after them).
+ */
 export const BetState: GameState = {
-  async enter({ engine, result, bet, message, popup, updateHud, waitForSpin }) {
+  async enter({ engine, result, bet, message, popup, updateHud, waitForSpin, takeAutoSpin, stopAutoplay }) {
     if (engine.freeSpinsLeft) {
-      await new Promise((resolve) => gsap.delayedCall(FREE_SPIN_PAUSE_S, resolve));
+      await pause(FREE_SPIN_PAUSE_S);
       return 'spin';
     }
 
@@ -18,12 +24,21 @@ export const BetState: GameState = {
     }
 
     updateHud({ freeSpin: false });
+    if (takeAutoSpin()) {
+      if (engine.canSpin(bet())) {
+        await pause(AUTOPLAY_PAUSE_S);
+        return 'spin';
+      }
+      stopAutoplay();
+    }
+
     for (;;) {
       const cheat = await waitForSpin();
       if (engine.canSpin(bet())) {
         if (cheat) engine.forceNext(cheat);
         return 'spin';
       }
+      stopAutoplay();
       message.text = 'Not enough balance, lower your bet';
     }
   },

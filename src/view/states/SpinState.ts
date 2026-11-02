@@ -41,6 +41,10 @@ export const SpinState: GameState = {
     if (chain >= 2) {
       await character.play(result.freeSpinsAwarded ? 'bonus_anticipation_win' : 'bonus_anticipation_lose');
     }
+    ctx.recordSpin({
+      time: new Date(), bet: ctx.bet(), win: result.totalWin,
+      freeSpin: result.isFreeSpin, freeSpinsAwarded: result.freeSpinsAwarded,
+    });
 
     if (result.totalWin || result.freeSpinsAwarded) return 'win';
     updateHud({ freeSpinsLeft: engine.freeSpinsLeft });

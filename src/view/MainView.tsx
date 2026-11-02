@@ -158,8 +158,10 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   app.canvas.style.display = 'block'; // inline canvases add a few px of line-box overflow
   host.appendChild(app.canvas);
 
+  // The character comes first: its size sets the layout, so the HUD row (with "Loading…" where SPIN
+  // goes) is in place while the rest loads.
   Assets.add(CHARACTER_ASSETS);
-  await Assets.load([...engine.config.symbols.map((s) => symbolUrl(s.id)), ...CHARACTER_ASSETS.map((a) => a.alias)]);
+  await Assets.load(CHARACTER_ASSETS.map((a) => a.alias));
 
   // Character + gap + board, centred as one group; character vertically centred on the board.
   const character = new Character();
@@ -169,38 +171,21 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   const maxWidth = DESIGN.width - 2 * MARGIN - bounds.width - GAP - 2 * FRAME_PAD;
   const maxHeight = DESIGN.height - 2 * MARGIN - below - 2 * FRAME_PAD;
   const cell = Math.floor(Math.min(MAX_CELL, maxWidth / engine.reels, maxHeight / engine.rows));
-  const board = new Board(engine.reels, engine.rows, cell, engine.getSymbol, engine.fillerSymbol, engine.generateGrid());
-  const left = (DESIGN.width - (bounds.width + GAP + board.boardWidth)) / 2;
+  const boardWidth = engine.reels * cell;
+  const boardHeight = engine.rows * cell;
+  const left = (DESIGN.width - (bounds.width + GAP + boardWidth)) / 2;
   // Board, message and HUD row stacked, centred vertically as one block.
-  const stack = 2 * FRAME_PAD + board.boardHeight + below;
-  board.position.set(left + bounds.width + GAP, (DESIGN.height - stack) / 2 + FRAME_PAD);
-  character.position.set(left - bounds.x, board.y + board.boardHeight / 2 - (bounds.y + bounds.height / 2));
-
-  const wins = new Wins(board);
-  wins.position.copyFrom(board.position);
-  const message = new Message();
-  // Screen centre (the scene is centred horizontally), in line with the SPIN button.
-  message.position.set(DESIGN.width / 2, board.y + board.boardHeight + FRAME_PAD + MESSAGE_GAP);
-  const hudTop = message.y + HUD_GAP;
-  message.text = 'Press SPIN to play';
-  const popup = new Popup();
-  popup.position.set(board.x + board.boardWidth / 2, board.y + board.boardHeight / 2);
-  const symbolInfo = new SymbolInfo();
-  const bigWin = new BigWin(engine.config.bigWins);
-  bigWin.position.copyFrom(popup.position);
+  const stack = 2 * FRAME_PAD + boardHeight + below;
+  const boardX = left + bounds.width + GAP;
+  const boardY = (DESIGN.height - stack) / 2 + FRAME_PAD;
+  character.position.set(left - bounds.x, boardY + boardHeight / 2 - (bounds.y + bounds.height / 2));
+  const messageY = boardY + boardHeight + FRAME_PAD + MESSAGE_GAP;
+  const hudTop = messageY + HUD_GAP;
 
   const background = new Background();
   // The 1600x900 design-space scene; it's scaled to fit the window (the HUD row is part of it).
   const scene = new Container();
-  // The intro fills the space above the HUD row, with its dots where the message goes.
-  const splash = new Splash(engine.config, DESIGN.width, MARGIN, message.y - MESSAGE_GAP / 2, message.y);
-  scene.addChild(character, board, wins, message, symbolInfo, bigWin, popup, splash);
   app.stage.addChild(background, scene);
-  // A click anywhere off the board closes the symbol pop-up.
-  app.stage.eventMode = 'static';
-  app.stage.hitArea = app.screen;
-  app.stage.on('pointertap', () => symbolInfo.hide());
-
   // Runs on window resize; tells the HUD where its row is so it sits right under the message.
   const layout = () => {
     const { width, height } = app.screen;
@@ -208,10 +193,33 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
     const scale = Math.min(width / DESIGN.width, height / DESIGN.height);
     scene.scale.set(scale);
     scene.position.set((width - DESIGN.width * scale) / 2, (height - DESIGN.height * scale) / 2);
-    onHudLayout({ top: scene.y + hudTop * scale, zoom: scale * HUD_ZOOM_PER_SCENE, boardWidth: board.frameWidth * scale });
+    onHudLayout({ top: scene.y + hudTop * scale, zoom: scale * HUD_ZOOM_PER_SCENE, boardWidth: (boardWidth + 2 * FRAME_PAD) * scale });
   };
   app.renderer.on('resize', layout);
   layout();
+
+  await Assets.load(engine.config.symbols.map((s) => symbolUrl(s.id)));
+  const board = new Board(engine.reels, engine.rows, cell, engine.getSymbol, engine.fillerSymbol, engine.generateGrid());
+  board.position.set(boardX, boardY);
+  const wins = new Wins(board);
+  wins.position.copyFrom(board.position);
+  const message = new Message();
+  // Screen centre (the scene is centred horizontally), in line with the SPIN button.
+  message.position.set(DESIGN.width / 2, messageY);
+  message.text = 'Press SPIN to play';
+  const popup = new Popup();
+  popup.position.set(board.x + board.boardWidth / 2, board.y + board.boardHeight / 2);
+  const symbolInfo = new SymbolInfo();
+  const bigWin = new BigWin(engine.config.bigWins);
+  bigWin.position.copyFrom(popup.position);
+
+  // The intro fills the space above the HUD row, with its dots where the message goes.
+  const splash = new Splash(engine.config, DESIGN.width, MARGIN, message.y - MESSAGE_GAP / 2, message.y);
+  scene.addChild(character, board, wins, message, symbolInfo, bigWin, popup, splash);
+  // A click anywhere off the board closes the symbol pop-up.
+  app.stage.eventMode = 'static';
+  app.stage.hitArea = app.screen;
+  app.stage.on('pointertap', () => symbolInfo.hide());
 
   return { background, board, wins, character, message, popup, bigWin, symbolInfo, splash };
 }

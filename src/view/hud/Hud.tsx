@@ -10,6 +10,7 @@ import { CheatMenu, type Cheat } from './CheatMenu';
 import type { HistoryEntry } from './menu/History';
 import { Menu } from './menu/Menu';
 import { SpinButton } from './SpinButton';
+import { colors } from './theme';
 
 export interface HudState {
   ready: boolean;
@@ -60,9 +61,11 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   const inFreeSpins = s.freeSpin || s.freeSpinsLeft > 0;
   const autoplay = s.autoplayLeft > 0;
   const locked = !s.ready || s.state !== 'bet' || inFreeSpins || autoplay;
-  // On the splash only SPIN (as CONTINUE) shows; the rest fades in with the game.
+  // While loading and on the splash only SPIN's spot shows ("Loading…", then CONTINUE); the rest
+  // fades in with the game.
   const splash = s.state === 'splash';
-  const others: CSSProperties = { opacity: splash ? 0 : 1, pointerEvents: splash ? 'none' : undefined, transition: 'opacity 0.5s' };
+  const intro = splash || !s.ready;
+  const others: CSSProperties = { opacity: intro ? 0 : 1, pointerEvents: intro ? 'none' : undefined, transition: 'opacity 0.5s' };
   // An arrow (CONTINUE) on the splash, spin icon in the bet state, stop icon while spinning, and
   // numbers otherwise: the free spins left during free spins (they play themselves), the autoplay
   // spins left during autoplay (pressing it stops autoplay), and the picked spins while the mini
@@ -89,11 +92,10 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
 
   return (
     <>
-      {!s.ready && <div style={styles.loading}>Loading…</div>}
       {/* One row right under the message: menu, balance | SPIN (centred) + autoplay | bet, cheats.
           `top` is divided by the zoom because zoom also scales the element's own offsets.
-          Hidden until the scene is in, so it shows up together with the board and character. */}
-      <div style={{ ...styles.row, zoom: scale, top: layout.top / scale, visibility: s.ready ? 'visible' : 'hidden' }}>
+          Hidden until the scene has placed it (layout.boardWidth is 0 until then). */}
+      <div style={{ ...styles.row, zoom: scale, top: layout.top / scale, visibility: layout.boardWidth ? 'visible' : 'hidden' }}>
         <div style={{ ...styles.left, ...others }}>
           <div style={styles.menu}>
           <Menu
@@ -117,7 +119,9 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
           <Balance value={s.balance} />
         </div>
         <div style={styles.centre}>
-          <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
+          {s.ready
+            ? <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
+            : <div style={styles.loading}>Loading…</div>}
           <div style={{ ...styles.auto, ...others }}>
             <AutoplayButton
               open={autoOpen}
@@ -138,7 +142,8 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
 }
 
 const styles = {
-  loading: { position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', fontSize: 28 },
+  // Takes SPIN's place (and size) while the game loads, so nothing moves when SPIN appears.
+  loading: { width: 110, height: 110, display: 'grid', placeItems: 'center', fontSize: 22, fontWeight: 800, color: colors.gold },
   // One line: SPIN in the exact middle (equal side columns), each side tucked in towards it.
   row: { position: 'absolute', left: 0, right: 0, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 28 },
   left: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 28 },

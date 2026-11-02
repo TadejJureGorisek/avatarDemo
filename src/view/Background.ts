@@ -3,95 +3,19 @@ import { Assets, Container, FillGradient, Graphics, Sprite } from 'pixi.js';
 
 export type Orientation = 'landscape' | 'portrait';
 
-/**
- * The art for each part of the game, landscape (16:9) and portrait (9:16), with the average colour
- * along its top and bottom edges: the bars around the stage take those colours.
- */
+/** The art for each part of the game, landscape (16:9) and portrait (9:16). */
 const ART = {
-  base: {
-    landscape: { url: 'assets/backgrounds/base.webp', top: 0x20056f, bottom: 0x240673 },
-    portrait: { url: 'assets/backgrounds/base-portrait.webp', top: 0x2b0392, bottom: 0x120650 },
-  },
-  freeSpins: {
-    landscape: { url: 'assets/backgrounds/free-spins.webp', top: 0xc66807, bottom: 0x9e4c0c },
-    portrait: { url: 'assets/backgrounds/free-spins-portrait.webp', top: 0xca6202, bottom: 0x973601 },
-  },
-  splash: {
-    landscape: { url: 'assets/backgrounds/splash.webp', top: 0x6103b4, bottom: 0x5104b8 },
-    portrait: { url: 'assets/backgrounds/splash-portrait.webp', top: 0x3e059e, bottom: 0x774505 },
-  },
+  base: { landscape: 'assets/backgrounds/base.webp', portrait: 'assets/backgrounds/base-portrait.webp' },
+  freeSpins: { landscape: 'assets/backgrounds/free-spins.webp', portrait: 'assets/backgrounds/free-spins-portrait.webp' },
+  splash: { landscape: 'assets/backgrounds/splash.webp', portrait: 'assets/backgrounds/splash-portrait.webp' },
 };
-type Art = (typeof ART)['base'];
-export const BACKGROUND_URLS = Object.values(ART).flatMap((a) => [a.landscape.url, a.portrait.url]);
-
-/** Of the stage's height (or width), how far the bars' colour fades into the picture. */
-const FEATHER = 0.05;
-
-const rgba = (color: number, alpha: number) => `rgba(${color >> 16}, ${(color >> 8) & 255}, ${color & 255}, ${alpha})`;
-
-/** A gradient through `stops` along x (or y), in the filled shape's own space. */
-const along = (vertical: boolean, stops: [number, string][]) => new FillGradient({
-  type: 'linear', start: { x: 0, y: 0 }, end: vertical ? { x: 0, y: 1 } : { x: 1, y: 0 }, textureSpace: 'local',
-  colorStops: stops.map(([offset, color]) => ({ offset, color })),
-});
-
-/** The stage's box in the window. */
-export interface StageBox {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-/** One picture filling the stage, and the bars beside it in its edge colours, fading into it. */
-class Layer extends Container {
-  private picture = new Sprite();
-  private bars = new Graphics();
-
-  constructor(private art: Art) {
-    super();
-    this.addChild(this.picture, this.bars);
-  }
-
-  layout(window: { width: number; height: number }, stage: StageBox, orientation: Orientation) {
-    const { url, top, bottom } = this.art[orientation];
-    this.picture.texture = Assets.get(url);
-    this.picture.position.set(stage.x, stage.y);
-    this.picture.setSize(stage.width, stage.height);
-    const g = this.bars.clear();
-    if (stage.height < window.height) {
-      // Above and below: solid, then fading out over the picture's edge.
-      const f = stage.height * FEATHER;
-      const aboveTo = stage.y + f;
-      g.rect(stage.x, 0, stage.width, aboveTo).fill(along(true, [[0, rgba(top, 1)], [stage.y / aboveTo, rgba(top, 1)], [1, rgba(top, 0)]]));
-      const belowFrom = stage.y + stage.height - f;
-      const belowSolid = f / (window.height - belowFrom);
-      g.rect(stage.x, belowFrom, stage.width, window.height - belowFrom)
-        .fill(along(true, [[0, rgba(bottom, 0)], [belowSolid, rgba(bottom, 1)], [1, rgba(bottom, 1)]]));
-    } else if (stage.width < window.width) {
-      // At the sides: the top edge's colour running into the bottom edge's, then a short fade (in
-      // the two colours' mix) over the picture's sides.
-      const f = stage.width * FEATHER;
-      const sides = along(true, [[0, rgba(top, 1)], [1, rgba(bottom, 1)]]);
-      g.rect(0, stage.y, stage.x, stage.height).fill(sides);
-      g.rect(stage.x + stage.width, stage.y, window.width - stage.x - stage.width, stage.height).fill(sides);
-      const middle = mix(top, bottom);
-      g.rect(stage.x, stage.y, f, stage.height).fill(along(false, [[0, rgba(middle, 1)], [1, rgba(middle, 0)]]));
-      g.rect(stage.x + stage.width - f, stage.y, f, stage.height).fill(along(false, [[0, rgba(middle, 0)], [1, rgba(middle, 1)]]));
-    }
-  }
-}
-
-/** Halfway between two colours. */
-const mix = (a: number, b: number) =>
-  (((a >> 16) + (b >> 16)) >> 1) << 16 | ((((a >> 8) & 255) + ((b >> 8) & 255)) >> 1) << 8 | (((a & 255) + (b & 255)) >> 1);
+export const BACKGROUND_URLS = Object.values(ART).flatMap((a) => Object.values(a));
 
 /**
- * The background behind the scene. A purple gradient shows while loading; then the art (base game,
- * free spins, splash) for the stage's orientation fills the stage, and the bars around it (where
- * the window is wider or taller than the stage) take the colours along the picture's top and
- * bottom. The art cross-fades: the free spins art on top of the rest, so a partial blend of it
- * gives the splash a hint of gold.
+ * Full-window background behind the scene. A purple gradient shows while loading; then the art
+ * (base game, free spins, splash) for the window's orientation covers the whole window, centred
+ * and cropped to fit, and cross-fades: the free spins art on top of the rest, so a partial blend
+ * of it gives the splash a hint of gold.
  */
 export class Background extends Container {
   private gradient = new Graphics();
@@ -99,8 +23,8 @@ export class Background extends Container {
     type: 'linear', start: { x: 0, y: 0 }, end: { x: 0, y: 1 }, textureSpace: 'local',
     colorStops: [{ offset: 0, color: 0x3b0f8c }, { offset: 1, color: 0x12052e }],
   });
-  private art?: { base: Layer; freeSpins: Layer; splash: Layer };
-  private last?: [{ width: number; height: number }, StageBox, Orientation];
+  private art?: Record<keyof typeof ART, Sprite>;
+  private last: [number, number, Orientation] = [0, 0, 'landscape'];
 
   constructor() {
     super();
@@ -109,16 +33,21 @@ export class Background extends Container {
 
   /** Adds the art once it has loaded (`BACKGROUND_URLS`); the splash art shows first. */
   addArt() {
-    this.art = { base: new Layer(ART.base), splash: new Layer(ART.splash), freeSpins: new Layer(ART.freeSpins) };
+    this.art = { base: new Sprite(), splash: new Sprite(), freeSpins: new Sprite() };
     this.art.freeSpins.alpha = 0;
     this.addChild(this.art.base, this.art.splash, this.art.freeSpins);
-    if (this.last) this.resize(...this.last);
+    this.resize(...this.last);
   }
 
-  resize(window: { width: number; height: number }, stage: StageBox, orientation: Orientation) {
-    this.last = [window, stage, orientation];
-    this.gradient.clear().rect(stage.x, stage.y, stage.width, stage.height).fill(this.fill);
-    for (const layer of Object.values(this.art ?? {})) layer.layout(window, stage, orientation);
+  resize(width: number, height: number, orientation: Orientation) {
+    this.last = [width, height, orientation];
+    this.gradient.clear().rect(0, 0, width, height).fill(this.fill);
+    for (const [key, sprite] of Object.entries(this.art ?? {})) {
+      sprite.texture = Assets.get(ART[key as keyof typeof ART][orientation]);
+      const scale = Math.max(width / sprite.texture.width, height / sprite.texture.height);
+      sprite.scale.set(scale);
+      sprite.position.set((width - sprite.texture.width * scale) / 2, (height - sprite.texture.height * scale) / 2);
+    }
   }
 
   setFreeSpins(on: boolean) {

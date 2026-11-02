@@ -91,61 +91,78 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     onStartAutoplay(autoChoice);
   };
 
-  return (
-    <>
-      {/* One row right under the message: menu, balance | SPIN (centred) + autoplay | bet, cheats.
-          Its position and width are divided by the zoom, because zoom scales those too.
-          Hidden until the scene has placed it (layout.boardWidth is 0 until then). */}
-      <div style={{ ...styles.row, zoom: scale, top: layout.top / scale, left: layout.left / scale, width: layout.width / scale,
-        visibility: layout.boardWidth ? 'visible' : 'hidden' }}>
-        <div style={{ ...styles.left, ...others }}>
-          <div style={styles.menu}>
-          <Menu
-          open={menuOpen}
-          disabled={locked}
-          width={layout.boardWidth}
-          scale={scale}
-          onOpenChange={setMenuOpen}
-          config={config}
-          bet={s.bet}
-          atMinBet={s.atMinBet}
-          atMaxBet={s.atMaxBet}
-          onBetChange={onBetChange}
-          history={history}
-          autoplayLeft={s.autoplayLeft}
-          canStartAutoplay={!locked}
-          onStartAutoplay={onStartAutoplay}
-          onStopAutoplay={onStopAutoplay}
+  const menu = (
+    <div style={layout.portrait ? styles.control : styles.menu}>
+      <Menu
+        open={menuOpen}
+        disabled={locked}
+        width={layout.boardWidth}
+        scale={scale}
+        onOpenChange={setMenuOpen}
+        config={config}
+        bet={s.bet}
+        atMinBet={s.atMinBet}
+        atMaxBet={s.atMaxBet}
+        onBetChange={onBetChange}
+        history={history}
+        autoplayLeft={s.autoplayLeft}
+        canStartAutoplay={!locked}
+        onStartAutoplay={onStartAutoplay}
+        onStopAutoplay={onStopAutoplay}
+      />
+    </div>
+  );
+  const balance = <div style={styles.control}><Balance value={s.balance} /></div>;
+  const spin = (
+    <div style={styles.centre}>
+      <div style={styles.spin}>
+        {s.ready
+          ? <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
+          : <div style={styles.loading}>Loading…</div>}
+      </div>
+      <div style={{ ...styles.auto, ...others }}>
+        <div style={styles.autoSize}>
+          <AutoplayButton
+            open={autoOpen}
+            choice={autoChoice}
+            disabled={locked}
+            onToggle={() => setAutoOpen(!autoOpen)}
+            onChoose={setAutoChoice}
           />
-          </div>
-          <div style={styles.control}><Balance value={s.balance} /></div>
-        </div>
-        <div style={styles.centre}>
-          <div style={styles.spin}>
-            {s.ready
-              ? <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
-              : <div style={styles.loading}>Loading…</div>}
-          </div>
-          <div style={{ ...styles.auto, ...others }}>
-            <div style={styles.autoSize}>
-            <AutoplayButton
-              open={autoOpen}
-              choice={autoChoice}
-              disabled={locked}
-              onToggle={() => setAutoOpen(!autoOpen)}
-              onChoose={setAutoChoice}
-            />
-            </div>
-          </div>
-        </div>
-        <div style={{ ...styles.right, ...others }}>
-          <div style={styles.control}>
-            <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
-          </div>
-          <div style={styles.control}><CheatMenu onCheat={onCheat} /></div>
         </div>
       </div>
-    </>
+    </div>
+  );
+  const bet = (
+    <div style={styles.control}>
+      <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
+    </div>
+  );
+  const cheats = <div style={styles.control}><CheatMenu onCheat={onCheat} /></div>;
+  // Its position and width are divided by the zoom, because zoom scales those too. Hidden until
+  // the scene has placed it (layout.boardWidth is 0 until then).
+  const place: CSSProperties = {
+    position: 'absolute', zoom: scale, top: layout.top / scale, left: layout.left / scale, width: layout.width / scale,
+    visibility: layout.boardWidth ? 'visible' : 'hidden',
+  };
+
+  // Landscape: one row right under the message: menu, balance | SPIN (centred) + autoplay | bet,
+  // cheats. Portrait is narrower, so two rows: balance and bet, then menu | SPIN + autoplay | cheats.
+  return layout.portrait ? (
+    <div style={{ ...place, ...styles.stack }}>
+      <div style={{ ...styles.pair, ...others }}>{balance}{bet}</div>
+      <div style={styles.row}>
+        <div style={{ ...styles.left, ...others }}>{menu}</div>
+        {spin}
+        <div style={{ ...styles.right, ...others }}>{cheats}</div>
+      </div>
+    </div>
+  ) : (
+    <div style={{ ...place, ...styles.row }}>
+      <div style={{ ...styles.left, ...others }}>{menu}{balance}</div>
+      {spin}
+      <div style={{ ...styles.right, ...others }}>{bet}{cheats}</div>
+    </div>
   );
 }
 
@@ -153,7 +170,10 @@ const styles = {
   // Takes SPIN's place (and size) while the game loads, so nothing moves when SPIN appears.
   loading: { width: 110, height: 110, display: 'grid', placeItems: 'center', fontSize: 22, fontWeight: 800, color: colors.gold },
   // One line: SPIN in the exact middle (equal side columns), each side tucked in towards it.
-  row: { position: 'absolute', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 28 },
+  row: { display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 28 },
+  // Portrait: the balance and bet row above the SPIN row.
+  stack: { display: 'flex', flexDirection: 'column', gap: 16 },
+  pair: { display: 'flex', justifyContent: 'center', gap: 40 },
   left: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 28 },
   // Size of each control relative to its own design size: SPIN stands out most, then autoplay.
   control: { zoom: 1.1 },

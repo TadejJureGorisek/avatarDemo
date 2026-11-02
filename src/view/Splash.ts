@@ -11,8 +11,17 @@ const SWIPE = 60;
 /** How far a slide moves as it fades in or out. */
 const SLIDE_SHIFT = 300;
 const FREE_SPINS_SLIDE = 2;
-/** The logo across the top, above the slides (design px). */
-const LOGO_HEIGHT = 170;
+/** Room kept for the arrows at either side of the pictures. */
+const SIDE = 150;
+
+/** Where the splash goes: its width, top and bottom, the dots' y (in line with the message) and the logo's height. */
+export interface SplashLayout {
+  width: number;
+  top: number;
+  bottom: number;
+  dotsY: number;
+  logoHeight: number;
+}
 
 interface Slide extends Container {
   /** Starts the slide's showcase animation, if it has one. */
@@ -23,53 +32,20 @@ interface Slide extends Container {
  * Game intro shown once after loading: the logo on top, then three slides (the character, big wins,
  * free spins), each with a title above and a short description below its picture. Swipe, the side
  * arrows, the dots or the arrow keys change slides (looping around at the ends); `onFreeSpins` says
- * when the free spins slide comes and goes (for a hint of gold).
- * `top`, `bottom` and `width` are the area it fills; the dots go at `dotsY`, in line with the message.
+ * when the free spins slide comes and goes (for a hint of gold). `layout()` builds it for a
+ * landscape or portrait screen, and again whenever that changes (staying on the same slide).
  */
 export class Splash extends Container {
   onFreeSpins?: (showing: boolean) => void;
-  private slides: Slide[];
-  private dots: Graphics[];
+  private slides: Slide[] = [];
+  private dots: Graphics[] = [];
   private index = 0;
+  private isOpen = false;
 
-  constructor(config: GameConfig, width: number, top: number, bottom: number, dotsY: number) {
+  constructor(private config: GameConfig) {
     super();
-    // The logo stays put while the slides change below it.
-    const title = logo(LOGO_HEIGHT, width - 400);
-    title.position.set(width / 2, top + LOGO_HEIGHT / 2);
-    const titleY = top + LOGO_HEIGHT + 40;
-    const textY = bottom - 50;
-    // The picture fits between the title and the description.
-    const box = { y: (titleY + textY) / 2, height: textY - titleY - 140 };
-    const { awarded, minScatters } = config.freeSpins;
-    this.slides = [
-      slide(width / 2, titleY, textY, 'MEET THE BOSS', 'Chains, shades and a pocket full of gold.\n243 ways to win on every spin!',
-        fit(new Character(), box.height)),
-      this.bigWinSlide(width / 2, titleY, textY, box.height, config),
-      slide(width / 2, titleY, textY, 'FREE SPINS', `Land a BONUS on all ${minScatters} reels for ${awarded} free spins.\nHit them again for even more!`,
-        bonusRow(minScatters, Math.min(box.height * 0.7, (width - 400) / minScatters))),
-    ];
-    this.slides.forEach((s, i) => {
-      s.y = box.y;
-      s.visible = i === 0;
-    });
-
-    this.dots = this.slides.map((_, i) => {
-      const dot = new Graphics().circle(0, 0, 9).fill(0xffffff);
-      dot.position.set(width / 2 + (i - (this.slides.length - 1) / 2) * 36, dotsY);
-      button(dot, () => this.go(i), 18);
-      return dot;
-    });
-    const prev = arrow(-1, 80, box.y, () => this.step(-1));
-    const next = arrow(1, width - 80, box.y, () => this.step(1));
-    this.addChild(title, ...this.slides, ...this.dots, prev, next);
-
     // Swipe anywhere on the splash: left for the next slide, right for the previous one.
     this.eventMode = 'static';
-    this.hitArea = new Rectangle(0, top, width, bottom - top);
-    // Zooms about its middle on the way out.
-    this.pivot.set(width / 2, (top + bottom) / 2);
-    this.position.copyFrom(this.pivot);
     let startX: number | undefined;
     const end = (e: FederatedPointerEvent) => {
       if (startX === undefined) return;
@@ -80,23 +56,62 @@ export class Splash extends Container {
     this.on('pointerdown', (e) => (startX = this.toLocal(e.global).x));
     this.on('pointerup', end);
     this.on('pointerupoutside', end);
+  }
+
+  /** (Re)builds the splash to fill this area. */
+  layout({ width, top, bottom, dotsY, logoHeight }: SplashLayout) {
+    for (const child of this.removeChildren()) {
+      killTweens(child);
+      child.destroy({ children: true });
+    }
+    // The logo stays put while the slides change below it.
+    const title = logo(logoHeight, width - 2 * SIDE);
+    title.position.set(width / 2, top + logoHeight / 2);
+    const titleY = top + logoHeight + 40;
+    const textY = bottom - 50;
+    // The picture fits between the title and the description, and between the arrows.
+    const box = { y: (titleY + textY) / 2, width: width - 2 * SIDE, height: Math.min(textY - titleY - 140, width - 2 * SIDE) };
+    const { awarded, minScatters } = this.config.freeSpins;
+    this.slides = [
+      slide(width / 2, titleY, textY, 'MEET THE BOSS', 'Chains, shades and a pocket full of gold.\n243 ways to win on every spin!',
+        fit(new Character(), box.height)),
+      this.bigWinSlide(width / 2, titleY, textY, box),
+      slide(width / 2, titleY, textY, 'FREE SPINS', `Land a BONUS on all ${minScatters} reels for ${awarded} free spins.\nHit them again for even more!`,
+        bonusRow(minScatters, Math.min(box.height * 0.7, box.width / minScatters))),
+    ];
+    this.slides.forEach((s, i) => {
+      s.y = box.y;
+      s.visible = i === this.index;
+    });
+
+    this.dots = this.slides.map((_, i) => {
+      const dot = new Graphics().circle(0, 0, 9).fill(0xffffff);
+      dot.position.set(width / 2 + (i - (this.slides.length - 1) / 2) * 36, dotsY);
+      button(dot, () => this.go(i), 18);
+      return dot;
+    });
+    const prev = arrow(-1, SIDE / 2, box.y, () => this.step(-1));
+    const next = arrow(1, width - SIDE / 2, box.y, () => this.step(1));
+    this.addChild(title, ...this.slides, ...this.dots, prev, next);
+    this.hitArea = new Rectangle(0, top, width, bottom - top);
+    // Zooms about its middle on the way out.
+    this.pivot.set(width / 2, (top + bottom) / 2);
+    this.position.copyFrom(this.pivot);
     this.updateDots();
+    if (this.isOpen) this.slides[this.index].onShow?.();
   }
 
-  /** Moves the dots, to stay in line with the message. */
-  setDotsY(y: number) {
-    this.dots.forEach((d) => (d.y = y));
-  }
-
-  /** Shows the first slide and listens for the arrow keys until `close()`. */
+  /** Shows the current slide and listens for the arrow keys until `close()`. */
   open() {
     this.visible = true;
     this.alpha = 1;
+    this.isOpen = true;
     window.addEventListener('keydown', this.onKey);
     this.slides[this.index].onShow?.();
   }
 
   async close() {
+    this.isOpen = false;
     window.removeEventListener('keydown', this.onKey);
     // Zooms towards the player as it fades, as if the game comes through it.
     gsap.to(this.scale, { x: 1.3, y: 1.3, duration: 0.6, ease: 'power2.in' });
@@ -135,12 +150,14 @@ export class Splash extends Container {
   }
 
   /** The big win count-up on repeat, from the first tier up to the top one, while its slide is showing. */
-  private bigWinSlide(x: number, titleY: number, textY: number, height: number, { bigWins }: GameConfig) {
+  private bigWinSlide(x: number, titleY: number, textY: number, box: { width: number; height: number }) {
+    const { bigWins } = this.config;
     const bigWin = new BigWin(bigWins);
     const top = bigWins[bigWins.length - 1];
     // The count-up animates the panel's own scale, so the fit goes on the slide's picture holder instead.
     const s: Slide = slide(x, titleY, textY, 'BIG WINS',
-      `Win ${bigWins[0].x}× your bet or more for a big win.\nGo all the way to ${top.title}!`, bigWin, Math.min(1, height / 420));
+      `Win ${bigWins[0].x}× your bet or more for a big win.\nGo all the way to ${top.title}!`, bigWin,
+      Math.min(1, box.height / 420, box.width / 900));
     let looping = false;
     s.onShow = async () => {
       if (looping) return;
@@ -150,6 +167,12 @@ export class Splash extends Container {
     };
     return s;
   }
+}
+
+/** Stops the animations on `node` and everything in it (also on their scales), before it's destroyed. */
+function killTweens(node: Container) {
+  gsap.killTweensOf([node, node.scale]);
+  for (const child of node.children) killTweens(child);
 }
 
 /** A slide: title above, `picture` (scaled by `scale`) centred at y 0, description below. */

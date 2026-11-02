@@ -94,9 +94,10 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   return (
     <>
       {/* One row right under the message: menu, balance | SPIN (centred) + autoplay | bet, cheats.
-          `top` is divided by the zoom because zoom also scales the element's own offsets.
+          Its position and width are divided by the zoom, because zoom scales those too.
           Hidden until the scene has placed it (layout.boardWidth is 0 until then). */}
-      <div style={{ ...styles.row, zoom: scale, top: layout.top / scale, visibility: layout.boardWidth ? 'visible' : 'hidden' }}>
+      <div style={{ ...styles.row, zoom: scale, top: layout.top / scale, left: layout.left / scale, width: layout.width / scale,
+        visibility: layout.boardWidth ? 'visible' : 'hidden' }}>
         <div style={{ ...styles.left, ...others }}>
           <div style={styles.menu}>
           <Menu
@@ -152,7 +153,7 @@ const styles = {
   // Takes SPIN's place (and size) while the game loads, so nothing moves when SPIN appears.
   loading: { width: 110, height: 110, display: 'grid', placeItems: 'center', fontSize: 22, fontWeight: 800, color: colors.gold },
   // One line: SPIN in the exact middle (equal side columns), each side tucked in towards it.
-  row: { position: 'absolute', left: 0, right: 0, display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 28 },
+  row: { position: 'absolute', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 28 },
   left: { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 28 },
   // Size of each control relative to its own design size: SPIN stands out most, then autoplay.
   control: { zoom: 1.1 },

@@ -68,7 +68,8 @@ export class BigWin extends Container {
     return [...this.tiers].reverse().find((t) => win >= t.x * bet);
   }
 
-  async play(win: number, bet: number) {
+  /** `onCounted` runs once the count-up is done (or skipped), before the hold and fade-out. */
+  async play(win: number, bet: number, onCounted?: () => void) {
     const top = this.tiers.indexOf(this.tierFor(win, bet)!);
     let shown = -1;
     const counter = { value: 0 };
@@ -95,6 +96,7 @@ export class BigWin extends Container {
     }
     await this.tween;
     this.tween = undefined;
+    onCounted?.();
     counter.value = win;
     update();
     gsap.fromTo(this.amount.scale, { x: 1.25, y: 1.25 }, { x: 1, y: 1, duration: 0.4, ease: 'back.out(2)' });

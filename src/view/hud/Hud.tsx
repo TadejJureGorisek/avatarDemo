@@ -86,8 +86,9 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     <>
       {!s.ready && <div style={styles.loading}>Loading…</div>}
       {/* One row right under the message: menu, balance | SPIN (centred) + autoplay | bet, cheats.
-          `top` is divided by the zoom because zoom also scales the element's own offsets. */}
-      <div style={{ ...styles.row, zoom: scale, top: layout.top / scale }}>
+          `top` is divided by the zoom because zoom also scales the element's own offsets.
+          Hidden until the scene is in, so it shows up together with the board and character. */}
+      <div style={{ ...styles.row, zoom: scale, top: layout.top / scale, visibility: s.ready ? 'visible' : 'hidden' }}>
         <div style={styles.left}>
           <div style={styles.menu}>
           <Menu

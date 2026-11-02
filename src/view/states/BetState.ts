@@ -27,8 +27,23 @@ export const BetState: GameState = {
     // The last free spin just finished: pay the round's total into the balance and announce it.
     if (result?.isFreeSpin && !engine.freeSpinsLeft) {
       const total = engine.freeSpinsTotal;
-      updateHud({ balance: engine.balance, freeSpin: false });
-      await popup.show(total > 0 ? `CONGRATULATIONS,\nYOU WON: ${total.toFixed(2)} $` : 'Free spins complete!');
+      const announcement = total > 0 ? `CONGRATULATIONS,\nYOU WON: ${total.toFixed(2)} $` : 'Free spins complete!';
+      updateHud({ balance: engine.balance });
+      if (ctx.autoplayRunning()) {
+        // Autoplay presses SPIN by itself: announce and carry on.
+        await popup.show(announcement);
+      } else {
+        // The pop-up stays up until the player presses SPIN, then we go back to the base game
+        // (a cheat picked here lines up the next spin instead of starting it).
+        await popup.open(announcement);
+        message.text = 'Press SPIN to continue!';
+        updateHud({ continueReady: true });
+        const cheat = await waitForSpin();
+        if (cheat) engine.forceNext(cheat);
+        updateHud({ continueReady: false });
+        void popup.close();
+        message.text = 'Press SPIN to play';
+      }
       background.setFreeSpins(false);
     }
 

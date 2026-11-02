@@ -42,7 +42,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const betState = (i: number) => ({ bet: bets[i], atMinBet: i === 0, atMaxBet: i === bets.length - 1 });
   const [hud, setHud] = useState<HudState>({
     ready: false, state: 'bet', balance: engine.balance, ...betState(defaultBetIndex),
-    freeSpinsLeft: 0, freeSpin: false, autoplayLeft: 0, freeSpinsReady: false,
+    freeSpinsLeft: 0, freeSpin: false, autoplayLeft: 0, freeSpinsReady: false, continueReady: false,
   });
   const update = (patch: Partial<HudState>) => setHud((s) => ({ ...s, ...patch }));
   const [history, setHistory] = useState<HistoryEntry[]>([]);

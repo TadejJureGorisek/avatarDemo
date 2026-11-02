@@ -26,6 +26,8 @@ export interface HudState {
   autoplayLeft: number;
   /** Free spins were just won and wait for the player to press SPIN to start them. */
   freeSpinsReady: boolean;
+  /** Free spins just ended and the result waits for the player to press SPIN to continue. */
+  continueReady: boolean;
 }
 
 interface Props {
@@ -63,11 +65,13 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   // stops autoplay), and the picked spins while the mini autoplay pop-up is open (pressing it starts autoplay).
   const [spinLabel, spinAria] = autoOpen ? [autoChoice, `Start autoplay, ${autoChoice} spins`]
     : s.freeSpinsReady ? [s.freeSpinsLeft, `Start ${s.freeSpinsLeft} free spins`]
+    : s.continueReady ? [<SpinIcon />, 'Continue']
     : inFreeSpins ? [s.freeSpinsLeft, `${s.freeSpinsLeft} free spins left`]
     : autoplay ? [s.autoplayLeft, `Stop autoplay, ${s.autoplayLeft} spins left`]
     : s.state === 'spin' ? [<StopIcon />, 'Stop'] : [<SpinIcon />, 'Spin'];
-  // SPIN is live while free spins wait to be started, even though the rest stays locked.
-  const spinDisabled = !s.freeSpinsReady && (!s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay)
+  // SPIN is live while free spins wait to be started or their result waits to be closed, even
+  // though the rest stays locked.
+  const spinDisabled = !s.freeSpinsReady && !s.continueReady && (!s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay)
     || (autoOpen && locked) || (stopPressed && !autoplay));
   const pressSpin = () => {
     if (!autoOpen) {

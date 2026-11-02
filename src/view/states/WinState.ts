@@ -28,7 +28,9 @@ export const WinState: GameState = {
     else message.text = `Win on ${ways} way${ways > 1 ? 's' : ''}!`;
 
     if (!r.freeSpinsAwarded) return 'bet';
-    const announcement = `CONGRATULATIONS,\nYOU WON ${r.freeSpinsAwarded} FREE SPINS`;
+    const announcement = r.isFreeSpin
+      ? `CONGRATULATIONS,\nYOU WON ${r.freeSpinsAwarded} ADDITIONAL FREE SPINS!`
+      : `CONGRATULATIONS,\nYOU WON ${r.freeSpinsAwarded} FREE SPINS`;
 
     // A retrigger mid-round, or autoplay (which presses SPIN by itself): announce and carry on.
     if (r.isFreeSpin || ctx.autoplayRunning()) {

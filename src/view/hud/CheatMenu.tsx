@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react';
 import type { GameConfig } from '../../engine/config';
-import { colors, disabledLook } from './theme';
+import { colors } from './theme';
 
 export type Cheat = keyof GameConfig['winCheats'] | 'freeSpins';
 
@@ -13,26 +13,27 @@ const CHEATS: { cheat: Cheat; label: string }[] = [
 ];
 
 interface Props {
-  disabled: boolean;
   onCheat: (cheat: Cheat) => void;
 }
 
-/** Demo shortcuts: force the next spin to land a big win tier or to trigger free spins. */
-export function CheatMenu({ disabled, onCheat }: Props) {
+/**
+ * Demo shortcuts: force the next spin to land a big win tier or to trigger free spins. Always
+ * available, so a cheat can also be lined up for the next spin of free spins or autoplay.
+ */
+export function CheatMenu({ onCheat }: Props) {
   const [open, setOpen] = useState(false);
   const pick = (cheat: Cheat) => {
     setOpen(false);
     onCheat(cheat);
   };
 
-  const option = { ...button, ...disabledLook(disabled) };
   return (
     <div style={{ position: 'relative' }}>
       <button style={{ ...button, width: '100%' }} onClick={() => setOpen(!open)}>CHEATS</button>
       {open && (
         <div style={menu}>
           {CHEATS.map(({ cheat, label }) => (
-            <button key={cheat} style={option} onClick={() => pick(cheat)} disabled={disabled}>{label}</button>
+            <button key={cheat} style={button} onClick={() => pick(cheat)}>{label}</button>
           ))}
         </div>
       )}

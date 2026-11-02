@@ -59,9 +59,15 @@ export function MainView({ engine }: { engine: SlotEngine }) {
           engine, ...scene,
           bet: () => engine.config.bets[betIndex.current],
           updateHud: update,
-          waitForSpin: () => new Promise((resolve) => (spinRequest.current = resolve)),
+          waitForSpin: () => new Promise((resolve) => {
+            spinRequest.current = (cheat) => {
+              spinRequest.current = undefined;
+              resolve(cheat);
+            };
+          }),
           waitForStop: () => new Promise((resolve) => (stopRequest.current = resolve)),
           takeAutoSpin: () => autoplayLeft.current > 0 && (setAutoplay(autoplayLeft.current - 1), true),
+          autoplayRunning: () => autoplayLeft.current > 0,
           stopAutoplay: () => setAutoplay(0),
           recordSpin: (entry) => setHistory((h) => [entry, ...h].slice(0, 50)),
         },
@@ -99,7 +105,12 @@ export function MainView({ engine }: { engine: SlotEngine }) {
     else if (machine.current?.current === 'spin') stopRequest.current?.();
     else spinRequest.current?.();
   }, []);
-  const requestCheat = useCallback((cheat: Cheat) => spinRequest.current?.(cheat), []);
+  // A cheat starts the spin when the game is waiting for the player; otherwise (mid-spin, free
+  // spins, autoplay) it lines up the board for whichever spin comes next.
+  const requestCheat = useCallback((cheat: Cheat) => {
+    if (spinRequest.current) spinRequest.current(cheat);
+    else engine.forceNext(cheat);
+  }, [engine]);
   // The first autoplay spin starts now (BetState is waiting for SPIN); the rest come from BetState.
   const startAutoplay = useCallback((spins: number) => {
     setAutoplay(spins - 1);

@@ -1,6 +1,6 @@
 import { useRef, useState, type CSSProperties } from 'react';
 import type { GameConfig } from '../../../engine/config';
-import { colors } from '../theme';
+import { colors, disabledLook } from '../theme';
 import { About } from './About';
 import { Autoplay } from './Autoplay';
 import { History, type HistoryEntry } from './History';
@@ -11,6 +11,8 @@ const TABS = ['HOW TO PLAY', 'ABOUT THE GAME', 'AUTOPLAY', 'HISTORY'] as const;
 type Tab = (typeof TABS)[number];
 
 interface Props {
+  /** Locked during a round (a spin, free spins or autoplay). */
+  disabled: boolean;
   open: boolean;
   /** Panel width in px (the board's on-screen width); 0 until the scene has laid out. */
   width: number;
@@ -35,7 +37,8 @@ export function Menu(p: Props) {
 
   return (
     <>
-      <button style={styles.burger} onClick={() => p.onOpenChange(true)} aria-label="Menu">☰</button>
+      <button style={{ ...styles.burger, ...disabledLook(p.disabled) }} onClick={() => p.onOpenChange(true)}
+        disabled={p.disabled} aria-label="Menu">☰</button>
       {p.open && (
         <div style={styles.overlay} onClick={() => p.onOpenChange(false)}>
           <div style={{ ...styles.panel, width: p.width ? `min(${Math.round(p.width)}px, 100%)` : styles.panel.width }} onClick={(e) => e.stopPropagation()}>

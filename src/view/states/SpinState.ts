@@ -51,7 +51,8 @@ export const SpinState: GameState = {
     if (result.totalWin || result.freeSpinsAwarded) return 'win';
     updateHud({ freeSpinsLeft: engine.freeSpinsLeft });
     if (result.isFreeSpin) message.showFreeSpinsTotal(engine.freeSpinsTotal, !engine.freeSpinsLeft);
-    else message.text = 'Press SPIN to play';
+    // Autoplay presses SPIN by itself, so only ask the player once it has finished.
+    else message.text = ctx.autoplayRunning() ? 'Good luck!' : 'Press SPIN to play';
     return 'bet';
   },
 };

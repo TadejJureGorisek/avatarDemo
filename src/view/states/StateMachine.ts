@@ -32,6 +32,8 @@ export interface GameContext {
   waitForStop: () => Promise<void>;
   /** Uses up one autoplay spin; false when autoplay is off or finished. */
   takeAutoSpin: () => boolean;
+  /** True while more autoplay spins are still to come. */
+  autoplayRunning: () => boolean;
   stopAutoplay: () => void;
   /** Adds a finished spin to the HISTORY tab. */
   recordSpin: (entry: HistoryEntry) => void;

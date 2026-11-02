@@ -85,6 +85,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
         <div>
           <Menu
             open={menuOpen}
+            disabled={locked}
             width={menuWidth}
             onOpenChange={setMenuOpen}
             config={config}
@@ -114,7 +115,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
         <div style={styles.stack}>
           <Balance value={s.balance} />
           <BetControl bet={s.bet} disabled={locked} atMin={s.atMinBet} atMax={s.atMaxBet} onChange={onBetChange} />
-          <CheatMenu disabled={locked} onCheat={onCheat} />
+          <CheatMenu onCheat={onCheat} />
         </div>
       </div>
     </>

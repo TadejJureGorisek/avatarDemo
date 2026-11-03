@@ -31,6 +31,7 @@ interface Slide extends Container {
 
 export class Splash extends Container {
   onFreeSpins?: (showing: boolean) => void;
+  onSlide?: () => void;
   private slides: Slide[] = [];
   private dots: Graphics[] = [];
   private index = 0;
@@ -143,6 +144,7 @@ export class Splash extends Container {
     next.visible = true;
     gsap.fromTo(next, { x: dir * SLIDE_SHIFT, alpha: 0 }, { x: 0, alpha: 1, duration: 0.45, delay: 0.15, ease: 'power2.out' });
     next.onShow?.();
+    this.onSlide?.();
     this.updateDots();
     this.onFreeSpins?.(to === FREE_SPINS_SLIDE);
   }

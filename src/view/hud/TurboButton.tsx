@@ -14,6 +14,7 @@ export function TurboButton({ on, disabled, onToggle }: Props) {
       style={{ ...styles.toggle, ...(on ? styles.on : {}), ...disabledLook(disabled) }}
       disabled={disabled}
       onClick={onToggle}
+      data-sound="toggle"
       aria-label={on ? 'Turbo on' : 'Turbo off'}
       aria-pressed={on}
     >

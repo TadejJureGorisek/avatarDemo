@@ -1,5 +1,6 @@
 import gsap from 'gsap';
 import type { SlotEngine, SpinResult } from '../../engine/SlotEngine';
+import { sound, type Playing } from '../Sound';
 import type { GameState } from './StateMachine';
 
 export const SpinState: GameState = {
@@ -11,6 +12,7 @@ export const SpinState: GameState = {
     wins.clear();
     ctx.symbolInfo.hide();
     board.start(turbo);
+    sound.play('spin');
     const stopPressed = ctx.waitForStop();
     let stopped = false;
     void stopPressed.then(() => (stopped = true));
@@ -30,10 +32,16 @@ export const SpinState: GameState = {
     let extra = 0;
     const stagger = turbo > 1 ? 0 : reelStopStagger;
     const delays = result.grid.map((_, reel) => (reel * stagger + (extra += anticipated(reel) ? anticipationExtra : 0)) / turbo);
+    let tension: Playing | undefined;
+    void stopPressed.then(() => tension?.stop());
     await board.stop(result.grid, delays, (reel) => {
-      if (!anticipated(reel + 1)) return;
+      sound.play(engine.scatter && result.grid[reel].includes(engine.scatter.id) ? 'bonusLand' : 'reelStop');
+      tension?.stop();
+      tension = undefined;
+      if (!anticipated(reel + 1) || stopped) return;
       if (reel === 1) character.startAnticipation();
       board.anticipate(reel + 1);
+      tension = sound.play('anticipation');
     }, stopPressed);
     if (chain >= 2) {
       const reaction = character.play(result.freeSpinsAwarded ? 'bonus_anticipation_win' : 'bonus_anticipation_lose');

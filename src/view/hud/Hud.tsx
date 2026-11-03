@@ -83,8 +83,7 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
       <Menu
         open={menuOpen}
         disabled={locked}
-        width={layout.boardWidth * (layout.portrait ? 1.5 : 0.7)}
-        scale={scale}
+        portrait={layout.portrait}
         onOpenChange={setMenuOpen}
         config={config}
         bet={s.bet}
@@ -96,6 +95,8 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
         canStartAutoplay={!locked}
         onStartAutoplay={onStartAutoplay}
         onStopAutoplay={onStopAutoplay}
+        turbo={s.turbo}
+        onToggleTurbo={onToggleTurbo}
       />
     </div>
   );

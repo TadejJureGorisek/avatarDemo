@@ -38,8 +38,14 @@ start command is needed.
   `bonus_anticipation_win` / `_lose`.
 - **Big wins**: wins of 20× / 35× / 50× / 100× the bet get a count-up (NICE / BIG / MEGA / EPIC WIN)
   with the title stepping up as each threshold is passed. Click to skip.
-- **Menu** (burger): HOW TO PLAY (rules + paytable at the current bet), ABOUT THE GAME, AUTOPLAY,
-  HISTORY (last 50 spins).
+- **Menu** (burger): a full-screen overlay with round icon buttons (on the left, or along the bottom in
+  portrait): HOME (asks to confirm, then opens the developer's LinkedIn), HISTORY (last 50 spins),
+  SETTINGS (Sound FX, Music, spacebar to spin, number-key cheats, turbo; saved in the browser),
+  AUTOPLAY and INFO (rules, paytable at the current bet, game details).
+- **Audio** (ElevenLabs): a base game music loop and a more intense one for free spins (cross-faded),
+  and effects for buttons, reel spin/stop, BONUS landing, anticipation, wins, the big win coin
+  shower and the free spins award. The character's Spine events (`sfx_squat`, `sfx_clink`, ...) play
+  matching sounds. Audio starts on the first click or key press, as browsers require.
 - **CHEATS** (or keys **1–7**): *Small win*, *Nice / Big / Mega / Epic win* (an exact win of that tier),
   *27 ways* (one symbol on every row of reels 1–3), all in `config.winCheats`; *Free spins* forces a
   BONUS on every reel. Picked while waiting for SPIN it starts that spin;
@@ -47,7 +53,8 @@ start command is needed.
 - **Any screen**: a landscape layout (1600×900) and a portrait one (900×1600) for windows clearly
   taller than wide, e.g. phones. The scene scales to fit the window without distorting; the
   background covers the window with its floor under the character's feet.
-- Art: logo, backgrounds, reel frame and big win panel generated with Higgsfield / Meshy; icons
+- Art: logo, backgrounds, reel frame and big win panel generated with Higgsfield / Meshy; sounds and
+  music with ElevenLabs; icons
   from [Lucide](https://lucide.dev) (ISC).
 - RNG: `crypto.getRandomValues`. Tuned by simulation (6M spins): RTP ≈ 96%, hit rate ≈ 28%,
   free spins about 1 in 320 spins.
@@ -66,10 +73,12 @@ src/
     board/             Board (frame, reels), Reel (spins filler, lands stop symbols), Cell
     Splash.ts          intro slides
     Background.ts      base / free spins / splash art, cross-faded
+    Sound.ts           Web Audio effects and music (separate Sound FX / Music volumes)
+    settings.ts        player settings, saved in localStorage
     Frame.ts           the gold reel frame and pop-up panels (nine-slice)
     Wins.ts, BigWin.ts, Popup.ts, Message.ts, SymbolInfo.ts, Character.ts, Logo.ts
     hud/               React HUD: buttons, balance, bet, cheats, icons, burger menu tabs
-public/assets/         symbols, character (Spine), logo, backgrounds, board frame/panel, icons
+public/assets/         symbols, character (Spine), logo, backgrounds, board frame/panel, icons, audio
 ```
 
 Animation uses GSAP; the HUD uses inline styles only (no CSS files). The HUD only sends requests
@@ -88,7 +97,8 @@ the evaluator already substitutes it. A new feature is a new state plus its math
   `character_bonus_anticipation_win`, `character_bonus_anticipation_lose`, `character_wild_throw`,
   `character_wild_landing`.
 - Events for sound: `sfx_squat`, `sfx_smile`, `sfx_unsquat`, `sfx_wiggle`, `sfx_clink`,
-  `sfx_anticipation`, `sfx_wildland`, `sfx_glasses` (no audio was supplied, so they are not hooked up).
+  `sfx_anticipation`, `sfx_wildland`, `sfx_glasses`. No audio was supplied, so I generated sounds for the
+  ones the used animations fire (`Character.ts` maps each event to a sound).
 - The pack ships **no `.atlas`**, only loose PNGs, so I generated
   `public/assets/character/character.atlas`: a multi-page atlas with one page per PNG and one
   full-size region named after the file. That matches the attachment paths, so meshes and regions

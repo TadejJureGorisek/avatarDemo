@@ -3,11 +3,12 @@ import type { GameConfig } from '../../../engine/config';
 import { symbolUrl } from '../../board/Cell';
 import { Section, TabTitle } from './Section';
 
-export function HowToPlay({ config, bet }: { config: GameConfig; bet: number }) {
-  const { reels, rows, freeSpins } = config;
+export function Info({ config, bet }: { config: GameConfig; bet: number }) {
+  const { reels, rows, bets, freeSpins } = config;
   return (
     <>
-      <TabTitle>HOW TO PLAY</TabTitle>
+      <TabTitle>INFO</TabTitle>
+      <Section subtitle="The game">Bling Bling Boss, a {reels}×{rows} video slot with {rows ** reels} ways to win.</Section>
       <Section subtitle="Playing">
         Set your bet with − / + and press SPIN (or Space). Press STOP to land the reels early.
       </Section>
@@ -18,7 +19,7 @@ export function HowToPlay({ config, bet }: { config: GameConfig; bet: number }) 
       </Section>
       <Section subtitle="Free spins">
         BONUS pays anywhere on the board. {freeSpins.minScatters} BONUS (one on every reel) award{' '}
-        {freeSpins.awarded} free spins, played automatically at the same bet.
+        {freeSpins.awarded} free spins, played automatically at the same bet and retriggerable.
       </Section>
       <Section subtitle="Paytable">
         <p style={{ margin: '0 0 12px' }}>Per way, at bet {bet.toFixed(2)}</p>
@@ -35,6 +36,10 @@ export function HowToPlay({ config, bet }: { config: GameConfig; bet: number }) 
           ))}
         </div>
       </Section>
+      <Section subtitle="Bets">From {bets[0].toFixed(2)} to {bets[bets.length - 1].toFixed(2)}.</Section>
+      <Section subtitle="Return to player">About 96%, from simulation.</Section>
+      <Section subtitle="Technology">Built with TypeScript, PixiJS, React and Spine 4.2 as a game developer test.</Section>
+      <Section subtitle="Disclaimer">Malfunctions void all pays and plays.</Section>
     </>
   );
 }

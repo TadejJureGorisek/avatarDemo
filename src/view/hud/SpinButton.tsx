@@ -1,4 +1,5 @@
 import { useEffect, type CSSProperties, type ReactNode } from 'react';
+import { settings } from '../settings';
 import { colors, disabledLook } from './theme';
 
 interface Props {
@@ -11,7 +12,7 @@ interface Props {
 export function SpinButton({ label, ariaLabel, disabled, onPress }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code !== 'Space') return;
+      if (e.code !== 'Space' || !settings.get().spaceToSpin) return;
       e.preventDefault();
       if (!disabled) onPress();
     };

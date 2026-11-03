@@ -1,3 +1,4 @@
+import { sound } from '../Sound';
 import type { GameState } from './StateMachine';
 
 export const WinState: GameState = {
@@ -6,10 +7,16 @@ export const WinState: GameState = {
     const r = result!;
     const big = bigWin.tierFor(r.totalWin, bet());
     wins.show(r.wins, r.totalWin, !big);
+    if (r.totalWin && !big) sound.play('win');
     if (r.totalWin && !r.freeSpinsAwarded) void character.play('small_win');
     if (big) {
       updateHud({ bigWinCounting: true });
-      await bigWin.play(r.totalWin, bet(), () => updateHud({ bigWinCounting: false }));
+      const coins = sound.play('bigWin', { loop: true });
+      await bigWin.play(r.totalWin, bet(), () => {
+        coins.stop(0.6);
+        sound.play('win');
+        updateHud({ bigWinCounting: false });
+      });
       wins.showAmount(r.totalWin);
     }
 
@@ -23,6 +30,7 @@ export const WinState: GameState = {
     else message.text = `Win on ${ways} way${ways > 1 ? 's' : ''}!`;
 
     if (!r.freeSpinsAwarded) return 'bet';
+    sound.play('freeSpins');
     const announcement = r.isFreeSpin
       ? `CONGRATULATIONS,\nYOU WON ${r.freeSpinsAwarded} ADDITIONAL FREE SPINS!`
       : `CONGRATULATIONS,\nYOU WON ${r.freeSpinsAwarded} FREE SPINS`;
@@ -30,6 +38,7 @@ export const WinState: GameState = {
     if (r.isFreeSpin) {
       await popup.show(announcement);
       background.setFreeSpins(true);
+      sound.music('musicFreeSpins');
       return 'bet';
     }
 
@@ -42,6 +51,7 @@ export const WinState: GameState = {
     updateHud({ freeSpinsReady: false });
     void popup.close();
     background.setFreeSpins(true);
+    sound.music('musicFreeSpins');
     return 'spin';
   },
 };

@@ -1,4 +1,5 @@
 import gsap from 'gsap';
+import { sound } from '../Sound';
 import type { GameContext, GameState } from './StateMachine';
 
 const AUTO_SPIN_PAUSE_S = 1;
@@ -35,6 +36,7 @@ export const BetState: GameState = {
         message.text = 'Press SPIN to play';
       }
       background.setFreeSpins(false);
+      sound.music('musicBase');
     }
 
     if (nextAutoSpin(ctx)) {

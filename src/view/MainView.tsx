@@ -18,6 +18,7 @@ import { WinState } from './states/WinState';
 import { logo, LOGO_URL } from './Logo';
 import { Message } from './Message';
 import { Popup } from './Popup';
+import { sound, type Effect } from './Sound';
 import { Splash } from './Splash';
 import { SymbolInfo } from './SymbolInfo';
 import { Wins } from './Wins';
@@ -47,6 +48,15 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const symbolInfoRef = useRef<SymbolInfo>();
   const bigWinRef = useRef<BigWin>();
   const [hudLayout, setHudLayout] = useState<HudLayout>({ top: 0, metersY: 0, left: 0, width: 0, zoom: 1, boardWidth: 0, portrait: false });
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const button = (e.target as Element).closest?.('button');
+      if (button) sound.play((button.dataset.sound as Effect | undefined) ?? 'click');
+    };
+    document.addEventListener('click', onClick, true);
+    return () => document.removeEventListener('click', onClick, true);
+  }, []);
 
   useEffect(() => {
     const app = new Application();
@@ -164,6 +174,8 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
 
   // The splash comes first: its assets load before anything else, and it shows while the rest loads.
   const { symbols } = engine.config;
+  void sound.loadEffects();
+  void sound.loadMusic();
   Assets.add(CHARACTER_ASSETS);
   await Assets.load([...CHARACTER_ASSETS.map((a) => a.alias), LOGO_URL, artUrl('splash'), PANEL_URL,
     ...symbols.filter((s) => s.kind === 'scatter').map((s) => symbolUrl(s.id))]);

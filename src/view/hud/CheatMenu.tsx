@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import type { GameConfig } from '../../engine/config';
+import { settings } from '../settings';
 import { colors } from './theme';
 
 export type Cheat = keyof GameConfig['winCheats'] | 'freeSpins';
@@ -28,7 +29,7 @@ export function CheatMenu({ onCheat }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const entry = CHEATS[Number(e.key) - 1];
-      if (entry && !e.repeat) onCheat(entry.cheat);
+      if (entry && !e.repeat && settings.get().cheatKeys) onCheat(entry.cheat);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

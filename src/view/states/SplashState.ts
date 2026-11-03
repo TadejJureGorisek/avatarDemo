@@ -1,4 +1,5 @@
 import gsap from 'gsap';
+import { sound } from '../Sound';
 import type { GameState } from './StateMachine';
 
 export const SplashState: GameState = {
@@ -6,8 +7,12 @@ export const SplashState: GameState = {
     const game = [logo, character, board, wins, message];
     game.forEach((o) => (o.visible = false));
     splash.onFreeSpins = (showing) => background.setGold(showing ? 0.35 : 0);
+    splash.onSlide = () => sound.play('whoosh');
     splash.open();
+    sound.music('musicBase');
     await waitForSpin();
+    splash.onSlide = undefined;
+    sound.play('whoosh');
     updateHud({ state: 'bet' });
     background.setFreeSpins(false);
     background.setSplash(false);

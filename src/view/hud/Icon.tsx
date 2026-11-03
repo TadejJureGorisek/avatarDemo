@@ -1,4 +1,5 @@
-export type IconName = 'spin' | 'stop' | 'autoplay' | 'continue' | 'turbo' | 'menu' | 'close';
+export type IconName = 'spin' | 'stop' | 'autoplay' | 'continue' | 'turbo' | 'menu' | 'close'
+  | 'home' | 'history' | 'settings' | 'info';
 
 export function Icon({ name, size }: { name: IconName; size: number }) {
   const mask = `url(assets/icons/${name}.svg) center / contain no-repeat`;

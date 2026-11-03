@@ -38,8 +38,8 @@ start command is needed.
   `bonus_anticipation_win` / `_lose`.
 - **Big wins**: wins of 20× / 35× / 50× / 100× the bet get a count-up (NICE / BIG / MEGA / EPIC WIN)
   with the title stepping up as each threshold is passed. Click to skip.
-- **Menu** (burger): a full-screen overlay with round icon buttons (on the left, or along the bottom in
-  portrait): HOME (asks to confirm, then opens the developer's LinkedIn), HISTORY (last 50 spins),
+- **Menu** (round burger): it turns into CLOSE in place and the other round icon buttons fan out from
+  it (to the right in landscape, upwards in portrait) over a blurred overlay: HOME (asks to confirm, then opens the developer's LinkedIn), HISTORY (last 50 spins),
   SETTINGS (Sound FX, Music, spacebar to spin, number-key cheats, turbo; saved in the browser),
   AUTOPLAY and INFO (rules, paytable at the current bet, game details).
 - **Audio** (ElevenLabs): a base game music loop and a more intense one for free spins (cross-faded),

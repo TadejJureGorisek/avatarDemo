@@ -10,7 +10,7 @@ export function useDragScroll(ref: RefObject<HTMLElement>) {
     let dragging = false;
 
     const down = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      if (e.pointerType !== 'mouse' || e.button !== 0 || (e.target as Element).closest('input, select, textarea')) return;
       start = { y: e.clientY, scrollTop: el.scrollTop };
       dragging = false;
     };

@@ -96,16 +96,11 @@ function iconImage(name: string, color: string, onReady: () => void) {
   return undefined;
 }
 
-/** An SVG icon drawn on a canvas, in the CSS `color` it inherits. */
-export function CanvasIcon({ name, size }: { name: string; size: number }) {
-  const color = useRef('');
+/** An SVG icon drawn on a canvas. The colour is passed in, not read from CSS, which forced dark mode rewrites. */
+export function CanvasIcon({ name, size, color }: { name: string; size: number; color: string }) {
   const { ref, paint } = useCanvas((g, w, h) => {
-    color.current = getComputedStyle(ref.current!).color;
-    const image = iconImage(name, color.current, paint);
+    const image = iconImage(name, color, paint);
     if (image) g.drawImage(image, 0, 0, w, h);
-  }, name);
-  useLayoutEffect(() => {
-    if (ref.current && getComputedStyle(ref.current).color !== color.current) paint();
-  });
+  }, `${name}|${color}`);
   return <canvas ref={ref} aria-hidden style={{ display: 'block', width: size, height: size }} />;
 }

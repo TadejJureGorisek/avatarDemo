@@ -94,7 +94,7 @@ export function Menu(p: Props) {
   return (
     <>
       <button ref={burger} style={{ ...styles.burger, ...disabledLook(p.disabled) }}
-        onClick={() => p.onOpenChange(true)} data-sound="whoosh" disabled={p.disabled} aria-label="Menu"><Paint look={looks.ring} /><Icon name="menu" size={26} /></button>
+        onClick={() => p.onOpenChange(true)} data-sound="whoosh" disabled={p.disabled} aria-label="Menu"><Paint look={looks.ring} /><Icon name="menu" size={26} color={colors.gold} /></button>
       {p.open && createPortal(
         <div style={{ ...styles.overlay, opacity: expanded ? 1 : 0 }}>
           <div style={{ ...styles.content, ...contentBox }} ref={content}>
@@ -142,7 +142,7 @@ export function Menu(p: Props) {
               <div style={{ ...styles.dialog, zoom: Math.min(innerWidth / 700, innerHeight / 520, 1.4) }}
                 onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Confirm choice">
                 <button style={styles.dialogClose} onClick={() => setConfirmHome(false)} aria-label="Close">
-                  <Icon name="close" size={28} />
+                  <Icon name="close" size={28} color="#fff" />
                 </button>
                 <h2 style={styles.dialogTitle}>CONFIRM CHOICE</h2>
                 <p style={styles.dialogText}>
@@ -177,7 +177,7 @@ function RoundButton({ icon, label, size, active = false, style, onClick }: Roun
     <button style={{ ...styles.round, ...(active ? styles.roundActive : {}), width: size, height: size, ...style }}
       onClick={onClick} aria-label={label} aria-pressed={active}>
       <Paint look={active ? looks.ringOn : { radius: 'round', fill: '#1a0b3d', border: { width: 3, color: colors.gold } }} />
-      <Icon name={icon} size={size * 0.5} />
+      <Icon name={icon} size={size * 0.5} color={active ? colors.dark : '#fff'} />
     </button>
   );
 }

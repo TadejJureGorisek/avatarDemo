@@ -35,7 +35,7 @@ export function AutoplayButton({ open, choice, disabled, onToggle, onChoose }: P
         aria-label={open ? 'Close autoplay' : 'Autoplay'}
       >
         <Paint look={looks.ring} />
-        <Icon name={open ? 'close' : 'autoplay'} size={open ? 20 : 26} />
+        <Icon name={open ? 'close' : 'autoplay'} size={open ? 20 : 26} color={colors.gold} />
       </button>
     </div>
   );

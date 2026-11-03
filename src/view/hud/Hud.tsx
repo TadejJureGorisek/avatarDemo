@@ -63,13 +63,13 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     opacity: intro ? 0 : 1, pointerEvents: intro ? 'none' : undefined,
     filter: s.dimmed ? 'brightness(0.5)' : undefined, transition: 'opacity 0.5s, filter 0.3s',
   };
-  const [spinLabel, spinAria] = splash ? [<Icon name="continue" size={44} />, 'Continue']
+  const [spinLabel, spinAria] = splash ? [<Icon name="continue" size={44} color={colors.dark} />, 'Continue']
     : autoOpen ? [autoChoice, `Start autoplay, ${autoChoice} spins`]
-    : s.freeSpinsReady ? [<Icon name="spin" size={44} />, `Start ${s.freeSpinsLeft} free spins`]
-    : s.continueReady ? [<Icon name="spin" size={44} />, 'Continue']
+    : s.freeSpinsReady ? [<Icon name="spin" size={44} color={colors.dark} />, `Start ${s.freeSpinsLeft} free spins`]
+    : s.continueReady ? [<Icon name="spin" size={44} color={colors.dark} />, 'Continue']
     : inFreeSpins ? [s.freeSpinsLeft, `${s.freeSpinsLeft} free spins left`]
     : autoplay ? [s.autoplayLeft, `Stop autoplay, ${s.autoplayLeft} spins left`]
-    : s.state === 'spin' ? [<Icon name="stop" size={30} />, 'Stop'] : [<Icon name="spin" size={44} />, 'Spin'];
+    : s.state === 'spin' ? [<Icon name="stop" size={30} color={colors.dark} />, 'Stop'] : [<Icon name="spin" size={44} color={colors.dark} />, 'Spin'];
   const spinDisabled = !s.freeSpinsReady && !s.continueReady && !s.bigWinCounting && (!s.ready || menuOpen || inFreeSpins || (s.state === 'win' && !autoplay)
     || (autoOpen && locked) || (stopPressed && !autoplay));
   const pressSpin = () => {

@@ -20,7 +20,7 @@ export function TurboButton({ on, disabled, onToggle }: Props) {
       aria-pressed={on}
     >
       <Paint look={on ? looks.ringOn : looks.ring} />
-      <Icon name="turbo" size={26} />
+      <Icon name="turbo" size={26} color={on ? colors.dark : colors.gold} />
     </button>
   );
 }

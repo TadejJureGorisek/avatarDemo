@@ -41,7 +41,7 @@ start command is needed.
 - **Menu** (round burger): round icon buttons fly out of it into a centred column on the left
   (landscape) or a centred row at the bottom (portrait), over a blurred overlay: CLOSE, HOME (asks to confirm, then opens the developer's LinkedIn), HISTORY (last 50 spins),
   SETTINGS (Master, Sound FX and Music volume sliders with on/off toggles, spacebar to spin, turbo; saved in the browser),
-  AUTOPLAY and INFO (rules, paytable at the current bet, game details).
+  AUTOPLAY (10/25/50/100 or a custom count up to 999, typed or built with +1/+10/+100) and INFO (rules, paytable at the current bet, game details).
 - **Audio** (ElevenLabs): a base game music loop and a more intense one for free spins (cross-faded),
   and effects for buttons, reel spin/stop, BONUS landing, anticipation, wins, the big win coin
   shower and the free spins award. The character's Spine events (`sfx_squat`, `sfx_clink`, ...) play

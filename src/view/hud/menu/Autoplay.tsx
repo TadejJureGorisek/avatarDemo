@@ -1,8 +1,11 @@
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { AUTOPLAY_COUNTS } from '../AutoplayButton';
 import { BetControl } from '../BetControl';
 import { colors, disabledLook } from '../theme';
 import { Section, TabTitle } from './Section';
+
+const MAX_SPINS = 999;
+const STEPS = [1, 10, 100];
 
 interface Props {
   bet: number;
@@ -16,6 +19,9 @@ interface Props {
 }
 
 export function Autoplay({ bet, atMinBet, atMaxBet, onBetChange, autoplayLeft, canStart, onStart, onStop }: Props) {
+  const [custom, setCustom] = useState('');
+  const spins = Math.min(MAX_SPINS, Math.floor(Number(custom)));
+  const canStartCustom = canStart && spins >= 1;
   if (autoplayLeft > 0) {
     return (
       <>
@@ -47,13 +53,44 @@ export function Autoplay({ bet, atMinBet, atMaxBet, onBetChange, autoplayLeft, c
             </button>
           ))}
         </div>
+        <div style={customRow}>
+          <input
+            type="text" inputMode="numeric" placeholder="Custom" value={custom}
+            aria-label="Custom number of spins" disabled={!canStart} style={input}
+            onChange={(e) => setCustom(e.target.value.replace(/\D/g, '').slice(0, 3))}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === 'Enter' && canStartCustom) onStart(spins);
+            }}
+          />
+          <button style={{ ...button, ...disabledLook(!canStartCustom) }} disabled={!canStartCustom} onClick={() => onStart(spins)}>
+            {canStartCustom ? `Start ${spins} spins` : 'Start'}
+          </button>
+        </div>
+        <div style={customRow}>
+          {STEPS.map((n) => (
+            <button key={n} style={{ ...stepButton, ...disabledLook(!canStart) }} disabled={!canStart}
+              onClick={() => setCustom((c) => String(Math.min(MAX_SPINS, (Number(c) || 0) + n)))}>+{n}</button>
+          ))}
+          <button style={{ ...stepButton, ...disabledLook(!canStart || !custom) }} disabled={!canStart || !custom}
+            onClick={() => setCustom('')}>Clear</button>
+        </div>
         {!canStart && <p style={{ margin: '10px 0 0' }}>Wait for the current spin to finish.</p>}
       </Section>
     </>
   );
 }
 
+const customRow: CSSProperties = { display: 'flex', gap: 10, justifyContent: 'center', marginTop: 14 };
+const input: CSSProperties = {
+  width: 110, padding: '10px 12px', borderRadius: 10, boxSizing: 'border-box', textAlign: 'center',
+  border: `2px solid ${colors.gold}`, background: colors.panel, color: '#fff', fontSize: 16, fontWeight: 800,
+};
+
 const button: CSSProperties = {
   padding: '10px 18px', borderRadius: 10, border: 'none', fontWeight: 800,
   background: colors.gold, color: colors.dark, cursor: 'pointer',
+};
+const stepButton: CSSProperties = {
+  ...button, minWidth: 64, padding: '8px 12px', background: colors.panel, color: colors.gold, border: `2px solid ${colors.gold}`,
 };

@@ -23,6 +23,7 @@ export interface Playing {
 
 class Sound {
   private context = new AudioContext();
+  private master = this.context.createGain();
   private effects = this.context.createGain();
   private musicBus = this.context.createGain();
   private buffers = new Map<string, AudioBuffer>();
@@ -32,8 +33,9 @@ class Sound {
   private wanted?: Music;
 
   constructor() {
-    this.effects.connect(this.context.destination);
-    this.musicBus.connect(this.context.destination);
+    this.master.connect(this.context.destination);
+    this.effects.connect(this.master);
+    this.musicBus.connect(this.master);
     this.applySettings(0);
     settings.subscribe(() => this.applySettings(0.05));
     const unlock = () => void this.context.resume();
@@ -68,10 +70,11 @@ class Sound {
   }
 
   private applySettings(fade: number) {
-    const { soundFx, music } = settings.get();
+    const { masterVolume, soundFx, soundFxVolume, music, musicVolume } = settings.get();
     const t = this.context.currentTime;
-    this.effects.gain.setTargetAtTime(soundFx ? 1 : 0, t, fade || 0.001);
-    this.musicBus.gain.setTargetAtTime(music ? 1 : 0, t, fade || 0.001);
+    this.master.gain.setTargetAtTime(masterVolume, t, fade || 0.001);
+    this.effects.gain.setTargetAtTime(soundFx ? soundFxVolume : 0, t, fade || 0.001);
+    this.musicBus.gain.setTargetAtTime(music ? musicVolume : 0, t, fade || 0.001);
   }
 
   private async load(name: string) {

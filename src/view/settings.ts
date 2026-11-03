@@ -1,14 +1,19 @@
 import { useSyncExternalStore } from 'react';
 
 export interface Settings {
+  masterVolume: number;
   soundFx: boolean;
+  soundFxVolume: number;
   music: boolean;
+  musicVolume: number;
   spaceToSpin: boolean;
   cheatKeys: boolean;
 }
 
 const KEY = 'settings';
-const DEFAULTS: Settings = { soundFx: true, music: true, spaceToSpin: true, cheatKeys: true };
+const DEFAULTS: Settings = {
+  masterVolume: 1, soundFx: true, soundFxVolume: 1, music: true, musicVolume: 0.8, spaceToSpin: true, cheatKeys: true,
+};
 
 function load(): Settings {
   try {

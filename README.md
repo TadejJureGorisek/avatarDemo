@@ -40,7 +40,7 @@ start command is needed.
   with the title stepping up as each threshold is passed. Click to skip.
 - **Menu** (round burger): it turns into CLOSE in place and the other round icon buttons fan out from
   it (to the right in landscape, upwards in portrait) over a blurred overlay: HOME (asks to confirm, then opens the developer's LinkedIn), HISTORY (last 50 spins),
-  SETTINGS (Sound FX, Music, spacebar to spin, number-key cheats, turbo; saved in the browser),
+  SETTINGS (Master, Sound FX and Music volume sliders with on/off toggles, spacebar to spin, number-key cheats, turbo; saved in the browser),
   AUTOPLAY and INFO (rules, paytable at the current bet, game details).
 - **Audio** (ElevenLabs): a base game music loop and a more intense one for free spins (cross-faded),
   and effects for buttons, reel spin/stop, BONUS landing, anticipation, wins, the big win coin

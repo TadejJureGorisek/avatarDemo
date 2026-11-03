@@ -24,6 +24,7 @@ export class Wins extends Container {
     if (!wins.length) return;
     this.winning = [...new Set(wins.flatMap((w) => w.positions.map((p) => this.board.cell(p.reel, p.row))))];
     for (const cell of this.winning) {
+      cell.setLit(true);
       gsap.to(cell.scale, { x: cell.scale.x * 1.1, y: cell.scale.y * 1.1, duration: 0.3, ease: 'sine.inOut',
         yoyo: true, repeat: -1 });
     }
@@ -38,6 +39,7 @@ export class Wins extends Container {
   clear() {
     for (const cell of this.winning) {
       gsap.killTweensOf(cell.scale);
+      cell.setLit(false);
       cell.fit();
     }
     this.winning = [];

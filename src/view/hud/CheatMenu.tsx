@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import type { GameConfig } from '../../engine/config';
+import { Paint, painted } from './Paint';
 import { colors } from './theme';
 
 export type Cheat = keyof GameConfig['winCheats'] | 'freeSpins';
@@ -36,11 +37,11 @@ export function CheatMenu({ onCheat }: Props) {
 
   return (
     <div style={{ position: 'relative' }}>
-      <button style={{ ...button, width: '100%' }} onClick={() => setOpen(!open)}>CHEATS</button>
+      <button style={{ ...button, width: '100%' }} onClick={() => setOpen(!open)}><Paint look={look} />CHEATS</button>
       {open && (
         <div style={menu}>
           {CHEATS.map(({ cheat, label }, i) => (
-            <button key={cheat} style={button} onClick={() => pick(cheat)}>{i + 1}  {label}</button>
+            <button key={cheat} style={button} onClick={() => pick(cheat)}><Paint look={look} />{i + 1}  {label}</button>
           ))}
         </div>
       )}
@@ -55,5 +56,7 @@ const menu: CSSProperties = {
 
 const button: CSSProperties = {
   padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 700,
-  border: `2px solid ${colors.border}`, background: colors.panel, color: colors.gold,
+  ...painted, color: colors.gold,
 };
+
+const look = { radius: 8, fill: colors.panel, border: { width: 2, color: colors.border } };

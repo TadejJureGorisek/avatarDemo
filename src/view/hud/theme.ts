@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import type { Look } from './Paint';
 
 export const colors = { gold: '#ffc94a', dark: '#3a1500', panel: 'rgb(26 11 61 / 0.9)', border: 'rgb(255 201 74 / 0.5)' };
 
@@ -16,3 +17,9 @@ export const value: CSSProperties = {
 
 export const disabledLook = (disabled: boolean): CSSProperties =>
   ({ opacity: disabled ? 0.4 : 1, cursor: disabled ? 'default' : 'pointer' });
+
+export const looks = {
+  ring: { radius: 'round', fill: colors.panel, border: { width: 3, color: colors.gold } },
+  ringOn: { radius: 'round', fill: colors.gold, border: { width: 3, color: colors.gold } },
+  spin: { radius: 'round', fill: ['#ffe27a', '#f8b032', '#f39a0f', '#b25e00'], border: { width: 5, color: '#fff3c4' } },
+} satisfies Record<string, Look>;

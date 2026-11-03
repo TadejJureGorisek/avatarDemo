@@ -1,6 +1,7 @@
 import { useEffect, type CSSProperties, type ReactNode } from 'react';
 import { settings } from '../settings';
-import { colors, disabledLook } from './theme';
+import { Paint, painted } from './Paint';
+import { colors, disabledLook, looks } from './theme';
 
 interface Props {
   label: ReactNode;
@@ -22,7 +23,10 @@ export function SpinButton({ label, ariaLabel, disabled, onPress }: Props) {
 
   return (
     <button style={{ ...style, ...disabledLook(disabled) }} onClick={onPress} disabled={disabled} aria-label={ariaLabel}>
-      {label}
+      <Paint look={typeof label === 'number' || typeof label === 'string'
+        ? { ...looks.spin, text: { value: String(label), color: colors.dark, font: '900 30px system-ui, sans-serif' } }
+        : looks.spin} />
+      {typeof label === 'number' || typeof label === 'string' ? null : label}
     </button>
   );
 }
@@ -30,7 +34,6 @@ export function SpinButton({ label, ariaLabel, disabled, onPress }: Props) {
 const style: CSSProperties = {
   width: 100, aspectRatio: '1', borderRadius: '50%',
   display: 'grid', placeItems: 'center', padding: 0,
-  border: '5px solid #fff3c4', color: colors.dark, fontSize: 30, fontWeight: 900,
-  background: 'radial-gradient(circle at 35% 30%, #ffe27a, #f39a0f 60%, #b25e00)',
+  ...painted, color: colors.dark, fontSize: 30, fontWeight: 900,
   boxShadow: '0 6px 24px rgb(0 0 0 / 0.5)',
 };

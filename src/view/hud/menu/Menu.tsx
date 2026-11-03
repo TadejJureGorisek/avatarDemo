@@ -2,7 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
 import { Icon, type IconName } from '../Icon';
 import { createPortal } from 'react-dom';
 import type { GameConfig } from '../../../engine/config';
-import { colors, disabledLook } from '../theme';
+import { Paint, painted } from '../Paint';
+import { colors, disabledLook, looks } from '../theme';
 import { Autoplay } from './Autoplay';
 import { History, type HistoryEntry } from './History';
 import { Info } from './Info';
@@ -93,7 +94,7 @@ export function Menu(p: Props) {
   return (
     <>
       <button ref={burger} style={{ ...styles.burger, ...disabledLook(p.disabled) }}
-        onClick={() => p.onOpenChange(true)} data-sound="whoosh" disabled={p.disabled} aria-label="Menu"><Icon name="menu" size={26} /></button>
+        onClick={() => p.onOpenChange(true)} data-sound="whoosh" disabled={p.disabled} aria-label="Menu"><Paint look={looks.ring} /><Icon name="menu" size={26} /></button>
       {p.open && createPortal(
         <div style={{ ...styles.overlay, opacity: expanded ? 1 : 0 }}>
           <div style={{ ...styles.content, ...contentBox }} ref={content}>
@@ -184,7 +185,7 @@ const styles = {
   burger: {
     width: 52, height: 52, borderRadius: '50%', cursor: 'pointer', boxSizing: 'border-box',
     display: 'grid', placeItems: 'center', padding: 0,
-    border: `3px solid ${colors.gold}`, background: colors.panel, color: colors.gold,
+    ...painted, color: colors.gold,
   },
   overlay: {
     position: 'fixed', inset: 0, zIndex: 10, transition: `opacity ${EXPAND_S}s`,

@@ -83,7 +83,9 @@ src/
 public/assets/         symbols, character (Spine), logo, backgrounds, board frame/panel, icons, audio
 ```
 
-Animation uses GSAP; the HUD uses inline styles only (no CSS files). The HUD only sends requests
+Animation uses GSAP; the HUD uses inline styles only (no CSS files). The bright HUD fills, rings and icons
+are drawn on small canvases (`hud/Paint.tsx`), because phone browsers with a forced dark mode (e.g.
+Samsung Internet) recolour page elements but leave canvases alone. The HUD only sends requests
 (spin, stop, cheat, autoplay, turbo); the states decide what happens.
 
 **Extending:** the board size comes from the engine (`engine.reels` × `engine.rows`, set in

@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { Icon } from './Icon';
-import { colors, disabledLook } from './theme';
+import { Paint, painted } from './Paint';
+import { colors, disabledLook, looks } from './theme';
 
 interface Props {
   on: boolean;
@@ -18,6 +19,7 @@ export function TurboButton({ on, disabled, onToggle }: Props) {
       aria-label={on ? 'Turbo on' : 'Turbo off'}
       aria-pressed={on}
     >
+      <Paint look={on ? looks.ringOn : looks.ring} />
       <Icon name="turbo" size={26} />
     </button>
   );
@@ -26,7 +28,7 @@ export function TurboButton({ on, disabled, onToggle }: Props) {
 const styles = {
   toggle: {
     width: 52, height: 52, borderRadius: '50%', display: 'grid', placeItems: 'center', padding: 0,
-    border: `3px solid ${colors.gold}`, background: colors.panel, color: colors.gold,
+    ...painted, color: colors.gold,
   },
-  on: { background: colors.gold, color: colors.dark, boxShadow: `0 0 16px ${colors.gold}` },
+  on: { color: colors.dark, boxShadow: `0 0 16px ${colors.gold}` },
 } satisfies Record<string, CSSProperties>;

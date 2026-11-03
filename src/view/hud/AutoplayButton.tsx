@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { Icon } from './Icon';
-import { colors, disabledLook } from './theme';
+import { Paint, painted } from './Paint';
+import { colors, disabledLook, looks } from './theme';
 
 export const AUTOPLAY_COUNTS = [10, 25, 50, 100];
 
@@ -18,8 +19,11 @@ export function AutoplayButton({ open, choice, disabled, onToggle, onChoose }: P
       {open && (
         <div style={styles.popup}>
           {AUTOPLAY_COUNTS.map((n) => (
-            <button key={n} style={{ ...styles.option, ...(n === choice ? styles.chosen : {}) }} onClick={() => onChoose(n)}>
-              {n}
+            <button key={n} style={styles.option} onClick={() => onChoose(n)}>
+              <Paint look={n === choice
+                ? { radius: 8, fill: colors.gold, text: { value: String(n), color: colors.dark, font: '800 16px system-ui, sans-serif' } }
+                : { radius: 8, border: { width: 2, color: colors.border } }} />
+              {n === choice ? ' ' : n}
             </button>
           ))}
         </div>
@@ -30,6 +34,7 @@ export function AutoplayButton({ open, choice, disabled, onToggle, onChoose }: P
         onClick={onToggle}
         aria-label={open ? 'Close autoplay' : 'Autoplay'}
       >
+        <Paint look={looks.ring} />
         <Icon name={open ? 'close' : 'autoplay'} size={open ? 20 : 26} />
       </button>
     </div>
@@ -41,7 +46,7 @@ const styles = {
   toggle: {
     width: 52, height: 52, borderRadius: '50%', fontSize: 18, fontWeight: 900,
     display: 'grid', placeItems: 'center', padding: 0,
-    border: `3px solid ${colors.gold}`, background: colors.panel, color: colors.gold,
+    ...painted, color: colors.gold,
   },
   popup: {
     position: 'absolute', bottom: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)',
@@ -50,7 +55,6 @@ const styles = {
   },
   option: {
     width: 56, padding: '8px 0', borderRadius: 8, cursor: 'pointer', fontWeight: 800, fontSize: 16,
-    border: `2px solid ${colors.border}`, background: 'transparent', color: colors.gold,
+    ...painted, color: colors.gold,
   },
-  chosen: { background: colors.gold, color: colors.dark, borderColor: colors.gold },
 } satisfies Record<string, CSSProperties>;

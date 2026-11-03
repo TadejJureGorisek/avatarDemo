@@ -1,7 +1,8 @@
+import { CanvasIcon } from './Paint';
+
 export type IconName = 'spin' | 'stop' | 'autoplay' | 'continue' | 'turbo' | 'menu' | 'close'
   | 'home' | 'history' | 'settings' | 'info';
 
 export function Icon({ name, size }: { name: IconName; size: number }) {
-  const mask = `url(assets/icons/${name}.svg) center / contain no-repeat`;
-  return <span aria-hidden style={{ display: 'block', width: size, height: size, background: 'currentColor', mask, WebkitMask: mask }} />;
+  return <CanvasIcon name={name} size={size} />;
 }

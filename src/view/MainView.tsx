@@ -1,4 +1,4 @@
-import { Application, Assets, Container } from 'pixi.js';
+import { Application, Assets, Container, Graphics } from 'pixi.js';
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { SlotEngine } from '../engine/SlotEngine';
 import { artUrl, Background } from './Background';
@@ -25,6 +25,8 @@ import { Wins } from './Wins';
 import { MAX_CELL, orientationFor, SCENES, type Orientation, type Scene } from './layout';
 
 const HUD_ZOOM_PER_SCENE = 1.25;
+const DIM_ALPHA = 0.5;
+const DIM_EASE = 0.15;
 const fill: CSSProperties = { position: 'absolute', inset: 0 };
 
 export function MainView({ engine }: { engine: SlotEngine }) {
@@ -37,7 +39,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const betState = (i: number) => ({ bet: bets[i], atMinBet: i === 0, atMaxBet: i === bets.length - 1 });
   const [hud, setHud] = useState<HudState>({
     ready: false, state: 'splash', balance: engine.balance, ...betState(defaultBetIndex),
-    freeSpinsLeft: 0, freeSpin: false, autoplayLeft: 0, freeSpinsReady: false, continueReady: false, bigWinCounting: false, turbo: false,
+    freeSpinsLeft: 0, freeSpin: false, autoplayLeft: 0, freeSpinsReady: false, continueReady: false, bigWinCounting: false, turbo: false, dimmed: false,
   });
   const update = (patch: Partial<HudState>) => setHud((s) => ({ ...s, ...patch }));
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -60,7 +62,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
 
   useEffect(() => {
     const app = new Application();
-    createScene(app, host.current!, engine, setHudLayout).then((scene) => {
+    createScene(app, host.current!, engine, setHudLayout, (dimmed) => update({ dimmed })).then((scene) => {
       machine.current = new StateMachine(
         { splash: SplashState, bet: BetState, spin: SpinState, win: WinState },
         {
@@ -164,7 +166,10 @@ export interface HudLayout {
   portrait: boolean;
 }
 
-async function createScene(app: Application, host: HTMLElement, engine: SlotEngine, onHudLayout: (layout: HudLayout) => void) {
+async function createScene(
+  app: Application, host: HTMLElement, engine: SlotEngine,
+  onHudLayout: (layout: HudLayout) => void, onDim: (dimmed: boolean) => void,
+) {
   await app.init({
     resizeTo: host, backgroundAlpha: 0, antialias: true, autoDensity: true,
     resolution: Math.min(devicePixelRatio, 2)
@@ -185,6 +190,9 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   background.addArt('splash');
   const splash = new Splash(engine.config);
   const scene = new Container();
+  const dim = new Graphics();
+  dim.eventMode = 'none';
+  dim.alpha = 0;
   scene.addChild(splash);
   app.stage.addChild(background, scene);
   let rest: ReturnType<typeof makeRest> | undefined;
@@ -220,6 +228,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
     scene.scale.set(scale);
     scene.position.set((width - s.size.width * scale) / 2, (height - s.size.height * scale) / 2);
     background.resize(width, height, scene.y + s.floor * scale);
+    dim.clear().rect(-scene.x / scale, -scene.y / scale, width / scale, height / scale).fill({ color: 0x000000, alpha: DIM_ALPHA });
     onHudLayout({
       top: scene.y + s.hud.top * scale, metersY: scene.y + s.hud.metersY * scale, left: scene.x, width: s.size.width * scale,
       zoom: scale * HUD_ZOOM_PER_SCENE, boardWidth: (engine.reels + (2 * FRAME_PAD) / MAX_CELL) * s.board.cell * scale,
@@ -236,6 +245,14 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   background.addArt('base', 'freeSpins');
   rest = makeRest(engine);
   scene.addChild(title, character, ...Object.values(rest), splash);
+  scene.addChildAt(dim, scene.getChildIndex(rest.bigWin));
+  let dimmed = false;
+  app.ticker.add(() => {
+    const on = rest!.popup.visible || rest!.bigWin.visible;
+    dim.alpha += ((on ? 1 : 0) - dim.alpha) * DIM_EASE;
+    dim.visible = dim.alpha > 0.01;
+    if (on !== dimmed) onDim((dimmed = on));
+  });
   current = undefined;
   layout();
   app.stage.eventMode = 'static';

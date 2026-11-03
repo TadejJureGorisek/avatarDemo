@@ -38,6 +38,7 @@ start command is needed.
   `bonus_anticipation_win` / `_lose`.
 - **Big wins**: wins of 20× / 35× / 50× / 100× the bet get a count-up (NICE / BIG / MEGA / EPIC WIN)
   with the title stepping up as each threshold is passed. Click to skip.
+- While a pop-up or big win is up, the scene and HUD fade darker behind it; SPIN stays bright in front.
 - **Menu** (round burger): round icon buttons fly out of it into a centred column on the left
   (landscape) or a centred row at the bottom (portrait), over a blurred overlay: CLOSE, HOME (asks to confirm, then opens the developer's LinkedIn), HISTORY (last 50 spins),
   SETTINGS (Master, Sound FX and Music volume sliders with on/off toggles, spacebar to spin, turbo; saved in the browser),

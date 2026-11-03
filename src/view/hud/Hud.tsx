@@ -27,6 +27,8 @@ export interface HudState {
   continueReady: boolean;
   /** SPIN skips the big win count-up. */
   bigWinCounting: boolean;
+  /** A pop-up is up: everything but SPIN is darkened behind it. */
+  dimmed: boolean;
   turbo: boolean;
 }
 
@@ -57,7 +59,10 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
   const locked = !s.ready || s.state !== 'bet' || inFreeSpins || autoplay;
   const splash = s.state === 'splash';
   const intro = splash || !s.ready;
-  const others: CSSProperties = { opacity: intro ? 0 : 1, pointerEvents: intro ? 'none' : undefined, transition: 'opacity 0.5s' };
+  const others: CSSProperties = {
+    opacity: intro ? 0 : 1, pointerEvents: intro ? 'none' : undefined,
+    filter: s.dimmed ? 'brightness(0.5)' : undefined, transition: 'opacity 0.5s, filter 0.3s',
+  };
   const [spinLabel, spinAria] = splash ? [<Icon name="continue" size={44} />, 'Continue']
     : autoOpen ? [autoChoice, `Start autoplay, ${autoChoice} spins`]
     : s.freeSpinsReady ? [<Icon name="spin" size={44} />, `Start ${s.freeSpinsLeft} free spins`]

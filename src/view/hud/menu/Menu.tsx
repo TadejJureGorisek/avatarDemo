@@ -48,6 +48,7 @@ export function Menu(p: Props) {
   const [page, setPage] = useState<Page>('info');
   const [confirmHome, setConfirmHome] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [settled, setSettled] = useState(false);
   const [anchor, setAnchor] = useState({ left: 0, top: 0, size: 52 });
   const burger = useRef<HTMLButtonElement>(null);
   const content = useRef<HTMLDivElement>(null);
@@ -62,6 +63,12 @@ export function Menu(p: Props) {
     const frame = requestAnimationFrame(() => setExpanded(true));
     return () => cancelAnimationFrame(frame);
   }, [p.open]);
+  useEffect(() => {
+    setSettled(false);
+    if (!expanded) return;
+    const timer = setTimeout(() => setSettled(true), (EXPAND_S + STAGGER_S * BUTTONS.length) * 1000);
+    return () => clearTimeout(timer);
+  }, [expanded]);
 
   const closing = useRef<ReturnType<typeof setTimeout>>();
   const close = () => {
@@ -129,7 +136,7 @@ export function Menu(p: Props) {
                 size={size}
                 active={b.page === page}
                 style={{
-                  ...at, opacity: expanded ? 1 : 0,
+                  ...at, opacity: expanded ? 1 : 0, pointerEvents: settled ? undefined : 'none',
                   transform: expanded ? 'none' : `translate(${left - at.left}px, ${top - at.top}px) scale(0.6)`,
                   transitionDelay: `${(expanded ? i : BUTTONS.length - 1 - i) * STAGGER_S}s`,
                 }}

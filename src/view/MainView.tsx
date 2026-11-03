@@ -1,7 +1,7 @@
 import { Application, Assets, Container } from 'pixi.js';
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { SlotEngine } from '../engine/SlotEngine';
-import { Background, BACKGROUND_URLS } from './Background';
+import { artUrl, Background } from './Background';
 import { BigWin } from './BigWin';
 import { Board, FRAME_PAD } from './board/Board';
 import { FRAME_URL, PANEL_URL } from './Frame';
@@ -162,12 +162,18 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   app.canvas.style.display = 'block';
   host.appendChild(app.canvas);
 
+  // The splash comes first: its assets load before anything else, and it shows while the rest loads.
+  const { symbols } = engine.config;
   Assets.add(CHARACTER_ASSETS);
-  await Assets.load([...CHARACTER_ASSETS.map((a) => a.alias), LOGO_URL]);
+  await Assets.load([...CHARACTER_ASSETS.map((a) => a.alias), LOGO_URL, artUrl('splash'), PANEL_URL,
+    ...symbols.filter((s) => s.kind === 'scatter').map((s) => symbolUrl(s.id))]);
   const character = new Character();
   const title = logo(1);
   const background = new Background();
+  background.addArt('splash');
+  const splash = new Splash(engine.config);
   const scene = new Container();
+  scene.addChild(splash);
   app.stage.addChild(background, scene);
   let rest: ReturnType<typeof makeRest> | undefined;
   let current: Orientation | undefined;
@@ -177,8 +183,9 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
     character.position.set(s.character.x, s.character.y);
     title.scale.set(Math.min(s.logo.height / title.texture.height, s.logo.maxWidth / title.texture.width));
     title.position.set(s.logo.x, s.logo.y);
+    splash.layout({ width: s.size.width, ...s.splash });
     if (!rest) return;
-    const { board, wins, message, popup, bigWin, symbolInfo, splash } = rest;
+    const { board, wins, message, popup, bigWin, symbolInfo } = rest;
     board.scale.set(s.board.cell / MAX_CELL);
     board.position.set(s.board.x, s.board.y);
     wins.scale.copyFrom(board.scale);
@@ -187,7 +194,6 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
     popup.position.set(s.size.width / 2, s.size.height / 2);
     bigWin.position.copyFrom(popup.position);
     symbolInfo.hide();
-    splash.layout({ width: s.size.width, ...s.splash });
   };
 
   const layout = () => {
@@ -210,20 +216,21 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   };
   app.renderer.on('resize', layout);
   layout();
+  splash.onFreeSpins = (showing) => background.setGold(showing ? 0.35 : 0);
+  splash.open();
 
-  const { symbols } = engine.config;
   await Assets.load([...symbols.map((s) => symbolUrl(s.id)), ...symbols.map((s) => litSymbolUrl(s.id)),
-    ...BACKGROUND_URLS, FRAME_URL, PANEL_URL]);
-  background.addArt();
+    artUrl('base'), artUrl('freeSpins'), FRAME_URL]);
+  background.addArt('base', 'freeSpins');
   rest = makeRest(engine);
-  scene.addChild(title, character, ...Object.values(rest));
+  scene.addChild(title, character, ...Object.values(rest), splash);
   current = undefined;
   layout();
   app.stage.eventMode = 'static';
   app.stage.hitArea = app.screen;
   app.stage.on('pointertap', () => rest!.symbolInfo.hide());
 
-  return { background, character, logo: title, ...rest };
+  return { background, character, logo: title, splash, ...rest };
 }
 
 function makeRest(engine: SlotEngine) {
@@ -232,6 +239,6 @@ function makeRest(engine: SlotEngine) {
   message.text = 'Press SPIN to play';
   return {
     board, wins: new Wins(board), message, symbolInfo: new SymbolInfo(),
-    bigWin: new BigWin(engine.config.bigWins), popup: new Popup(), splash: new Splash(engine.config),
+    bigWin: new BigWin(engine.config.bigWins), popup: new Popup(),
   };
 }

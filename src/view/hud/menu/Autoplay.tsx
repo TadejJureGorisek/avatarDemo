@@ -1,5 +1,4 @@
 import { useState, type CSSProperties } from 'react';
-import { AUTOPLAY_COUNTS } from '../AutoplayButton';
 import { BetControl } from '../BetControl';
 import { colors, disabledLook } from '../theme';
 import { Section, TabTitle } from './Section';
@@ -46,14 +45,7 @@ export function Autoplay({ bet, atMinBet, atMaxBet, onBetChange, autoplayLeft, c
         </div>
       </Section>
       <Section subtitle="Number of spins">
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {AUTOPLAY_COUNTS.map((n) => (
-            <button key={n} style={{ ...button, ...disabledLook(!canStart) }} disabled={!canStart} onClick={() => onStart(n)}>
-              {n} spins
-            </button>
-          ))}
-        </div>
-        <div style={customRow}>
+        <div style={{ ...customRow, marginTop: 0 }}>
           <input
             type="text" inputMode="numeric" placeholder="Custom" value={custom}
             aria-label="Custom number of spins" disabled={!canStart} style={input}

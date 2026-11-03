@@ -21,6 +21,7 @@ const BUTTONS: { page?: Page; icon: IconName; label: string }[] = [
 const EXPAND_S = 0.3;
 const STAGGER_S = 0.04;
 const GAP = 0.3;
+const TITLE_MARGIN = 4;
 
 interface Props {
   disabled: boolean;
@@ -74,12 +75,14 @@ export function Menu(p: Props) {
 
   const { left, top, size } = anchor;
   const step = size * (1 + GAP);
+  const side = left + size + 8;
   const zoom = p.portrait
-    ? Math.min((innerWidth - left - size - 16) / 440, 1.6)
+    ? Math.min((innerWidth - 2 * side) / 380, 1.6)
     : Math.min((top - 16) / 640, innerWidth / 1100, 1.6);
+  const edgeGap = Math.max(16, innerHeight - top - size - TITLE_MARGIN * zoom);
   const contentBox: CSSProperties = p.portrait
-    ? { left: left + size + 8, top: 0, right: 0, bottom: 0 }
-    : { left: 0, top: 0, right: 0, height: top - 8 };
+    ? { inset: 0, paddingTop: edgeGap, paddingLeft: side, paddingRight: side }
+    : { left: 0, top: 0, right: 0, height: top - 8, paddingTop: edgeGap };
 
   return (
     <>

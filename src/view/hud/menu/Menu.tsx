@@ -12,6 +12,7 @@ import { useDragScroll } from './useDragScroll';
 const HOME_URL = 'https://www.linkedin.com/in/tadejjuregorisek/';
 type Page = 'info' | 'autoplay' | 'history' | 'settings';
 const BUTTONS: { page?: Page; icon: IconName; label: string }[] = [
+  { icon: 'close', label: 'Close' },
   { page: 'info', icon: 'info', label: 'Info' },
   { page: 'autoplay', icon: 'autoplay', label: 'Autoplay' },
   { page: 'settings', icon: 'settings', label: 'Settings' },
@@ -71,7 +72,6 @@ export function Menu(p: Props) {
       p.onOpenChange(false);
     }, (EXPAND_S + STAGGER_S * BUTTONS.length) * 1000);
   };
-  const toggle = () => (p.open ? close() : p.onOpenChange(true));
 
   const { left, top, size } = anchor;
   const step = size * (1 + GAP);
@@ -80,15 +80,20 @@ export function Menu(p: Props) {
   const zoom = vertical
     ? Math.min((innerWidth - 2 * side) / 700, innerHeight / 760, 1.6)
     : Math.min(innerWidth / 440, (top - 16) / 640, 1.6);
-  const edgeGap = Math.max(16, innerHeight - top - size - TITLE_MARGIN * zoom);
+  const run = BUTTONS.length * step - size * GAP;
+  const start = ((vertical ? innerHeight : innerWidth) - run) / 2;
+  const place = (i: number) => (vertical
+    ? { left, top: start + (BUTTONS.length - 1 - i) * step }
+    : { left: start + i * step, top });
+  const edgeGap = Math.max(16, (vertical ? start : innerHeight - top - size) - TITLE_MARGIN * zoom);
   const contentBox: CSSProperties = vertical
     ? { left: 0, right: 0, top: edgeGap, bottom: edgeGap, paddingLeft: side, paddingRight: side }
     : { left: 0, right: 0, top: edgeGap, height: top - 8 - edgeGap };
 
   return (
     <>
-      <button ref={burger} style={{ ...styles.burger, ...disabledLook(p.disabled), visibility: p.open ? 'hidden' : undefined }}
-        onClick={toggle} data-sound="whoosh" disabled={p.disabled} aria-label="Menu"><Icon name="menu" size={26} /></button>
+      <button ref={burger} style={{ ...styles.burger, ...disabledLook(p.disabled) }}
+        onClick={() => p.onOpenChange(true)} data-sound="whoosh" disabled={p.disabled} aria-label="Menu"><Icon name="menu" size={26} /></button>
       {p.open && createPortal(
         <div style={{ ...styles.overlay, opacity: expanded ? 1 : 0 }}>
           <div style={{ ...styles.content, ...contentBox }} ref={content}>
@@ -114,7 +119,7 @@ export function Menu(p: Props) {
             </div>
           </div>
           {BUTTONS.map((b, i) => {
-            const offset = expanded ? (i + 1) * step : 0;
+            const at = place(i);
             return (
               <RoundButton
                 key={b.label}
@@ -123,16 +128,14 @@ export function Menu(p: Props) {
                 size={size}
                 active={b.page === page}
                 style={{
-                  left, top, opacity: expanded ? 1 : 0,
-                  transform: vertical ? `translateY(${-offset}px)` : `translateX(${offset}px)`,
+                  ...at, opacity: expanded ? 1 : 0,
+                  transform: expanded ? 'none' : `translate(${left - at.left}px, ${top - at.top}px) scale(0.6)`,
                   transitionDelay: `${(expanded ? i : BUTTONS.length - 1 - i) * STAGGER_S}s`,
                 }}
-                onClick={() => (b.page ? setPage(b.page) : setConfirmHome(true))}
+                onClick={() => (b.icon === 'close' ? close() : b.page ? setPage(b.page) : setConfirmHome(true))}
               />
             );
           })}
-          <RoundButton icon="close" label="Close" size={size} onClick={close}
-            style={{ left, top, transform: `rotate(${expanded ? 0 : -90}deg)` }} />
           {confirmHome && (
             <div style={styles.dim} onClick={() => setConfirmHome(false)}>
               <div style={{ ...styles.dialog, zoom: Math.min(innerWidth / 700, innerHeight / 520, 1.4) }}

@@ -2,7 +2,7 @@ import { Application, Assets, Container, Graphics } from 'pixi.js';
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { SlotEngine } from '../engine/SlotEngine';
 import { artUrl, Background } from './Background';
-import { BigWin } from './BigWin';
+import { BigWin, BIG_WIN_SIZE } from './BigWin';
 import { Board, FRAME_PAD } from './board/Board';
 import { FRAME_URL, PANEL_URL } from './Frame';
 import { litSymbolUrl, symbolUrl } from './board/Cell';
@@ -17,7 +17,7 @@ import { StateMachine } from './states/StateMachine';
 import { WinState } from './states/WinState';
 import { logo, LOGO_URL } from './Logo';
 import { Message } from './Message';
-import { Popup } from './Popup';
+import { Popup, POPUP_SIZE } from './Popup';
 import { sound, type Effect } from './Sound';
 import { Splash } from './Splash';
 import { SymbolInfo } from './SymbolInfo';
@@ -27,6 +27,7 @@ import { MAX_CELL, orientationFor, SCENES, type Orientation, type Scene } from '
 const HUD_ZOOM_PER_SCENE = 1.25;
 const DIM_ALPHA = 0.5;
 const DIM_EASE = 0.15;
+const MESSAGE_UNDER_POPUP = 36;
 const fill: CSSProperties = { position: 'absolute', inset: 0 };
 
 export function MainView({ engine }: { engine: SlotEngine }) {
@@ -197,6 +198,7 @@ async function createScene(
   app.stage.addChild(background, scene);
   let rest: ReturnType<typeof makeRest> | undefined;
   let current: Orientation | undefined;
+  let messageY = 0;
 
   const place = (s: Scene) => {
     character.scale.set(s.character.scale);
@@ -210,8 +212,8 @@ async function createScene(
     board.position.set(s.board.x, s.board.y);
     wins.scale.copyFrom(board.scale);
     wins.position.copyFrom(board.position);
-    message.position.set(s.message.x, s.message.y);
-    popup.position.set(s.size.width / 2, s.size.height / 2);
+    message.position.set(s.message.x, (messageY = s.message.y));
+    popup.position.set(s.size.width / 2, s.popupY);
     bigWin.position.copyFrom(popup.position);
     symbolInfo.hide();
   };
@@ -251,7 +253,12 @@ async function createScene(
     const on = rest!.popup.visible || rest!.bigWin.visible;
     dim.alpha += ((on ? 1 : 0) - dim.alpha) * DIM_EASE;
     dim.visible = dim.alpha > 0.01;
-    if (on !== dimmed) onDim((dimmed = on));
+    const { message, popup, bigWin } = rest!;
+    const panel = bigWin.visible ? BIG_WIN_SIZE : popup.visible ? POPUP_SIZE : undefined;
+    message.y = panel ? popup.y + panel.height / 2 + MESSAGE_UNDER_POPUP : messageY;
+    if (on === dimmed) return;
+    onDim((dimmed = on));
+    scene.setChildIndex(message, scene.getChildIndex(dim));
   });
   current = undefined;
   layout();

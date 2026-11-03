@@ -4,6 +4,8 @@ import { framedPanel } from './Frame';
 
 const WIDTH = 760;
 const HEIGHT = 260;
+const FRAME = 44;
+export const POPUP_SIZE = { width: WIDTH + 2 * FRAME, height: HEIGHT + 2 * FRAME };
 
 export class Popup extends Container {
   private text = new Text({
@@ -15,7 +17,7 @@ export class Popup extends Container {
   constructor() {
     super();
     this.addChild(
-      framedPanel(WIDTH, HEIGHT, 44, 0x1a0b3d),
+      framedPanel(WIDTH, HEIGHT, FRAME, 0x1a0b3d),
       this.text,
     );
     this.text.anchor.set(0.5);

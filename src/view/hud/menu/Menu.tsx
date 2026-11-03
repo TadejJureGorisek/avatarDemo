@@ -81,8 +81,8 @@ export function Menu(p: Props) {
     : Math.min((top - 16) / 640, innerWidth / 1100, 1.6);
   const edgeGap = Math.max(16, innerHeight - top - size - TITLE_MARGIN * zoom);
   const contentBox: CSSProperties = p.portrait
-    ? { inset: 0, paddingTop: edgeGap, paddingLeft: side, paddingRight: side }
-    : { left: 0, top: 0, right: 0, height: top - 8, paddingTop: edgeGap };
+    ? { left: 0, right: 0, top: edgeGap, bottom: edgeGap, paddingLeft: side, paddingRight: side }
+    : { left: 0, right: 0, top: edgeGap, height: top - 8 - edgeGap };
 
   return (
     <>
@@ -195,7 +195,7 @@ const styles = {
   },
   roundActive: { background: colors.gold, color: colors.dark, boxShadow: `0 0 18px ${colors.gold}` },
   content: {
-    position: 'absolute', overflow: 'auto', padding: '24px 16px 32px', boxSizing: 'border-box',
+    position: 'absolute', overflow: 'auto', padding: '0 16px 32px', boxSizing: 'border-box',
     scrollbarWidth: 'thin', scrollbarColor: `${colors.gold} transparent`,
   },
   page: { maxWidth: 720, margin: '0 auto' },

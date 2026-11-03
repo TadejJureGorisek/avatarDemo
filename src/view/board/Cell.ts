@@ -2,7 +2,7 @@ import { Assets, Sprite } from 'pixi.js';
 import type { SymbolDef } from '../../engine/config';
 
 export const symbolUrl = (id: string) => `assets/symbols/${id}.png`;
-/** The lit-up version shown on winning symbols (the scatter has none). */
+/** The lit-up version shown on winning symbols. */
 export const litSymbolUrl = (id: string) => `assets/symbols/${id}_connect.png`;
 
 export class Cell extends Sprite {

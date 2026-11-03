@@ -212,7 +212,7 @@ async function createScene(app: Application, host: HTMLElement, engine: SlotEngi
   layout();
 
   const { symbols } = engine.config;
-  await Assets.load([...symbols.map((s) => symbolUrl(s.id)), ...symbols.filter((s) => s.kind !== 'scatter').map((s) => litSymbolUrl(s.id)),
+  await Assets.load([...symbols.map((s) => symbolUrl(s.id)), ...symbols.map((s) => litSymbolUrl(s.id)),
     ...BACKGROUND_URLS, FRAME_URL, PANEL_URL]);
   background.addArt();
   rest = makeRest(engine);

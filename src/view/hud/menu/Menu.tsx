@@ -76,11 +76,12 @@ export function Menu(p: Props) {
   const { left, top, size } = anchor;
   const step = size * (1 + GAP);
   const side = left + size + 8;
-  const zoom = p.portrait
-    ? Math.min((innerWidth - 2 * side) / 380, 1.6)
-    : Math.min((top - 16) / 640, innerWidth / 1100, 1.6);
+  const vertical = !p.portrait;
+  const zoom = vertical
+    ? Math.min((innerWidth - 2 * side) / 700, innerHeight / 760, 1.6)
+    : Math.min(innerWidth / 440, (top - 16) / 640, 1.6);
   const edgeGap = Math.max(16, innerHeight - top - size - TITLE_MARGIN * zoom);
-  const contentBox: CSSProperties = p.portrait
+  const contentBox: CSSProperties = vertical
     ? { left: 0, right: 0, top: edgeGap, bottom: edgeGap, paddingLeft: side, paddingRight: side }
     : { left: 0, right: 0, top: edgeGap, height: top - 8 - edgeGap };
 
@@ -123,7 +124,7 @@ export function Menu(p: Props) {
                 active={b.page === page}
                 style={{
                   left, top, opacity: expanded ? 1 : 0,
-                  transform: p.portrait ? `translateY(${-offset}px)` : `translateX(${offset}px)`,
+                  transform: vertical ? `translateY(${-offset}px)` : `translateX(${offset}px)`,
                   transitionDelay: `${(expanded ? i : BUTTONS.length - 1 - i) * STAGGER_S}s`,
                 }}
                 onClick={() => (b.page ? setPage(b.page) : setConfirmHome(true))}

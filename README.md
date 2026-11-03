@@ -39,8 +39,9 @@ start command is needed.
   with the title stepping up as each threshold is passed. Click to skip.
 - **Menu** (burger): HOW TO PLAY (rules + paytable at the current bet), ABOUT THE GAME, AUTOPLAY,
   HISTORY (last 50 spins).
-- **CHEATS**: *Nice / Big / Mega / Epic win* land an exact win of that tier (`config.winCheats`),
-  *Free spins* forces a BONUS on every reel. Picked while waiting for SPIN it starts that spin;
+- **CHEATS** (or keys **1–7**): *Small win*, *Nice / Big / Mega / Epic win* (an exact win of that tier),
+  *27 ways* (one symbol on every row of reels 1–3), all in `config.winCheats`; *Free spins* forces a
+  BONUS on every reel. Picked while waiting for SPIN it starts that spin;
   mid-round it lines up the next one (`SlotEngine.forceNext()`).
 - **Any screen**: a landscape layout (1600×900) and a portrait one (900×1600) for windows clearly
   taller than wide, e.g. phones. The scene scales to fit the window without distorting; the

@@ -45,10 +45,13 @@ export const config = {
     { title: 'EPIC WIN', x: 100 },
   ],
   winCheats: {
+    small: { symbol: 'Q', length: 3, ways: 1 },
     nice: { symbol: 'H3', length: 3, ways: 2 },
     big: { symbol: 'H1', length: 3, ways: 2 },
     mega: { symbol: 'H2', length: 4, ways: 1 },
     epic: { symbol: 'H1', length: 5, ways: 1 },
+    // More ways than rows fills every row of those reels: 3 reels × 3 rows = 27 ways.
+    ways: { symbol: '9', length: 3, ways: 27 },
   },
   timing: {
     minSpinTime: 1,

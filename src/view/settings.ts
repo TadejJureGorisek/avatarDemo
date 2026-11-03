@@ -7,12 +7,11 @@ export interface Settings {
   music: boolean;
   musicVolume: number;
   spaceToSpin: boolean;
-  cheatKeys: boolean;
 }
 
 const KEY = 'settings';
 const DEFAULTS: Settings = {
-  masterVolume: 1, soundFx: true, soundFxVolume: 1, music: true, musicVolume: 0.8, spaceToSpin: true, cheatKeys: true,
+  masterVolume: 1, soundFx: true, soundFxVolume: 1, music: true, musicVolume: 0.8, spaceToSpin: true,
 };
 
 function load(): Settings {

@@ -33,7 +33,6 @@ export function SettingsTab({ turbo, onToggleTurbo }: Props) {
       {volume('musicVolume', 'Music', 'music')}
       <h3 style={styles.group}>KEYBOARD</h3>
       {option('spaceToSpin', 'Press spacebar to spin')}
-      {option('cheatKeys', 'Number keys 1–7 pick cheats')}
       <h3 style={styles.group}>GAMEPLAY</h3>
       <div style={styles.row}><Toggle label="Turbo spins" on={turbo} onToggle={onToggleTurbo} /><span>Turbo spins</span></div>
     </>

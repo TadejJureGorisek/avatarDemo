@@ -77,7 +77,7 @@ const styles = {
     position: 'relative', flex: 'none', width: 76, height: 40, padding: 0, borderRadius: 20, cursor: 'pointer',
     border: `2px solid ${colors.border}`, background: colors.panel, transition: 'background 0.2s',
   },
-  trackOn: { background: '#8a5a00', borderColor: colors.gold },
+  trackOn: { background: '#8a5a00', border: `2px solid ${colors.gold}` },
   knob: {
     position: 'absolute', top: 4, left: 4, width: 28, height: 28, borderRadius: '50%',
     background: '#6d5a8a', transition: 'left 0.2s, background 0.2s',

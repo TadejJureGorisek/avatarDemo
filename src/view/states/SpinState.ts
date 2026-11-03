@@ -13,6 +13,8 @@ export const SpinState: GameState = {
     ctx.symbolInfo.hide();
     board.start(turbo);
     sound.play('spin');
+    const whir = sound.play('reelSpin', { loop: true });
+    let landed = 0;
     const stopPressed = ctx.waitForStop();
     let stopped = false;
     void stopPressed.then(() => (stopped = true));
@@ -36,6 +38,8 @@ export const SpinState: GameState = {
     void stopPressed.then(() => tension?.stop());
     await board.stop(result.grid, delays, (reel) => {
       sound.play(engine.scatter && result.grid[reel].includes(engine.scatter.id) ? 'bonusLand' : 'reelStop');
+      if (++landed < result.grid.length) whir.volume(1 - landed / result.grid.length);
+      else whir.stop(0.1);
       tension?.stop();
       tension = undefined;
       if (!anticipated(reel + 1) || stopped) return;

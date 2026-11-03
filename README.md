@@ -43,7 +43,7 @@ start command is needed.
   SETTINGS (Master, Sound FX and Music volume sliders with on/off toggles, spacebar to spin, turbo; saved in the browser),
   AUTOPLAY (any count up to 999, typed or built with +1/+10/+100) and INFO (rules, paytable at the current bet, game details).
 - **Audio** (ElevenLabs): a base game music loop and a more intense one for free spins (cross-faded),
-  and effects for buttons, reel spin/stop, BONUS landing, anticipation, wins, the big win coin
+  and effects for buttons, the reel spin (a loop that fades out as each reel lands), reel stops, BONUS landing, anticipation, wins, the big win coin
   shower and the free spins award. The character's Spine events (`sfx_squat`, `sfx_clink`, ...) play
   matching sounds. Audio starts on the first click or key press, as browsers require.
 - **CHEATS** (or keys **1–7**): *Small win*, *Nice / Big / Mega / Epic win* (an exact win of that tier),

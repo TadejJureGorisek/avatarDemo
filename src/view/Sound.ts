@@ -1,7 +1,7 @@
 import { settings } from './settings';
 
 const EFFECTS = [
-  'click', 'toggle', 'whoosh', 'spin', 'reelStop', 'bonusLand', 'anticipation', 'win', 'bigWin', 'freeSpins',
+  'click', 'toggle', 'whoosh', 'spin', 'reelSpin', 'reelStop', 'bonusLand', 'anticipation', 'win', 'bigWin', 'freeSpins',
   'squat', 'smile', 'unsquat', 'wiggle', 'clink', 'celebrate',
 ] as const;
 const MUSIC = ['musicBase', 'musicFreeSpins'] as const;
@@ -9,7 +9,7 @@ export type Effect = (typeof EFFECTS)[number];
 export type Music = (typeof MUSIC)[number];
 
 const VOLUME: Record<Effect | Music, number> = {
-  click: 0.5, toggle: 0.5, whoosh: 0.4, spin: 0.5, reelStop: 0.6, bonusLand: 0.8, anticipation: 0.7,
+  click: 0.5, toggle: 0.5, whoosh: 0.4, spin: 0.5, reelSpin: 0.45, reelStop: 0.6, bonusLand: 0.8, anticipation: 0.7,
   win: 0.7, bigWin: 0.6, freeSpins: 0.9,
   squat: 0.35, smile: 0.4, unsquat: 0.35, wiggle: 0.35, clink: 0.6, celebrate: 0.7,
   musicBase: 0.35, musicFreeSpins: 0.4,
@@ -19,6 +19,7 @@ const REPEAT_GAP_S = 0.04;
 
 export interface Playing {
   stop(fadeSeconds?: number): void;
+  volume(level: number): void;
 }
 
 class Sound {
@@ -55,7 +56,7 @@ class Sound {
   play(name: Effect, { loop = false } = {}): Playing {
     const buffer = this.buffers.get(name);
     const now = this.context.currentTime;
-    if (!buffer || now - (this.lastPlayed.get(name) ?? -1) < REPEAT_GAP_S) return { stop() {} };
+    if (!buffer || now - (this.lastPlayed.get(name) ?? -1) < REPEAT_GAP_S) return { stop() {}, volume() {} };
     this.lastPlayed.set(name, now);
     return this.start(buffer, this.effects, VOLUME[name], loop);
   }
@@ -106,6 +107,9 @@ class Sound {
         gain.gain.setValueAtTime(gain.gain.value, t);
         gain.gain.linearRampToValueAtTime(0, t + fade);
         source.stop(t + fade);
+      },
+      volume: (level) => {
+        if (!stopped) gain.gain.setTargetAtTime(volume * level, this.context.currentTime, 0.05);
       },
     };
   }

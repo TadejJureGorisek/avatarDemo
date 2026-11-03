@@ -16,6 +16,7 @@ const TEXT_BELOW = 50;
 const BLOCK_EXTRA = PICTURE_TOP + TEXT_BELOW + 45;
 const PICTURE_SHARE = 0.85;
 const LOGO_GAP = 20;
+const AUTO_SLIDE_S = 6;
 
 interface SplashLayout {
   width: number;
@@ -37,6 +38,7 @@ export class Splash extends Container {
   private index = 0;
   private isOpen = false;
   private loops: gsap.core.Tween[] = [];
+  private auto?: gsap.core.Tween;
 
   constructor(private config: GameConfig) {
     super();
@@ -98,6 +100,7 @@ export class Splash extends Container {
 
   override destroy(options?: Parameters<Container['destroy']>[0]) {
     window.removeEventListener('keydown', this.onKey);
+    this.auto?.kill();
     this.stopLoops();
     killTweens(this);
     super.destroy(options);
@@ -114,10 +117,12 @@ export class Splash extends Container {
     this.isOpen = true;
     window.addEventListener('keydown', this.onKey);
     this.slides[this.index].onShow?.();
+    this.scheduleAuto();
   }
 
   async close() {
     this.isOpen = false;
+    this.auto?.kill();
     window.removeEventListener('keydown', this.onKey);
     gsap.to(this.scale, { x: 1.3, y: 1.3, duration: 0.6, ease: 'power2.in' });
     await gsap.to(this, { alpha: 0, duration: 0.6, ease: 'power2.in' });
@@ -147,6 +152,12 @@ export class Splash extends Container {
     this.onSlide?.();
     this.updateDots();
     this.onFreeSpins?.(to === FREE_SPINS_SLIDE);
+    this.scheduleAuto();
+  }
+
+  private scheduleAuto() {
+    this.auto?.kill();
+    if (this.isOpen) this.auto = gsap.delayedCall(AUTO_SLIDE_S, () => this.step(1));
   }
 
   private updateDots() {

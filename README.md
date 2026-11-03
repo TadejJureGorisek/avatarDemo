@@ -19,8 +19,8 @@ start command is needed.
 
 - **Loading and splash**: the splash's own assets load first, so it shows right away with three
   slides (the character, big wins, free spins) under the logo, and "Loading…" where SPIN will be
-  until the rest has loaded. Swipe, the side arrows, the dots or the
-  arrow keys change slides (looping). SPIN shows an arrow and is CONTINUE: the splash zooms away
+  until the rest has loaded. Slides move on by themselves every 6 s; swipe, the side arrows, the
+  dots or the arrow keys change them too (looping). SPIN shows an arrow and is CONTINUE: the splash zooms away
   while the character, logo, board and HUD come in.
 - 5 reels × 3 rows, **243 ways**, pays left to right from reel 1 (3+ of a kind).
 - Spinning reels: all reels spin for at least `timing.minSpinTime`, then each reel lands its

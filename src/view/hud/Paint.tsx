@@ -79,28 +79,60 @@ export const painted: CSSProperties = { position: 'relative', isolation: 'isolat
 
 const layer: CSSProperties = { position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: -1, pointerEvents: 'none' };
 
-const icons = new Map<string, HTMLImageElement>();
-
-function iconImage(name: string, color: string, onReady: () => void) {
-  const key = `${name}|${color}`;
-  let image = icons.get(key);
-  if (!image) {
-    const created = (image = new Image());
-    icons.set(key, created);
-    void fetch(`assets/icons/${name}.svg`).then((r) => r.text()).then((svg) => {
-      created.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.replace(/currentColor/g, color))}`;
-    });
-  }
-  if (image.complete && image.naturalWidth) return image;
-  image.addEventListener('load', onReady, { once: true });
-  return undefined;
+interface IconShape {
+  paths: Path2D[];
+  strokeWidth: number;
+  filled: boolean;
 }
 
-/** An SVG icon drawn on a canvas. The colour is passed in, not read from CSS, which forced dark mode rewrites. */
+const num = (el: Element, name: string) => Number(el.getAttribute(name) ?? 0);
+
+/** An icon's shapes as canvas paths. Rendering the SVG as an image would let forced dark mode recolour it. */
+function toShape(svg: string): IconShape {
+  const root = new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement;
+  const paths = [...root.querySelectorAll('path, line, circle, rect')].map((el) => {
+    if (el.tagName === 'path') return new Path2D(el.getAttribute('d')!);
+    const p = new Path2D();
+    if (el.tagName === 'line') {
+      p.moveTo(num(el, 'x1'), num(el, 'y1'));
+      p.lineTo(num(el, 'x2'), num(el, 'y2'));
+    } else if (el.tagName === 'circle') {
+      p.arc(num(el, 'cx'), num(el, 'cy'), num(el, 'r'), 0, Math.PI * 2);
+    } else {
+      p.roundRect(num(el, 'x'), num(el, 'y'), num(el, 'width'), num(el, 'height'), num(el, 'rx'));
+    }
+    return p;
+  });
+  return { paths, strokeWidth: num(root, 'stroke-width') || 2, filled: (root.getAttribute('fill') ?? 'none') !== 'none' };
+}
+
+const shapes = new Map<string, Promise<IconShape>>();
+const loadShape = (name: string) => {
+  if (!shapes.has(name)) shapes.set(name, fetch(`assets/icons/${name}.svg`).then((r) => r.text()).then(toShape));
+  return shapes.get(name)!;
+};
+const loaded = new Map<string, IconShape>();
+
+/** An icon drawn on a canvas. The colour is passed in, not read from CSS, which forced dark mode rewrites. */
 export function CanvasIcon({ name, size, color }: { name: string; size: number; color: string }) {
-  const { ref, paint } = useCanvas((g, w, h) => {
-    const image = iconImage(name, color, paint);
-    if (image) g.drawImage(image, 0, 0, w, h);
+  const { ref, paint } = useCanvas((g, w) => {
+    const shape = loaded.get(name);
+    if (!shape) {
+      void loadShape(name).then((s) => {
+        loaded.set(name, s);
+        paint();
+      });
+      return;
+    }
+    g.scale(w / 24, w / 24);
+    g.lineWidth = shape.strokeWidth;
+    g.lineCap = 'round';
+    g.lineJoin = 'round';
+    g.strokeStyle = g.fillStyle = color;
+    for (const p of shape.paths) {
+      if (shape.filled) g.fill(p);
+      g.stroke(p);
+    }
   }, `${name}|${color}`);
   return <canvas ref={ref} aria-hidden style={{ display: 'block', width: size, height: size }} />;
 }

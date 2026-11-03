@@ -21,5 +21,5 @@ export const disabledLook = (disabled: boolean): CSSProperties =>
 export const looks = {
   ring: { radius: 'round', fill: colors.panel, border: { width: 3, color: colors.gold } },
   ringOn: { radius: 'round', fill: colors.gold, border: { width: 3, color: colors.gold } },
-  spin: { radius: 'round', fill: ['#ffe27a', '#f8b032', '#f39a0f', '#b25e00'], border: { width: 5, color: '#fff3c4' } },
+  spin: { radius: 'round', fill: ['#ffe27a', '#f8b032', '#f39a0f', '#b25e00'], border: { width: 5, color: '#1a0b3d' } },
 } satisfies Record<string, Look>;

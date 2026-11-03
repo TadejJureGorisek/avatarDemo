@@ -1,5 +1,6 @@
 import { useState, type CSSProperties } from 'react';
 import { BetControl } from '../BetControl';
+import { Paint, painted, type Look } from '../Paint';
 import { colors, disabledLook } from '../theme';
 import { Section, TabTitle } from './Section';
 
@@ -27,7 +28,7 @@ export function Autoplay({ bet, atMinBet, atMaxBet, onBetChange, autoplayLeft, c
         <TabTitle>AUTOPLAY</TabTitle>
         <Section subtitle="Running">
           <p style={{ margin: '0 0 12px' }}>{autoplayLeft} spins left.</p>
-          <button style={button} onClick={onStop}>Stop autoplay</button>
+          <button style={button} onClick={onStop}><Paint look={gold('Stop autoplay')} />Stop autoplay</button>
         </Section>
       </>
     );
@@ -56,16 +57,17 @@ export function Autoplay({ bet, atMinBet, atMaxBet, onBetChange, autoplayLeft, c
             }}
           />
           <button style={{ ...button, ...disabledLook(!canStartCustom) }} disabled={!canStartCustom} onClick={() => onStart(spins)}>
+            <Paint look={gold(canStartCustom ? `Start ${spins} spins` : 'Start')} />
             {canStartCustom ? `Start ${spins} spins` : 'Start'}
           </button>
         </div>
         <div style={customRow}>
           {STEPS.map((n) => (
             <button key={n} style={{ ...stepButton, ...disabledLook(!canStart) }} disabled={!canStart}
-              onClick={() => setCustom((c) => String(Math.min(MAX_SPINS, (Number(c) || 0) + n)))}>+{n}</button>
+              onClick={() => setCustom((c) => String(Math.min(MAX_SPINS, (Number(c) || 0) + n)))}><Paint look={stepLook} />+{n}</button>
           ))}
           <button style={{ ...stepButton, ...disabledLook(!canStart || !custom) }} disabled={!canStart || !custom}
-            onClick={() => setCustom('')}>Clear</button>
+            onClick={() => setCustom('')}><Paint look={stepLook} />Clear</button>
         </div>
         {!canStart && <p style={{ margin: '10px 0 0' }}>Wait for the current spin to finish.</p>}
       </Section>
@@ -80,9 +82,10 @@ const input: CSSProperties = {
 };
 
 const button: CSSProperties = {
-  padding: '10px 18px', borderRadius: 10, border: 'none', fontWeight: 800,
-  background: colors.gold, color: colors.dark, cursor: 'pointer',
+  ...painted, padding: '10px 18px', borderRadius: 10, fontWeight: 800, color: 'transparent', cursor: 'pointer',
 };
-const stepButton: CSSProperties = {
-  ...button, minWidth: 64, padding: '8px 12px', background: colors.panel, color: colors.gold, border: `2px solid ${colors.gold}`,
-};
+const stepButton: CSSProperties = { ...button, minWidth: 64, padding: '8px 12px', color: colors.gold };
+const stepLook: Look = { radius: 10, fill: colors.panel, border: { width: 2, color: colors.gold } };
+const gold = (text: string): Look => ({
+  radius: 10, fill: colors.gold, text: { value: text, color: colors.dark, font: '800 13.33px system-ui, sans-serif' },
+});

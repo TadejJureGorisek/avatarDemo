@@ -150,8 +150,8 @@ export function Menu(p: Props) {
                 </p>
                 <h3 style={styles.question}>DO YOU WANT TO PROCEED?</h3>
                 <div style={styles.answers}>
-                  <button style={{ ...styles.answer, background: '#f04a4a' }} onClick={() => setConfirmHome(false)}>NO</button>
-                  <button style={{ ...styles.answer, background: '#16a85a' }} onClick={() => location.assign(HOME_URL)}>YES</button>
+                  <button style={styles.answer} onClick={() => setConfirmHome(false)}><Paint look={{ radius: 'round', fill: '#f04a4a' }} />NO</button>
+                  <button style={styles.answer} onClick={() => location.assign(HOME_URL)}><Paint look={{ radius: 'round', fill: '#16a85a' }} />YES</button>
                 </div>
               </div>
             </div>
@@ -176,6 +176,7 @@ function RoundButton({ icon, label, size, active = false, style, onClick }: Roun
   return (
     <button style={{ ...styles.round, ...(active ? styles.roundActive : {}), width: size, height: size, ...style }}
       onClick={onClick} aria-label={label} aria-pressed={active}>
+      <Paint look={active ? looks.ringOn : { radius: 'round', fill: '#1a0b3d', border: { width: 3, color: colors.gold } }} />
       <Icon name={icon} size={size * 0.5} />
     </button>
   );
@@ -192,13 +193,12 @@ const styles = {
     background: 'rgb(10 4 28 / 0.78)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
   },
   round: {
-    position: 'fixed', borderRadius: '50%', padding: 0, cursor: 'pointer', boxSizing: 'border-box',
-    display: 'grid', placeItems: 'center',
-    border: `3px solid ${colors.gold}`, background: '#1a0b3d', color: '#fff',
+    ...painted, position: 'fixed', borderRadius: '50%', padding: 0, cursor: 'pointer', boxSizing: 'border-box',
+    display: 'grid', placeItems: 'center', color: '#fff',
     boxShadow: '0 4px 14px rgb(0 0 0 / 0.5)',
     transition: `transform ${EXPAND_S}s cubic-bezier(0.34, 1.4, 0.64, 1), opacity ${EXPAND_S}s, background 0.2s`,
   },
-  roundActive: { background: colors.gold, color: colors.dark, boxShadow: `0 0 18px ${colors.gold}` },
+  roundActive: { color: colors.dark, boxShadow: `0 0 18px ${colors.gold}` },
   content: {
     position: 'absolute', overflow: 'auto', padding: '0 16px 32px', boxSizing: 'border-box',
     scrollbarWidth: 'thin', scrollbarColor: `${colors.gold} transparent`,
@@ -218,7 +218,7 @@ const styles = {
   question: { margin: '0 0 22px', fontSize: 24, fontWeight: 900 },
   answers: { display: 'flex', justifyContent: 'center', gap: 120 },
   answer: {
-    width: 160, height: 48, borderRadius: 24, border: 'none', cursor: 'pointer',
+    ...painted, width: 160, height: 48, borderRadius: 24, cursor: 'pointer',
     fontSize: 24, fontWeight: 900, color: '#fff',
   },
 } satisfies Record<string, CSSProperties>;

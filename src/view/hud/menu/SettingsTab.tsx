@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { settings, useSettings, type Settings } from '../../settings';
+import { Paint, painted } from '../Paint';
 import { colors } from '../theme';
 import { TabTitle } from './Section';
 
@@ -41,9 +42,12 @@ export function SettingsTab({ turbo, onToggleTurbo }: Props) {
 
 function Toggle({ label, on, onToggle }: { label: string; on: boolean; onToggle: () => void }) {
   return (
-    <button style={{ ...styles.track, ...(on ? styles.trackOn : {}) }} onClick={onToggle}
+    <button style={styles.track} onClick={onToggle}
       role="switch" aria-checked={on} aria-label={label} data-sound="toggle">
-      <span style={{ ...styles.knob, ...(on ? styles.knobOn : {}) }} />
+      <Paint look={{ radius: 'round', fill: on ? '#8a5a00' : colors.panel, border: { width: 2, color: on ? colors.gold : colors.border } }} />
+      <span style={{ ...styles.knob, ...(on ? styles.knobOn : {}) }}>
+        <Paint look={{ radius: 'round', fill: on ? colors.gold : '#6d5a8a' }} />
+      </span>
     </button>
   );
 }
@@ -74,13 +78,11 @@ const styles = {
   range: { flex: 1, minWidth: 0, height: 24, margin: 0, accentColor: colors.gold, cursor: 'pointer' },
   percent: { width: 52, textAlign: 'right', fontVariantNumeric: 'tabular-nums' },
   track: {
-    position: 'relative', flex: 'none', width: 76, height: 40, padding: 0, borderRadius: 20, cursor: 'pointer',
-    border: `2px solid ${colors.border}`, background: colors.panel, transition: 'background 0.2s',
+    ...painted, flex: 'none', width: 76, height: 40, padding: 0, borderRadius: 20, cursor: 'pointer',
   },
-  trackOn: { background: '#8a5a00', border: `2px solid ${colors.gold}` },
   knob: {
-    position: 'absolute', top: 4, left: 4, width: 28, height: 28, borderRadius: '50%',
-    background: '#6d5a8a', transition: 'left 0.2s, background 0.2s',
+    position: 'absolute', isolation: 'isolate', top: 4, left: 4, width: 28, height: 28, borderRadius: '50%',
+    transition: 'left 0.2s',
   },
-  knobOn: { left: 40, background: colors.gold, boxShadow: `0 0 10px ${colors.gold}` },
+  knobOn: { left: 40, boxShadow: `0 0 10px ${colors.gold}` },
 } satisfies Record<string, CSSProperties>;

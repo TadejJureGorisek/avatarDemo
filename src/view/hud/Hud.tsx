@@ -37,6 +37,7 @@ interface Props {
   config: GameConfig;
   history: HistoryEntry[];
   onSpin: () => void;
+  onHoldSpin: (holding: boolean) => void;
   onBetChange: (direction: 1 | -1) => void;
   onCheat: (cheat: Cheat) => void;
   onStartAutoplay: (spins: number) => void;
@@ -45,7 +46,7 @@ interface Props {
   layout: HudLayout;
 }
 
-export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, onStartAutoplay, onStopAutoplay, onToggleTurbo, layout }: Props) {
+export function Hud({ state: s, config, history, onSpin, onHoldSpin, onBetChange, onCheat, onStartAutoplay, onStopAutoplay, onToggleTurbo, layout }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const scale = layout.zoom;
   const [autoOpen, setAutoOpen] = useState(false);
@@ -111,7 +112,8 @@ export function Hud({ state: s, config, history, onSpin, onBetChange, onCheat, o
     <div style={styles.centre}>
       <div style={{ zoom: size.spin }}>
         {s.ready
-          ? <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin} />
+          ? <SpinButton label={spinLabel} ariaLabel={spinAria} disabled={spinDisabled} onPress={pressSpin}
+            onHold={(holding) => !autoOpen && onHoldSpin(holding)} />
           : <div style={styles.loading}>Loading…</div>}
       </div>
       <div style={{ ...styles.turbo, ...others }}>

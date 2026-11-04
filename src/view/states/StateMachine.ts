@@ -34,6 +34,7 @@ export interface GameContext {
   takeAutoSpin: () => boolean;
   turbo: () => boolean;
   autoplayRunning: () => boolean;
+  holding: () => boolean;
   stopAutoplay: () => void;
   /** Holds autoplay while free spins are started and played; `resumeAutoplay` gives the spins back. */
   pauseAutoplay: () => void;

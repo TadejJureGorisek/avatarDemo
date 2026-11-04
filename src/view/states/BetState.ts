@@ -3,6 +3,7 @@ import { sound } from '../Sound';
 import type { GameContext, GameState } from './StateMachine';
 
 const AUTO_SPIN_PAUSE_S = 1;
+const HOLD_SPIN_PAUSE_S = 0.3;
 
 const pause = (seconds: number) => new Promise((resolve) => gsap.delayedCall(seconds, resolve));
 
@@ -40,7 +41,7 @@ export const BetState: GameState = {
     }
 
     if (nextAutoSpin(ctx)) {
-      await pause(AUTO_SPIN_PAUSE_S);
+      await pause(ctx.holding() ? HOLD_SPIN_PAUSE_S : AUTO_SPIN_PAUSE_S);
       return 'spin';
     }
 

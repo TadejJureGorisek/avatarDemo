@@ -12,11 +12,13 @@ export const WinState: GameState = {
     if (big) {
       updateHud({ bigWinCounting: true });
       const coins = sound.play('bigWin', { loop: true });
-      await bigWin.play(r.totalWin, bet(), () => {
+      const counting = bigWin.play(r.totalWin, bet(), () => {
         coins.stop(0.6);
         sound.play('win');
         updateHud({ bigWinCounting: false });
       });
+      if (ctx.holding()) bigWin.skip();
+      await counting;
       wins.showAmount(r.totalWin);
     }
 

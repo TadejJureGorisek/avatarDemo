@@ -28,6 +28,8 @@ start command is needed.
   next spin, with the win amount over them. Click a landed symbol to see what it pays.
 - One main button: SPIN, then STOP while spinning (lands the reels early), the free spins left
   during free spins, and the autoplay spins left during autoplay. `Space` presses it.
+  **Holding** SPIN or `Space` keeps spinning while held, landing each spin straight away and skipping
+  big win count-ups, as if STOP were pressed every time; letting go ends it after the current spin.
 - **TURBO** (lightning, left of SPIN): spins run `timing.turboSpeed` × faster, and STOP lands the
   reels instantly. **Autoplay** (right of SPIN): pick 10/25/50/100 spins.
 - **BONUS** scatter: at most one per reel, pays anywhere (3/4/5). Five (one on every reel) award

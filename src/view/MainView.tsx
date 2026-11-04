@@ -47,6 +47,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
   const autoplayLeft = useRef(0);
   const pausedAutoplay = useRef(0);
   const turbo = useRef(false);
+  const holding = useRef(false);
   const setAutoplay = (spins: number) => update({ autoplayLeft: (autoplayLeft.current = spins) });
   const symbolInfoRef = useRef<SymbolInfo>();
   const bigWinRef = useRef<BigWin>();
@@ -76,9 +77,13 @@ export function MainView({ engine }: { engine: SlotEngine }) {
               resolve(cheat);
             };
           }),
-          waitForStop: () => new Promise((resolve) => (stopRequest.current = resolve)),
-          takeAutoSpin: () => autoplayLeft.current > 0 && (setAutoplay(autoplayLeft.current - 1), true),
-          autoplayRunning: () => autoplayLeft.current > 0,
+          waitForStop: () => new Promise((resolve) => {
+            stopRequest.current = resolve;
+            if (holding.current) resolve();
+          }),
+          takeAutoSpin: () => holding.current || (autoplayLeft.current > 0 && (setAutoplay(autoplayLeft.current - 1), true)),
+          autoplayRunning: () => holding.current || autoplayLeft.current > 0,
+          holding: () => holding.current,
           turbo: () => turbo.current,
           stopAutoplay: () => setAutoplay(0),
           pauseAutoplay: () => {
@@ -128,6 +133,13 @@ export function MainView({ engine }: { engine: SlotEngine }) {
     else if (machine.current?.current === 'spin') stopRequest.current?.();
     else spinRequest.current?.();
   }, []);
+  const holdSpin = useCallback((on: boolean) => {
+    holding.current = on;
+    if (!on) return;
+    if (bigWinRef.current?.counting) bigWinRef.current.skip();
+    else if (machine.current?.current === 'spin') stopRequest.current?.();
+    else if (machine.current?.current === 'bet') spinRequest.current?.();
+  }, []);
   const requestCheat = useCallback((cheat: Cheat) => {
     if (spinRequest.current) spinRequest.current(cheat);
     else engine.forceNext(cheat);
@@ -146,6 +158,7 @@ export function MainView({ engine }: { engine: SlotEngine }) {
         config={engine.config}
         history={history}
         onSpin={pressSpin}
+        onHoldSpin={holdSpin}
         onBetChange={changeBet}
         onCheat={requestCheat}
         onStartAutoplay={startAutoplay}
